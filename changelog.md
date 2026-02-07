@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.6] - 2026-02-07
+
+### Fixed
+- **Fixed Cheer button being incorrectly intercepted** - the Bits Cheer button (`aria-label="Cheer"`, `data-a-target="bits-button"`) is no longer blocked
+  - Cheering uses already-purchased Bits, not real money — no friction needed
+  - Only the actual Buy/Get Bits flow (spending USD) is now intercepted
+  - Added `'cheer'` to the ignore labels allow-list as a second safety layer
+
+---
+
 ## [0.2.5] - 2026-01-24
 
 ### Changed
@@ -328,6 +338,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.2.6 | 2026-02-07 | Fixed Cheer button being incorrectly intercepted |
 | 0.2.5 | 2026-01-24 | Purchase logs now include settings used |
 | 0.2.4 | 2026-01-24 | Fixed price parsing for values with commas |
 | 0.2.3 | 2026-01-24 | Cost breakdown in overlay (tax + hours of work) |

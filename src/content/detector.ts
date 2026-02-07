@@ -60,6 +60,7 @@ const IGNORE_LABELS = [
   'maybe later',
   'no thanks',
   'about combos',  // Info button in combos modal
+  'cheer',         // Cheer button uses already-owned Bits, not real money
 ];
 
 /**
@@ -293,9 +294,22 @@ export function isPurchaseButton(element: HTMLElement | null): boolean {
     return false;
   };
 
-  // Check if element has gift or bits-related data-a-target
-  if (dataTarget.includes('gift') || dataTarget === 'bits-button') {
-    debug('isPurchaseButton: MATCH via data-a-target', elementInfo);
+  // Check if element has gift-related data-a-target
+  if (dataTarget.includes('gift')) {
+    debug('isPurchaseButton: MATCH via data-a-target (gift)', elementInfo);
+    return true;
+  }
+
+  // For bits-button: distinguish Cheer (using already-owned Bits) from Buy Bits (real money)
+  // The Cheer button has aria-label="Cheer" and data-a-target="bits-button"
+  // We only want to intercept the actual "Buy/Get Bits" flow, not cheering
+  if (dataTarget === 'bits-button') {
+    const ariaLbl = (element.getAttribute('aria-label') || '').toLowerCase();
+    if (ariaLbl === 'cheer') {
+      debug('isPurchaseButton: SKIPPED bits-button (Cheer, not purchase)', elementInfo);
+      return false;
+    }
+    debug('isPurchaseButton: MATCH via data-a-target (bits-button, non-cheer)', elementInfo);
     return true;
   }
 
