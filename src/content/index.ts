@@ -13,7 +13,7 @@ import { log, debug, error, setVersion, loadLogs } from '../shared/logger';
 import './styles.css';
 
 /** Current extension version */
-const VERSION = '0.2.21';
+const VERSION = '0.2.22';
 
 // Set version immediately so logger can check for updates
 setVersion(VERSION);

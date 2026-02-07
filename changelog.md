@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.22] - 2026-02-07
+
+### Fixed
+- **Gift sub buttons without `data-a-target` not being intercepted** — some gift sub quantity buttons (e.g., "$11.98" for 2 subs) have `dataTarget: null` and `ariaLabel: null`, causing them to fall through all `isPurchaseButton` checks
+  - Added detection for buttons whose text is a pure dollar amount (`$XX.XX`) and are inside a dialog/modal context (`[role="dialog"]`, `.modal`, or `[data-a-target="gift-sub-modal"]`)
+  - This was the root cause of the soft nudge tier never triggering — the only mid-range purchases were on these undetected buttons
+- **Soft nudge tier now reachable** — with the expanded button detection, purchases between threshold 1 and threshold 2 (e.g., $11.98 → $12.88 with tax, between $10 and $25) correctly trigger the soft nudge flow (main modal + 1 comparison step)
+
+---
+
 ## [0.2.21] - 2026-02-07
 
 ### Added
@@ -535,6 +545,7 @@ When thresholds are disabled, always shows the full modal with all comparisons.
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.2.22 | 2026-02-07 | Fix dollar-amount gift buttons not intercepted; soft nudge now reachable |
 | 0.2.21 | 2026-02-07 | Diagnostic logging for friction flow debugging |
 | 0.2.20 | 2026-02-07 | Threshold tier logging + soft nudge uses main modal with 1 comparison |
 | 0.2.19 | 2026-02-07 | Fixed custom items losing `enabled` flag on save (querySelector bug) |

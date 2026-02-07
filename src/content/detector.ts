@@ -375,6 +375,13 @@ export function isPurchaseButton(element: HTMLElement | null): boolean {
     return true;
   }
 
+  // Check for buttons with dollar-amount text inside a dialog/modal (e.g., gift sub quantity buttons)
+  const buttonText = (element.textContent || '').trim();
+  if (/^\$[\d,]+\.\d{2}$/.test(buttonText) && element.closest('[role="dialog"], .modal, [data-a-target="gift-sub-modal"]')) {
+    debug('isPurchaseButton: MATCH via dollar amount in dialog', { ...elementInfo, buttonText });
+    return true;
+  }
+
   // Also check if button is inside the one-tap-store container
   const oneTapStore = element.closest('#one-tap-store-id');
   if (oneTapStore) {
