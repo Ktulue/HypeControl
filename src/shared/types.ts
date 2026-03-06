@@ -56,7 +56,7 @@ export interface DailyCapConfig {
 }
 
 /** Whitelist behavior applied to a specific channel */
-export type WhitelistBehavior = 'skip' | 'reduced' | 'track-only';
+export type WhitelistBehavior = 'skip' | 'reduced' | 'full';
 
 /** A single channel whitelist entry */
 export interface WhitelistEntry {
@@ -66,11 +66,14 @@ export interface WhitelistEntry {
 
 /** Streaming mode configuration */
 export interface StreamingModeConfig {
-  enabled: boolean;           // default: true
+  enabled: boolean;           // default: false
   twitchUsername: string;     // default: ''
   gracePeriodMinutes: number; // default: 15
   logBypassed: boolean;       // default: true
 }
+
+/** Theme preference for overlay styling */
+export type ThemePreference = 'auto' | 'light' | 'dark';
 
 /** User settings stored in chrome.storage.sync */
 export interface UserSettings {
@@ -83,25 +86,26 @@ export interface UserSettings {
   streamingMode: StreamingModeConfig;
   toastDurationSeconds: number;
   whitelistedChannels: WhitelistEntry[];
+  theme: ThemePreference;
 }
 
 /** Preset comparison items */
 export const PRESET_COMPARISON_ITEMS: ComparisonItem[] = [
-  {
-    id: 'preset-hotdog',
-    emoji: '\u{1F32D}',
-    name: 'Costco Hot Dog',
-    price: 1.50,
-    pluralLabel: 'Costco glizzies',
-    enabled: true,
-    isPreset: true,
-  },
   {
     id: 'preset-chicken',
     emoji: '\u{1F357}',
     name: 'Costco Rotisserie Chicken',
     price: 4.99,
     pluralLabel: 'Costco chickens',
+    enabled: true,
+    isPreset: true,
+  },
+  {
+    id: 'preset-hotdog',
+    emoji: '\u{1F32D}',
+    name: 'Costco Hot Dog',
+    price: 1.50,
+    pluralLabel: 'Costco glizzies',
     enabled: true,
     isPreset: true,
   },
@@ -136,13 +140,14 @@ export const DEFAULT_SETTINGS: UserSettings = {
     softNudgeSteps: 1,
   },
   streamingMode: {
-    enabled: true,
+    enabled: false,
     twitchUsername: '',
     gracePeriodMinutes: 15,
     logBypassed: true,
   },
-  toastDurationSeconds: 5,
+  toastDurationSeconds: 15,
   whitelistedChannels: [],
+  theme: 'auto',
 };
 
 /** Transient spending data — stored in chrome.storage.local */
@@ -181,6 +186,14 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
   // Remove retired presets from saved data
   items = items.filter(i => i.id !== 'preset-work-minutes');
 
+  // Deduplicate by ID (first occurrence wins)
+  const seen = new Set<string>();
+  items = items.filter(i => {
+    if (seen.has(i.id)) return false;
+    seen.add(i.id);
+    return true;
+  });
+
   return {
     hourlyRate: saved.hourlyRate ?? DEFAULT_SETTINGS.hourlyRate,
     taxRate: saved.taxRate ?? DEFAULT_SETTINGS.taxRate,
@@ -208,6 +221,10 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
       ...(saved.streamingMode || {}),
     },
     toastDurationSeconds: saved.toastDurationSeconds ?? DEFAULT_SETTINGS.toastDurationSeconds,
-    whitelistedChannels: saved.whitelistedChannels ?? DEFAULT_SETTINGS.whitelistedChannels,
+    whitelistedChannels: (saved.whitelistedChannels ?? DEFAULT_SETTINGS.whitelistedChannels).map(e => ({
+      ...e,
+      behavior: (e.behavior as string) === 'track-only' ? 'full' as WhitelistBehavior : e.behavior,
+    })),
+    theme: saved.theme ?? DEFAULT_SETTINGS.theme,
   };
 }

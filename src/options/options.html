@@ -9,8 +9,18 @@
     }
 
     body {
-      background: #18181b;
-      color: #efeff1;
+      --opt-bg: #18181b;
+      --opt-bg-card: #1f1f23;
+      --opt-bg-inset: #18181b;
+      --opt-text: #efeff1;
+      --opt-text-muted: #adadb8;
+      --opt-border: #3d3d42;
+      --opt-separator: #2a2a2e;
+      --opt-toggle-bg: #3d3d42;
+      --opt-toggle-knob: #efeff1;
+
+      background: var(--opt-bg);
+      color: var(--opt-text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
       padding: 0;
@@ -18,10 +28,69 @@
       min-width: 400px;
     }
 
+    body.mts-light {
+      --opt-bg: #f5f5f5;
+      --opt-bg-card: #ffffff;
+      --opt-bg-inset: #f0f0f2;
+      --opt-text: #1f1f23;
+      --opt-text-muted: #53535f;
+      --opt-border: #d2d2d7;
+      --opt-separator: #e0e0e3;
+      --opt-toggle-bg: #c8c8d0;
+      --opt-toggle-knob: #ffffff;
+    }
+
     .container {
       max-width: 500px;
       margin: 0 auto;
       padding: 24px;
+    }
+
+    @media (min-width: 900px) {
+      .container {
+        max-width: 900px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .section-full {
+        grid-column: 1 / -1;
+      }
+
+      .container > .welcome-banner,
+      .container > .actions,
+      .container > .status,
+      .container > .divider,
+      .container > .footer-center,
+      .container > .version {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .container {
+        max-width: 1400px;
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .section-full {
+        grid-column: 1 / -1;
+      }
+
+      .section-span2 {
+        grid-column: span 2;
+      }
+
+      .container > .welcome-banner,
+      .container > .actions,
+      .container > .status,
+      .container > .divider,
+      .container > .footer-center,
+      .container > .version {
+        grid-column: 1 / -1;
+      }
     }
 
     .header {
@@ -47,8 +116,8 @@
     }
 
     .section {
-      background: #1f1f23;
-      border: 1px solid #3d3d42;
+      background: var(--opt-bg-card);
+      border: 1px solid var(--opt-border);
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 16px;
@@ -61,6 +130,7 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       margin: 0 0 16px 0;
+      text-align: center;
     }
 
     .form-group {
@@ -73,7 +143,7 @@
 
     label {
       display: block;
-      color: #adadb8;
+      color: var(--opt-text-muted);
       font-size: 13px;
       margin-bottom: 6px;
     }
@@ -86,16 +156,16 @@
 
     .input-prefix,
     .input-suffix {
-      color: #adadb8;
+      color: var(--opt-text-muted);
       font-size: 14px;
     }
 
     input[type="number"],
     input[type="text"] {
-      background: #18181b;
-      border: 1px solid #3d3d42;
+      background: var(--opt-bg-inset);
+      border: 1px solid var(--opt-border);
       border-radius: 4px;
-      color: #efeff1;
+      color: var(--opt-text);
       font-size: 14px;
       padding: 10px 12px;
       width: 120px;
@@ -120,10 +190,10 @@
     }
 
     select {
-      background: #18181b;
-      border: 1px solid #3d3d42;
+      background: var(--opt-bg-inset);
+      border: 1px solid var(--opt-border);
       border-radius: 4px;
-      color: #efeff1;
+      color: var(--opt-text);
       font-size: 14px;
       padding: 10px 12px;
       outline: none;
@@ -135,7 +205,7 @@
     }
 
     .help-text {
-      color: #adadb8;
+      color: var(--opt-text-muted);
       font-size: 12px;
       margin-top: 6px;
     }
@@ -161,13 +231,13 @@
 
     .btn-secondary {
       background: transparent;
-      color: #adadb8;
-      border: 1px solid #3d3d42;
+      color: var(--opt-text-muted);
+      border: 1px solid var(--opt-border);
     }
 
     .btn-secondary:hover {
-      background: #3d3d42;
-      color: #efeff1;
+      background: var(--opt-border);
+      color: var(--opt-text);
     }
 
     .btn-danger {
@@ -184,6 +254,7 @@
       display: flex;
       gap: 12px;
       margin-top: 20px;
+      justify-content: center;
     }
 
     .status {
@@ -210,33 +281,48 @@
 
     .divider {
       height: 1px;
-      background: #3d3d42;
+      background: var(--opt-border);
       margin: 20px 0;
     }
 
-    .link-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: #adadb8;
-      text-decoration: none;
-      font-size: 13px;
-      padding: 8px 0;
-      transition: color 0.2s;
-      cursor: pointer;
-      background: none;
-      border: none;
-    }
-
-    .link-btn:hover {
-      color: #9146ff;
+    .footer-center {
+      display: flex;
+      justify-content: center;
+      margin-top: 4px;
     }
 
     .version {
-      color: #adadb8;
+      color: var(--opt-text-muted);
       font-size: 11px;
       text-align: center;
       margin-top: 24px;
+    }
+
+    /* Drag handle for reorderable items */
+    .drag-handle {
+      cursor: grab;
+      color: var(--opt-border);
+      font-size: 16px;
+      user-select: none;
+      padding: 0 2px;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+
+    .drag-handle:hover {
+      color: var(--opt-text-muted);
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .dragging {
+      opacity: 0.4;
+    }
+
+    .drag-over {
+      border-top: 2px solid #9146ff;
     }
 
     /* Toggle switch */
@@ -248,7 +334,7 @@
     }
 
     .toggle-row + .toggle-row {
-      border-top: 1px solid #2a2a2e;
+      border-top: 1px solid var(--opt-separator);
     }
 
     .toggle-label {
@@ -263,11 +349,11 @@
     }
 
     .toggle-name {
-      color: #efeff1;
+      color: var(--opt-text);
     }
 
     .toggle-price {
-      color: #adadb8;
+      color: var(--opt-text-muted);
       font-size: 12px;
       margin-left: 4px;
     }
@@ -288,7 +374,7 @@
     .toggle-slider {
       position: absolute;
       inset: 0;
-      background: #3d3d42;
+      background: var(--opt-toggle-bg);
       border-radius: 22px;
       cursor: pointer;
       transition: background 0.2s;
@@ -301,7 +387,7 @@
       height: 16px;
       left: 3px;
       bottom: 3px;
-      background: #efeff1;
+      background: var(--opt-toggle-knob);
       border-radius: 50%;
       transition: transform 0.2s;
     }
@@ -314,24 +400,19 @@
       transform: translateX(18px);
     }
 
-    /* Custom item list */
-    .custom-items-list {
-      margin-top: 12px;
-    }
-
-    .custom-item-row {
+    /* Comparison item row (unified list) */
+    .comparison-item-row {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 8px 0;
-      border-bottom: 1px solid #2a2a2e;
     }
 
-    .custom-item-row:last-child {
-      border-bottom: none;
+    .comparison-item-row + .comparison-item-row {
+      border-top: 1px solid var(--opt-separator);
     }
 
-    .custom-item-info {
+    .comparison-item-info {
       flex: 1;
       display: flex;
       align-items: center;
@@ -339,10 +420,23 @@
       font-size: 13px;
     }
 
+    .custom-badge {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9146ff;
+      background: rgba(145, 70, 255, 0.12);
+      border: 1px solid rgba(145, 70, 255, 0.25);
+      border-radius: 3px;
+      padding: 1px 5px;
+      flex-shrink: 0;
+    }
+
     .btn-icon {
       background: transparent;
-      border: 1px solid #3d3d42;
-      color: #adadb8;
+      border: 1px solid var(--opt-border);
+      color: var(--opt-text-muted);
       width: 28px;
       height: 28px;
       border-radius: 4px;
@@ -355,8 +449,8 @@
     }
 
     .btn-icon:hover {
-      background: #3d3d42;
-      color: #efeff1;
+      background: var(--opt-border);
+      color: var(--opt-text);
     }
 
     .btn-icon.danger:hover {
@@ -370,8 +464,8 @@
       display: none;
       margin-top: 12px;
       padding: 12px;
-      background: #18181b;
-      border: 1px solid #3d3d42;
+      background: var(--opt-bg-inset);
+      border: 1px solid var(--opt-border);
       border-radius: 6px;
     }
 
@@ -408,7 +502,7 @@
     .subsection {
       padding-left: 12px;
       margin-top: 8px;
-      border-left: 2px solid #3d3d42;
+      border-left: 2px solid var(--opt-border);
     }
 
     /* Channel whitelist list */
@@ -417,7 +511,7 @@
       align-items: center;
       gap: 8px;
       padding: 8px 0;
-      border-bottom: 1px solid #2a2a2e;
+      border-bottom: 1px solid var(--opt-separator);
     }
 
     .whitelist-item-row:last-child {
@@ -427,15 +521,15 @@
     .whitelist-channel-name {
       flex: 1;
       font-size: 13px;
-      color: #efeff1;
+      color: var(--opt-text);
       font-family: 'Courier New', Courier, monospace;
     }
 
     .whitelist-behavior-select {
-      background: #18181b;
-      border: 1px solid #3d3d42;
+      background: var(--opt-bg-inset);
+      border: 1px solid var(--opt-border);
       border-radius: 4px;
-      color: #efeff1;
+      color: var(--opt-text);
       font-size: 12px;
       padding: 4px 8px;
       cursor: pointer;
@@ -449,13 +543,13 @@
     .tracker-data {
       display: none;
       margin-top: 12px;
-      background: #18181b;
-      border: 1px solid #3d3d42;
+      background: var(--opt-bg-inset);
+      border: 1px solid var(--opt-border);
       border-radius: 4px;
       padding: 12px;
       font-size: 12px;
       font-family: 'Courier New', Courier, monospace;
-      color: #adadb8;
+      color: var(--opt-text-muted);
       overflow-x: auto;
       white-space: pre-wrap;
       word-break: break-all;
@@ -469,9 +563,9 @@
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      background: #2a2a2e;
-      border: 1px solid #3d3d42;
-      color: #adadb8;
+      background: var(--opt-separator);
+      border: 1px solid var(--opt-border);
+      color: var(--opt-text-muted);
       font-size: 9px;
       font-weight: 700;
       cursor: help;
@@ -509,7 +603,7 @@
       white-space: normal;
       line-height: 1.5;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-      border: 1px solid #3d3d42;
+      border: 1px solid var(--opt-border);
       pointer-events: none;
       opacity: 0;
       visibility: hidden;
@@ -566,6 +660,54 @@
     .similarity-warning .form-row {
       margin-bottom: 0;
     }
+
+    /* Welcome banner (first-run onboarding) */
+    .welcome-banner {
+      position: relative;
+      background: rgba(145, 70, 255, 0.1);
+      border: 1px solid rgba(145, 70, 255, 0.4);
+      border-radius: 8px;
+      padding: 20px 40px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .welcome-title {
+      color: #bf94ff;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+
+    .welcome-text {
+      color: var(--opt-text-muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .welcome-dismiss {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: var(--opt-text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .welcome-dismiss:hover {
+      color: var(--opt-text);
+    }
+
+    .section.onboarding-highlight {
+      border-color: rgba(145, 70, 255, 0.6);
+      box-shadow: 0 0 12px rgba(145, 70, 255, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -575,8 +717,16 @@
   </div>
 
   <div class="container">
+    <!-- Welcome Banner (first-run onboarding) -->
+    <div id="welcome-banner" class="welcome-banner" style="display: none;">
+      <button id="welcome-dismiss" class="welcome-dismiss" title="Dismiss">&times;</button>
+      <h2 class="welcome-title">Welcome to Mindful Twitch Spending!</h2>
+      <p class="welcome-text">Set your hourly rate below to get started. MTS will use it to show how much work each Twitch purchase really costs.</p>
+    </div>
+
+    <!-- Row 1 (3-col): Income, Tax, Daily Cap -->
     <!-- Income Settings -->
-    <div class="section">
+    <div class="section" id="section-income">
       <h2 class="section-title">Income Settings</h2>
 
       <div class="form-group">
@@ -603,55 +753,6 @@
         </div>
         <p id="tax-rate-error" class="field-error"></p>
         <p class="help-text">Applied to show true cost including tax</p>
-      </div>
-    </div>
-
-    <!-- Comparison Items -->
-    <div class="section">
-      <h2 class="section-title">Comparison Items <span class="info-icon" data-tooltip="Toggle on to include an item in the friction windows." tabindex="0">i</span></h2>
-      <p class="help-text" style="margin-bottom: 12px;">
-        Show relatable comparisons on the friction modal (e.g., "That's 16 Costco glizzies")
-      </p>
-
-      <div id="preset-items">
-        <!-- Populated by JS -->
-      </div>
-
-      <div class="divider"></div>
-
-      <h3 class="section-title" style="font-size: 11px; margin-top: 0;">Custom Items <span class="info-icon" data-tooltip="Create your own comparison item with a custom name, emoji, and price." tabindex="0">i</span></h3>
-      <div id="custom-items-list" class="custom-items-list">
-        <p class="help-text" id="no-custom-items">No custom items yet.</p>
-      </div>
-
-      <button class="btn btn-secondary" id="btn-add-item" style="margin-top: 12px; width: 100%;">
-        + Add Custom Item
-      </button>
-
-      <div class="add-item-form" id="add-item-form">
-        <div class="form-row">
-          <input type="text" id="new-item-emoji" class="emoji-input" placeholder="&#x1F381;" maxlength="4">
-          <input type="text" id="new-item-name" placeholder="Item name">
-        </div>
-        <p id="item-name-error" class="field-error"></p>
-        <p id="new-item-emoji-error" class="field-error"></p>
-        <p class="help-text" style="margin: 2px 0 6px;">Tip: Press <strong>Win + .</strong> to open the emoji picker on Windows</p>
-        <div class="form-row">
-          <input type="number" id="new-item-price" placeholder="Price" min="0.01" step="0.01">
-          <input type="text" id="new-item-plural" placeholder="Plural label (e.g. tacos)">
-        </div>
-        <p id="new-item-price-error" class="field-error"></p>
-        <div class="form-row" style="justify-content: flex-end;">
-          <button class="btn btn-secondary" id="btn-cancel-item" style="padding: 6px 14px; font-size: 12px;">Cancel</button>
-          <button class="btn btn-primary" id="btn-save-item" style="padding: 6px 14px; font-size: 12px;">Add</button>
-        </div>
-        <div id="similarity-warning" class="similarity-warning">
-          <p id="similarity-warning-text"></p>
-          <div class="form-row" style="justify-content: flex-end;">
-            <button class="btn btn-secondary" id="btn-similarity-cancel" style="padding: 6px 14px; font-size: 12px;">Cancel</button>
-            <button class="btn btn-primary" id="btn-similarity-confirm" style="padding: 6px 14px; font-size: 12px;">Add Anyway</button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -685,8 +786,9 @@
       </div>
     </div>
 
+    <!-- Row 2: Spending Tracker (full-width) -->
     <!-- Spending Tracker -->
-    <div class="section">
+    <div class="section section-full">
       <h2 class="section-title">Spending Tracker <span class="info-icon" data-tooltip="Tracks cumulative spending during a single Twitch browsing session." tabindex="0">i</span></h2>
       <p class="help-text" style="margin-bottom: 12px;">
         Manage the daily spending data stored locally by the extension
@@ -701,8 +803,52 @@
       <pre class="tracker-data" id="tracker-data"></pre>
     </div>
 
+    <!-- Row 3: Comparison Items (full-width) -->
+    <!-- Comparison Items -->
+    <div class="section section-full">
+      <h2 class="section-title">Comparison Items <span class="info-icon" data-tooltip="Toggle on to include an item in the friction windows." tabindex="0">i</span></h2>
+      <p class="help-text" style="margin-bottom: 12px;">
+        Show relatable comparisons on the friction modal (e.g., "That's 16 Costco glizzies")
+      </p>
+
+      <div id="comparison-items-list">
+        <!-- Populated by JS -->
+      </div>
+
+      <button class="btn btn-secondary" id="btn-add-item" style="margin-top: 12px; width: 100%;">
+        + Add Custom Item
+      </button>
+
+      <div class="add-item-form" id="add-item-form">
+        <div class="form-row">
+          <input type="text" id="new-item-emoji" class="emoji-input" placeholder="&#x1F381;" maxlength="4">
+          <input type="text" id="new-item-name" placeholder="Item name">
+        </div>
+        <p id="item-name-error" class="field-error"></p>
+        <p id="new-item-emoji-error" class="field-error"></p>
+        <p class="help-text" style="margin: 2px 0 6px;">Tip: Press <strong>Win + .</strong> to open the emoji picker on Windows</p>
+        <div class="form-row">
+          <input type="number" id="new-item-price" placeholder="Price" min="0.01" step="0.01">
+          <input type="text" id="new-item-plural" placeholder="Plural label (e.g. tacos)">
+        </div>
+        <p id="new-item-price-error" class="field-error"></p>
+        <div class="form-row" style="justify-content: flex-end;">
+          <button class="btn btn-secondary" id="btn-cancel-item" style="padding: 6px 14px; font-size: 12px;">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-item" style="padding: 6px 14px; font-size: 12px;">Add</button>
+        </div>
+        <div id="similarity-warning" class="similarity-warning">
+          <p id="similarity-warning-text"></p>
+          <div class="form-row" style="justify-content: flex-end;">
+            <button class="btn btn-secondary" id="btn-similarity-cancel" style="padding: 6px 14px; font-size: 12px;">Cancel</button>
+            <button class="btn btn-primary" id="btn-similarity-confirm" style="padding: 6px 14px; font-size: 12px;">Add Anyway</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Friction controls -->
     <!-- Friction Thresholds -->
-    <div class="section">
+    <div class="section section-span2">
       <h2 class="section-title">Friction Thresholds</h2>
       <p class="help-text" style="margin-bottom: 12px;">
         Set dollar amounts for different friction levels
@@ -776,6 +922,7 @@
       </div>
     </div>
 
+    <!-- Row 5: Streaming & channel settings -->
     <!-- Streaming Mode -->
     <div class="section">
       <h2 class="section-title">Streaming Mode</h2>
@@ -831,6 +978,13 @@
         <button class="btn btn-secondary" id="btn-add-whitelist" style="white-space: nowrap;">Add Channel</button>
       </div>
       <p id="whitelist-username-error" class="field-error" style="margin: 4px 0 8px;"></p>
+      <p style="font-size: 11px; color: var(--opt-text-muted); opacity: 0.7; font-style: italic; margin: 4px 0 10px;">* Channels are whitelisted as entered and are not validated against Twitch. A channel that no longer exists or was entered incorrectly will still appear in your whitelist.</p>
+
+      <div class="help-text" style="margin: 8px 0 12px; line-height: 1.7;">
+        <strong style="color: var(--opt-text);">Skip</strong> &mdash; No friction; purchases go through normally<br>
+        <strong style="color: var(--opt-text);">Reduced</strong> &mdash; Soft nudge only (fewer friction steps)<br>
+        <strong style="color: var(--opt-text);">Full</strong> &mdash; Full friction applies; spending logged separately
+      </div>
 
       <div id="whitelist-items">
         <p class="help-text" id="no-whitelist-items">No channels whitelisted yet.</p>
@@ -842,9 +996,18 @@
       <h2 class="section-title">Display Preferences</h2>
 
       <div class="form-group">
+        <label for="theme-preference">Overlay theme <span class="info-icon" data-tooltip="Controls the color scheme of MTS friction overlays. Auto detects whether Twitch is in light or dark mode and matches it." tabindex="0">i</span></label>
+        <select id="theme-preference">
+          <option value="auto">Auto (match Twitch)</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label for="toast-duration">Notification display time</label>
         <div class="input-wrapper">
-          <input type="number" id="toast-duration" min="1" max="30" step="1" placeholder="5">
+          <input type="number" id="toast-duration" min="1" max="30" step="1" placeholder="15">
           <span class="input-suffix">seconds</span>
         </div>
         <p class="help-text">How long toast notifications remain visible (1–30 seconds)</p>
@@ -860,10 +1023,9 @@
 
     <div class="divider"></div>
 
-    <button class="link-btn" id="btn-logs">
-      <span>&#x1F4CB;</span>
-      <span>View Activity Logs</span>
-    </button>
+    <div class="footer-center">
+      <button class="btn btn-secondary" id="btn-logs">View Activity Logs</button>
+    </div>
 
     <div class="version" id="version">MTS v0.0.0</div>
   </div>

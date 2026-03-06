@@ -11,6 +11,7 @@ import {
 } from '../shared/types';
 import { isPurchaseButton, createPurchaseAttempt } from './detector';
 import { shouldBypassFriction } from './streamingMode';
+import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
 
 /** Storage keys */
@@ -243,7 +244,7 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
     const dailyClass = overBudget ? 'mts-daily-over' : (percentage >= 80 ? 'mts-daily-warning' : '');
     dailyInfo = `
       <p class="mts-daily-tracker ${dailyClass}">
-        Daily: $${tracker.dailyTotal.toFixed(2)} / $${settings.dailyCap.amount.toFixed(2)}
+        Daily: $${newTotal.toFixed(2)} / $${settings.dailyCap.amount.toFixed(2)}
         ${overBudget ? ' \u2014 OVER BUDGET' : ` (${percentage}%)`}
       </p>
     `;
@@ -299,6 +300,7 @@ interface ModalContext {
 function showModalPromise(overlay: HTMLElement, context?: ModalContext): Promise<OverlayDecision> {
   return new Promise((resolve) => {
     let resolved = false;
+    const previousFocus = document.activeElement as HTMLElement | null;
     const tag = context
       ? `(${context.type} - ${context.rawPrice || 'Price not detected'})`
       : '';
@@ -317,7 +319,9 @@ function showModalPromise(overlay: HTMLElement, context?: ModalContext): Promise
           log(`User dismissed modal via Escape key ${tag}`);
         }
       }
+      document.removeEventListener('keydown', handleKeydown);
       removeOverlay(overlay);
+      previousFocus?.focus();
       resolve(decision);
     };
 
@@ -328,14 +332,28 @@ function showModalPromise(overlay: HTMLElement, context?: ModalContext): Promise
       if (e.target === overlay) finish('cancel', 'outside');
     });
 
-    const handleEscape = (e: KeyboardEvent) => {
+    const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         finish('cancel', 'escape');
-        document.removeEventListener('keydown', handleEscape);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusableButtons = Array.from(overlay.querySelectorAll<HTMLButtonElement>('.mts-btn'));
+        if (focusableButtons.length === 0) return;
+        const first = focusableButtons[0];
+        const last = focusableButtons[focusableButtons.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeydown);
 
+    applyThemeToOverlay(overlay);
     document.body.appendChild(overlay);
     (overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement)?.focus();
   });
@@ -364,6 +382,10 @@ async function showMainOverlay(
   const overlay = document.createElement('div');
   overlay.id = 'mts-overlay';
   overlay.className = 'mts-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'mts-overlay-heading');
+  overlay.setAttribute('aria-describedby', 'mts-overlay-desc');
   overlay.innerHTML = `
     <div class="mts-modal">
       <div class="mts-header">
@@ -372,8 +394,8 @@ async function showMainOverlay(
       </div>
       <div class="mts-content">
         ${whitelistNote ? `<div class="mts-whitelist-note">${whitelistNote}</div>` : ''}
-        <div class="mts-price-section">
-          <p class="mts-label">You're about to spend:</p>
+        <div class="mts-price-section" id="mts-overlay-desc">
+          <p class="mts-label" id="mts-overlay-heading">You're about to spend:</p>
           <p class="mts-price">${priceDisplay}</p>
           ${priceExtra}
         </div>
@@ -417,14 +439,18 @@ async function showComparisonStep(
   const overlay = document.createElement('div');
   overlay.id = 'mts-overlay';
   overlay.className = 'mts-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'mts-overlay-heading');
+  overlay.setAttribute('aria-describedby', 'mts-overlay-desc');
   overlay.innerHTML = `
     <div class="mts-modal">
       <div class="mts-header">
         <span class="mts-icon">${item.emoji}</span>
-        <h2 class="mts-title">STEP ${stepNumber} OF ${totalSteps}</h2>
+        <h2 class="mts-title" id="mts-overlay-heading">STEP ${stepNumber} OF ${totalSteps}</h2>
       </div>
       <div class="mts-content">
-        <div class="mts-comparison-step">
+        <div class="mts-comparison-step" id="mts-overlay-desc">
           <p class="mts-comparison-amount">${display.amountText}</p>
           <p class="mts-comparison-label">${display.labelText}</p>
         </div>
@@ -452,24 +478,36 @@ async function showComparisonStep(
 
 // ── Overlay: Cooldown Block ─────────────────────────────────────────────
 
+function formatCountdown(ms: number): string {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function showCooldownBlock(remainingMs: number): void {
   if (overlayVisible) return;
   overlayVisible = true;
 
-  const minutes = Math.ceil(remainingMs / 60000);
+  const expiresAt = Date.now() + remainingMs;
+  const previousFocus = document.activeElement as HTMLElement | null;
 
   const overlay = document.createElement('div');
   overlay.id = 'mts-overlay';
   overlay.className = 'mts-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'mts-overlay-heading');
+  overlay.setAttribute('aria-describedby', 'mts-overlay-desc');
   overlay.innerHTML = `
     <div class="mts-modal mts-cooldown-modal">
-      <div class="mts-header" style="background: linear-gradient(135deg, #eb0400, #c00);">
+      <div class="mts-header" style="background: linear-gradient(135deg, var(--mts-danger), var(--mts-danger-dark));">
         <span class="mts-icon">\u231B</span>
-        <h2 class="mts-title">COOLDOWN ACTIVE</h2>
+        <h2 class="mts-title" id="mts-overlay-heading">COOLDOWN ACTIVE</h2>
       </div>
-      <div class="mts-content" style="text-align: center;">
+      <div class="mts-content" id="mts-overlay-desc" style="text-align: center;">
         <p class="mts-label">You recently made a purchase.</p>
-        <p class="mts-price" style="font-size: 24px;">${minutes} minute${minutes !== 1 ? 's' : ''} remaining</p>
+        <p class="mts-price" id="mts-cooldown-timer" style="font-size: 24px;">${formatCountdown(remainingMs)} remaining</p>
         <p class="mts-message">Take a breather. This cooldown helps you avoid impulse spending.</p>
       </div>
       <div class="mts-actions">
@@ -478,9 +516,43 @@ function showCooldownBlock(remainingMs: number): void {
     </div>
   `;
 
-  overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => removeOverlay(overlay));
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) removeOverlay(overlay); });
+  let intervalId: ReturnType<typeof setInterval> | null = null;
 
+  const dismiss = () => {
+    if (intervalId !== null) clearInterval(intervalId);
+    document.removeEventListener('keydown', handleKeydown);
+    removeOverlay(overlay);
+    previousFocus?.focus();
+  };
+
+  overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', dismiss);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) dismiss(); });
+
+  const handleKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { dismiss(); return; }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      (overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement)?.focus();
+    }
+  };
+  document.addEventListener('keydown', handleKeydown);
+
+  // Live countdown tick
+  const timerEl = overlay.querySelector('#mts-cooldown-timer') as HTMLElement;
+  const btnEl = overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement;
+  intervalId = setInterval(() => {
+    const left = expiresAt - Date.now();
+    if (left <= 0) {
+      if (intervalId !== null) clearInterval(intervalId);
+      intervalId = null;
+      if (timerEl) timerEl.textContent = 'Cooldown complete!';
+      if (btnEl) btnEl.textContent = 'Cooldown Complete \u2014 Continue';
+      return;
+    }
+    if (timerEl) timerEl.textContent = `${formatCountdown(left)} remaining`;
+  }, 1000);
+
+  applyThemeToOverlay(overlay);
   document.body.appendChild(overlay);
   (overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement)?.focus();
 }
@@ -638,6 +710,10 @@ async function handleClick(event: MouseEvent): Promise<void> {
   // Streaming mode bypass check
   const streamingBypass = await shouldBypassFriction(settings);
   if (streamingBypass) {
+    const whitelistOverridden = checkWhitelist(attempt.channel, settings);
+    if (whitelistOverridden) {
+      log(`Streaming mode active \u2014 whitelist setting for ${attempt.channel} ignored`);
+    }
     if (settings.streamingMode.logBypassed) {
       log('Streaming mode bypass:', { type: attempt.type, rawPrice: attempt.rawPrice, wasStreamingMode: true });
     }
@@ -675,8 +751,8 @@ async function handleClick(event: MouseEvent): Promise<void> {
       return;
     }
 
-    // track-only falls through to normal friction with a note in the overlay
-    log(`Whitelist check — track-only on ${attempt.channel}, applying full friction with whitelist note`);
+    // full falls through to normal friction with a note in the overlay
+    log(`Whitelist check — full on ${attempt.channel}, applying full friction with whitelist note`);
   } else {
     log(`Whitelist check — channel not whitelisted, applying normal friction`);
   }
@@ -715,10 +791,10 @@ async function handleClick(event: MouseEvent): Promise<void> {
   // Soft nudge: main overlay + 1 comparison item
   // Full friction: main overlay + ALL comparison items
   const maxComparisons = frictionLevel === 'nudge' ? settings.frictionThresholds.softNudgeSteps : undefined;
-  const whitelistNote = whitelistEntry?.behavior === 'track-only'
+  const whitelistNote = whitelistEntry?.behavior === 'full'
     ? '\u2B50 Whitelisted Channel \u2014 This is a planned support channel'
     : undefined;
-  log(`Friction flow starting: level=${frictionLevel}, maxComparisons=${maxComparisons ?? 'all'}${whitelistNote ? ', track-only whitelist' : ''}`);
+  log(`Friction flow starting: level=${frictionLevel}, maxComparisons=${maxComparisons ?? 'all'}${whitelistNote ? ', full whitelist' : ''}`);
   const finalDecision = await runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote);
 
   if (finalDecision === 'proceed' && pendingPurchase) {

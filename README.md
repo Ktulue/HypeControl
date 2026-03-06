@@ -21,13 +21,13 @@ MTS intercepts Twitch checkout flows (gifting subs, subscribing, Bits purchases)
 - 📊 Daily spending cap with silent bypass below budget and full friction when over
 - ⏳ Spending cooldown — enforces a waiting period after each purchase
 - 🎥 Streaming mode — detects when you're live on your own channel and bypasses friction automatically, with a configurable grace period after your stream ends
-- ⭐ Channel whitelist — skip, reduce, or track-only friction for channels you intentionally support
+- ⭐ Channel whitelist — skip, reduce, or apply full friction for channels you intentionally support
 - 📋 Activity log — full history of intercepts, decisions, and settings changes
 - 🔔 Toast notifications for silent bypass events (budget bypass, streaming mode, whitelisted channels)
 
 ## Installation
 
-*Not yet published to the Chrome Web Store.*
+Available on the [Chrome Web Store](https://chromewebstore.google.com/detail/mindful-twitch-spending/).
 
 For development:
 1. Clone this repository
@@ -47,7 +47,7 @@ Click the extension icon (or right-click → Options) to open the settings page:
 - **Spending cooldown** — Block further purchases for 5/10/30 minutes after each one
 - **Friction thresholds** — Set floor/ceiling dollar amounts to control nudge vs. full friction
 - **Streaming mode** — Enter your Twitch username; friction bypasses while you're live and during a configurable grace period after your stream ends
-- **Channel whitelist** — Add channels with Skip (no friction), Reduced (toast only), or Track-Only (full friction with a note) behavior
+- **Channel whitelist** — Add channels with Skip (no friction), Reduced (toast only), or Full (full friction with a note) behavior
 - **Toast duration** — How long silent-bypass notifications stay on screen
 
 ## Tech Stack
@@ -84,6 +84,10 @@ MTS/
         ├── types.ts           # Shared interfaces and defaults
         └── logger.ts          # Event logging to chrome.storage.local
 ```
+
+## Known Issues
+
+- **Bits promotional module** — The animated Bits gem/icon that Twitch displays on channel pages cannot currently be intercepted. MTS can intercept the "Get Bits" button in the top navigation bar, but the promotional overlay module uses a non-standard rendering path that doesn't expose a clickable element MTS can hook.
 
 ## Contributing
 

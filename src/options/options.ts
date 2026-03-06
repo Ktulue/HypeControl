@@ -5,7 +5,7 @@
 import {
   UserSettings, DEFAULT_SETTINGS, ComparisonItem,
   PRESET_COMPARISON_ITEMS, migrateSettings,
-  WhitelistEntry, WhitelistBehavior,
+  WhitelistEntry, WhitelistBehavior, ThemePreference,
 } from '../shared/types';
 import { settingsLog, loadLogs, setVersion } from '../shared/logger';
 
@@ -93,67 +93,129 @@ function toggleSubsection(sectionId: string, enabled: boolean): void {
 }
 
 /**
- * Render preset comparison items with toggle switches
+ * Initialize HTML5 drag-and-drop reordering on the comparison items container.
+ * On drop, persists the new order to storage.
  */
-function renderPresetItems(items: ComparisonItem[]): void {
-  const container = document.getElementById('preset-items');
-  if (!container) return;
-  container.innerHTML = '';
+function initDragReorder(container: HTMLElement): void {
+  let draggedEl: HTMLElement | null = null;
 
-  const presets = items.filter(i => i.isPreset);
-  for (const item of presets) {
-    const priceText = `$${item.price.toFixed(2)}`;
+  container.addEventListener('dragstart', (e) => {
+    const target = (e.target as HTMLElement).closest('[draggable="true"]') as HTMLElement | null;
+    if (!target || !container.contains(target)) return;
+    draggedEl = target;
+    target.classList.add('dragging');
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', target.dataset.itemId || '');
+    }
+  });
 
-    const row = document.createElement('div');
-    row.className = 'toggle-row';
-    row.innerHTML = `
-      <span class="toggle-label">
-        <span class="toggle-emoji">${item.emoji}</span>
-        <span class="toggle-name">${item.name}</span>
-        <span class="toggle-price">${priceText}</span>
-      </span>
-      <label class="toggle-switch">
-        <input type="checkbox" data-item-id="${item.id}" ${item.enabled ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
-    `;
-    container.appendChild(row);
-  }
+  container.addEventListener('dragend', () => {
+    if (draggedEl) draggedEl.classList.remove('dragging');
+    container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    draggedEl = null;
+  });
+
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    const target = (e.target as HTMLElement).closest('[draggable="true"]') as HTMLElement | null;
+    if (!target || target === draggedEl || !container.contains(target)) return;
+    container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    target.classList.add('drag-over');
+  });
+
+  container.addEventListener('dragleave', (e) => {
+    const target = (e.target as HTMLElement).closest('[draggable="true"]') as HTMLElement | null;
+    if (target) target.classList.remove('drag-over');
+  });
+
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    const target = (e.target as HTMLElement).closest('[draggable="true"]') as HTMLElement | null;
+    if (!target || !draggedEl || target === draggedEl || !container.contains(target)) return;
+
+    // Reorder DOM
+    const children = Array.from(container.querySelectorAll('[draggable="true"]'));
+    const dragIdx = children.indexOf(draggedEl);
+    const dropIdx = children.indexOf(target);
+    if (dragIdx < dropIdx) {
+      target.after(draggedEl);
+    } else {
+      target.before(draggedEl);
+    }
+
+    // Persist order to storage
+    persistItemOrder(container);
+  });
 }
 
 /**
- * Render custom comparison items with toggle/edit/delete controls
+ * Read the item IDs from the DOM order and update the comparisonItems array to match.
  */
-function renderCustomItems(items: ComparisonItem[]): void {
-  const container = document.getElementById('custom-items-list');
-  const noItemsMsg = document.getElementById('no-custom-items');
-  if (!container) return;
+async function persistItemOrder(container: HTMLElement): Promise<void> {
+  const orderedIds = Array.from(container.querySelectorAll('[data-item-id]'))
+    .map(el => (el as HTMLElement).dataset.itemId!)
+    .filter(Boolean);
 
-  // Remove existing custom item rows
-  container.querySelectorAll('.custom-item-row').forEach(el => el.remove());
-
-  const customs = items.filter(i => !i.isPreset);
-  if (noItemsMsg) {
-    noItemsMsg.style.display = customs.length === 0 ? 'block' : 'none';
+  const settings = await loadSettings();
+  const idToItem = new Map(settings.comparisonItems.map(i => [i.id, i]));
+  const reordered = orderedIds.map(id => idToItem.get(id)).filter(Boolean) as ComparisonItem[];
+  // Append any items not in the DOM (shouldn't happen, but safety)
+  for (const item of settings.comparisonItems) {
+    if (!reordered.find(i => i.id === item.id)) reordered.push(item);
   }
 
-  for (const item of customs) {
+  settings.comparisonItems = reordered;
+  await saveSettings(settings);
+  cachedSettings = settings;
+}
+
+/** Track whether drag listeners have been initialized on the comparison list */
+let dragInitialized = false;
+
+/**
+ * Render all comparison items (preset + custom) in a single unified list.
+ */
+function renderComparisonItems(items: ComparisonItem[]): void {
+  const container = document.getElementById('comparison-items-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (const item of items) {
+    const priceText = `$${item.price.toFixed(2)}`;
     const row = document.createElement('div');
-    row.className = 'custom-item-row';
+    row.className = 'comparison-item-row';
+    row.draggable = true;
     row.dataset.itemId = item.id;
+
+    const customControls = item.isPreset ? '' : `
+      <span class="custom-badge">custom</span>
+      <button class="btn-icon" data-edit-id="${item.id}" title="Edit">&#9998;</button>
+      <button class="btn-icon danger" data-delete-id="${item.id}" title="Delete">&#10005;</button>
+    `;
+
     row.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">&#x2261;</span>
       <label class="toggle-switch">
         <input type="checkbox" data-item-id="${item.id}" ${item.enabled ? 'checked' : ''}>
         <span class="toggle-slider"></span>
       </label>
-      <span class="custom-item-info">
+      <span class="comparison-item-info">
         <span>${item.emoji}</span>
-        <span>${item.name} - $${item.price.toFixed(2)}</span>
+        <span>${item.name}</span>
+        <span class="toggle-price">${priceText}</span>
       </span>
-      <button class="btn-icon" data-edit-id="${item.id}" title="Edit">&#9998;</button>
-      <button class="btn-icon danger" data-delete-id="${item.id}" title="Delete">&#10005;</button>
+      ${customControls}
     `;
     container.appendChild(row);
+  }
+
+  // Only attach drag listeners once (they're on the container, not the children)
+  if (!dragInitialized) {
+    initDragReorder(container);
+    dragInitialized = true;
   }
 }
 
@@ -546,7 +608,7 @@ async function addCustomItem(force = false): Promise<void> {
     }
     await saveSettings(settings);
     cachedSettings = settings;
-    renderCustomItems(settings.comparisonItems);
+    renderComparisonItems(settings.comparisonItems);
     updateSoftNudgeStepsCount();
     hideAddForm();
     showStatus(editingItemId ? 'Item updated!' : 'Custom item added!', 'success');
@@ -565,7 +627,7 @@ async function deleteCustomItem(itemId: string): Promise<void> {
     settings.comparisonItems = settings.comparisonItems.filter(i => i.id !== itemId);
     await saveSettings(settings);
     cachedSettings = settings;
-    renderCustomItems(settings.comparisonItems);
+    renderComparisonItems(settings.comparisonItems);
     updateSoftNudgeStepsCount();
     showStatus('Item removed.', 'success');
     settingsLog('Custom comparison item deleted:', itemId);
@@ -578,7 +640,7 @@ async function deleteCustomItem(itemId: string): Promise<void> {
 
 /**
  * Normalize a user-supplied channel string to a bare lowercase username.
- * Accepts: "ktulue", "twitch.tv/ktulue", full URLs, with/without protocol.
+ * Handles: "ktulue", "twitch.tv/ktulue", full URLs with query params and subpaths.
  */
 function normalizeUsername(input: string): string {
   return input
@@ -587,7 +649,18 @@ function normalizeUsername(input: string): string {
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/^twitch\.tv\//, '')
-    .replace(/\/.*$/, '');
+    .replace(/[?#].*$/, '')   // strip query params and fragments
+    .replace(/\/.*$/, '');    // strip any subpath (e.g. /videos)
+}
+
+/**
+ * Get the streaming-mode username from the form (live, unsaved value).
+ * Returns the normalized lowercase username, or '' if streaming mode is off.
+ */
+function getStreamingOverrideUsername(): string {
+  const enabled = (document.getElementById('streaming-enabled') as HTMLInputElement)?.checked ?? false;
+  if (!enabled) return '';
+  return (document.getElementById('streaming-username') as HTMLInputElement)?.value.trim().toLowerCase() ?? '';
 }
 
 /**
@@ -601,21 +674,37 @@ function renderWhitelistItems(items: WhitelistEntry[]): void {
   container.querySelectorAll('.whitelist-item-row').forEach(el => el.remove());
   if (noItemsMsg) noItemsMsg.style.display = items.length === 0 ? 'block' : 'none';
 
+  const streamingUser = getStreamingOverrideUsername();
+
   for (const entry of items) {
+    const overridden = streamingUser !== '' && entry.username === streamingUser;
     const row = document.createElement('div');
     row.className = 'whitelist-item-row';
     row.dataset.username = entry.username;
+    if (overridden) {
+      row.style.opacity = '0.4';
+      row.title = 'Streaming Mode is active for this channel \u2014 whitelist setting is overridden.';
+    }
     row.innerHTML = `
       <span class="whitelist-channel-name">twitch.tv/${entry.username}</span>
-      <select class="whitelist-behavior-select" data-username="${entry.username}">
+      <select class="whitelist-behavior-select" data-username="${entry.username}"${overridden ? ' disabled' : ''}>
         <option value="skip" ${entry.behavior === 'skip' ? 'selected' : ''}>Skip</option>
         <option value="reduced" ${entry.behavior === 'reduced' ? 'selected' : ''}>Reduced</option>
-        <option value="track-only" ${entry.behavior === 'track-only' ? 'selected' : ''}>Track Only</option>
+        <option value="full" ${entry.behavior === 'full' ? 'selected' : ''}>Full</option>
       </select>
-      <button class="btn-icon danger" data-remove-username="${entry.username}" title="Remove">&#10005;</button>
+      <button class="btn-icon danger" data-remove-username="${entry.username}" title="${overridden ? 'Streaming Mode is active for this channel \u2014 whitelist setting is overridden.' : 'Remove'}"${overridden ? ' disabled' : ''}>&#10005;</button>
     `;
     container.appendChild(row);
   }
+}
+
+/**
+ * Re-render whitelist items to reflect current streaming mode state.
+ * Called when streaming mode toggle or username changes.
+ */
+function refreshWhitelistOverrideState(): void {
+  if (!cachedSettings) return;
+  renderWhitelistItems(cachedSettings.whitelistedChannels);
 }
 
 /**
@@ -623,6 +712,7 @@ function renderWhitelistItems(items: WhitelistEntry[]): void {
  */
 async function addWhitelistChannel(): Promise<void> {
   const input = document.getElementById('whitelist-username-input') as HTMLInputElement | null;
+  const addBtn = document.getElementById('btn-add-whitelist') as HTMLButtonElement | null;
   if (!input) return;
   const username = normalizeUsername(input.value);
   const fmtError = validateWhitelistUsername(username);
@@ -633,17 +723,18 @@ async function addWhitelistChannel(): Promise<void> {
   clearWhitelistError();
   const settings = await loadSettings();
   if (settings.whitelistedChannels.find(e => e.username === username)) {
-    showWhitelistError(`${username} is already whitelisted.`);
+    showWhitelistError(`twitch.tv/${username} is already whitelisted.`);
     return;
   }
+
   const entry: WhitelistEntry = { username, behavior: 'reduced' };
   settings.whitelistedChannels.push(entry);
   await saveSettings(settings);
   cachedSettings = settings;
   renderWhitelistItems(settings.whitelistedChannels);
   input.value = '';
-  showStatus(`Added ${username} to whitelist.`, 'success');
-  settingsLog(`Channel added to whitelist: ${username} (reduced)`);
+  showStatus(`Added twitch.tv/${username} to whitelist.`, 'success');
+  settingsLog(`Channel added to whitelist: twitch.tv/${username} (reduced)`);
 }
 
 /**
@@ -674,6 +765,14 @@ async function changeWhitelistBehavior(username: string, behavior: WhitelistBeha
 }
 
 /**
+ * Apply theme class to the options page body.
+ * 'auto' and 'dark' both use dark (the options page isn't on Twitch, so auto = dark).
+ */
+function applyOptionsTheme(theme: string): void {
+  document.body.classList.toggle('mts-light', theme === 'light');
+}
+
+/**
  * Populate form fields with current settings
  */
 async function populateForm(): Promise<void> {
@@ -687,8 +786,7 @@ async function populateForm(): Promise<void> {
   if (taxRateInput) taxRateInput.value = settings.taxRate.toString();
 
   // Comparison items
-  renderPresetItems(settings.comparisonItems);
-  renderCustomItems(settings.comparisonItems);
+  renderComparisonItems(settings.comparisonItems);
 
   // Friction thresholds
   const thresholdsEnabled = document.getElementById('thresholds-enabled') as HTMLInputElement;
@@ -727,6 +825,9 @@ async function populateForm(): Promise<void> {
   toggleSubsection('streaming-config', settings.streamingMode.enabled);
 
   // Display preferences
+  const themePreference = document.getElementById('theme-preference') as HTMLSelectElement;
+  if (themePreference) themePreference.value = settings.theme;
+  applyOptionsTheme(settings.theme);
   const toastDuration = document.getElementById('toast-duration') as HTMLInputElement;
   if (toastDuration) toastDuration.value = settings.toastDurationSeconds.toString();
 
@@ -780,6 +881,7 @@ async function getFormSettings(): Promise<UserSettings> {
     toastDurationSeconds: Math.min(30, Math.max(1, parseInt((document.getElementById('toast-duration') as HTMLInputElement)?.value) || DEFAULT_SETTINGS.toastDurationSeconds)),
     // Whitelist is managed independently (add/remove/behavior-change saves immediately)
     whitelistedChannels: cachedSettings?.whitelistedChannels ?? [],
+    theme: ((document.getElementById('theme-preference') as HTMLSelectElement)?.value as ThemePreference) || DEFAULT_SETTINGS.theme,
   };
 }
 
@@ -801,6 +903,58 @@ function showStatus(message: string, type: 'success' | 'error'): void {
 }
 
 /**
+ * Build a human-readable summary of which settings changed between old and new.
+ * Returns an empty string if nothing changed.
+ */
+function describeChanges(oldS: UserSettings, newS: UserSettings): string {
+  const parts: string[] = [];
+
+  if (oldS.hourlyRate !== newS.hourlyRate) parts.push(`Hourly rate: $${newS.hourlyRate}`);
+  if (oldS.taxRate !== newS.taxRate) parts.push(`Tax rate: ${newS.taxRate}%`);
+  if (oldS.theme !== newS.theme) {
+    const labels: Record<string, string> = { auto: 'Auto (match Twitch)', light: 'Light', dark: 'Dark' };
+    parts.push(`Overlay theme: ${labels[newS.theme] ?? newS.theme}`);
+  }
+  if (oldS.toastDurationSeconds !== newS.toastDurationSeconds) parts.push(`Notification display time: ${newS.toastDurationSeconds}s`);
+
+  // Friction thresholds
+  if (oldS.frictionThresholds.enabled !== newS.frictionThresholds.enabled) parts.push(`Threshold tiers: ${newS.frictionThresholds.enabled ? 'On' : 'Off'}`);
+  if (oldS.frictionThresholds.thresholdFloor !== newS.frictionThresholds.thresholdFloor) parts.push(`Friction floor: $${newS.frictionThresholds.thresholdFloor}`);
+  if (oldS.frictionThresholds.thresholdCeiling !== newS.frictionThresholds.thresholdCeiling) parts.push(`Friction ceiling: $${newS.frictionThresholds.thresholdCeiling}`);
+  if (oldS.frictionThresholds.softNudgeSteps !== newS.frictionThresholds.softNudgeSteps) parts.push(`Soft nudge steps: ${newS.frictionThresholds.softNudgeSteps}`);
+
+  // Cooldown
+  if (oldS.cooldown.enabled !== newS.cooldown.enabled) parts.push(`Cooldown: ${newS.cooldown.enabled ? 'On' : 'Off'}`);
+  if (oldS.cooldown.minutes !== newS.cooldown.minutes) parts.push(`Cooldown period: ${newS.cooldown.minutes} min`);
+
+  // Daily cap
+  if (oldS.dailyCap.enabled !== newS.dailyCap.enabled) parts.push(`Daily cap: ${newS.dailyCap.enabled ? 'On' : 'Off'}`);
+  if (oldS.dailyCap.amount !== newS.dailyCap.amount) parts.push(`Daily cap amount: $${newS.dailyCap.amount}`);
+
+  // Streaming mode
+  if (oldS.streamingMode.enabled !== newS.streamingMode.enabled) parts.push(`Streaming mode: ${newS.streamingMode.enabled ? 'On' : 'Off'}`);
+  if (oldS.streamingMode.twitchUsername !== newS.streamingMode.twitchUsername) parts.push(`Twitch username: ${newS.streamingMode.twitchUsername || '(empty)'}`);
+  if (oldS.streamingMode.gracePeriodMinutes !== newS.streamingMode.gracePeriodMinutes) parts.push(`Grace period: ${newS.streamingMode.gracePeriodMinutes} min`);
+  if (oldS.streamingMode.logBypassed !== newS.streamingMode.logBypassed) parts.push(`Log bypassed: ${newS.streamingMode.logBypassed ? 'On' : 'Off'}`);
+
+  // Comparison items — report toggle changes and order changes
+  const oldEnabled = oldS.comparisonItems.filter(i => i.enabled).map(i => i.id).sort().join(',');
+  const newEnabled = newS.comparisonItems.filter(i => i.enabled).map(i => i.id).sort().join(',');
+  if (oldEnabled !== newEnabled) {
+    const toggled: string[] = [];
+    for (const item of newS.comparisonItems) {
+      const oldItem = oldS.comparisonItems.find(o => o.id === item.id);
+      if (oldItem && oldItem.enabled !== item.enabled) {
+        toggled.push(`${item.name}: ${item.enabled ? 'On' : 'Off'}`);
+      }
+    }
+    if (toggled.length > 0) parts.push(`Comparison items — ${toggled.join(', ')}`);
+  }
+
+  return parts.join(' | ');
+}
+
+/**
  * Handle save button click
  */
 async function handleSave(): Promise<void> {
@@ -811,9 +965,15 @@ async function handleSave(): Promise<void> {
     return;
   }
   try {
+    const oldSettings = await loadSettings();
     const settings = await getFormSettings();
     await saveSettings(settings);
-    settingsLog('Validation passed — settings saved successfully');
+    const changes = describeChanges(oldSettings, settings);
+    if (changes) {
+      settingsLog(`Settings saved — ${changes}`);
+    } else {
+      settingsLog('Settings saved (no changes)');
+    }
     showStatus('Settings saved successfully!', 'success');
   } catch (error) {
     showStatus(`Error saving settings: ${error}`, 'error');
@@ -896,6 +1056,31 @@ function displayVersion(): void {
   }
 }
 
+/**
+ * Show the welcome banner and highlight the Income Settings section
+ * if this is the user's first run (no settings saved yet).
+ */
+async function initOnboarding(): Promise<void> {
+  const result = await chrome.storage.sync.get('mtsWelcomeDismissed');
+  if (result.mtsWelcomeDismissed) return;
+
+  const banner = document.getElementById('welcome-banner');
+  const incomeSection = document.getElementById('section-income');
+  if (banner) banner.style.display = 'block';
+  if (incomeSection) incomeSection.classList.add('onboarding-highlight');
+
+  // Dismiss only on explicit X click
+  document.getElementById('welcome-dismiss')?.addEventListener('click', () => dismissOnboarding());
+}
+
+function dismissOnboarding(): void {
+  const banner = document.getElementById('welcome-banner');
+  const incomeSection = document.getElementById('section-income');
+  if (banner) banner.style.display = 'none';
+  if (incomeSection) incomeSection.classList.remove('onboarding-highlight');
+  chrome.storage.sync.set({ mtsWelcomeDismissed: true });
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize logger
@@ -905,6 +1090,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Populate form with saved settings
   await populateForm();
+
+  // First-run onboarding: show welcome banner if user hasn't saved settings yet
+  await initOnboarding();
 
   // Display version
   displayVersion();
@@ -940,6 +1128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('streaming-enabled')?.addEventListener('change', (e) => {
     toggleSubsection('streaming-config', (e.target as HTMLInputElement).checked);
+    refreshWhitelistOverrideState();
+  });
+  document.getElementById('streaming-username')?.addEventListener('input', refreshWhitelistOverrideState);
+  document.getElementById('theme-preference')?.addEventListener('change', (e) => {
+    applyOptionsTheme((e.target as HTMLSelectElement).value);
   });
 
   // ── Main form: blur validation + numeric stripping ───────────────────
@@ -994,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('new-item-emoji')?.addEventListener('input', () => clearItemFieldError('new-item-emoji'));
 
   // Delegated click handler for custom item edit/delete buttons
-  document.getElementById('custom-items-list')?.addEventListener('click', (e) => {
+  document.getElementById('comparison-items-list')?.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     const editBtn = target.closest('[data-edit-id]');
     if (editBtn) {

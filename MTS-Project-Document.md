@@ -1243,7 +1243,7 @@ This is simpler than the multi-step cooldown - it's a single timer that applies 
 - [ ] Add custom items in options: name, icon, price
 - [ ] Examples: "coffees", "lunch", "monthly subscriptions"
 - [ ] Show in overlay alongside default comparisons
-- [ ] Reorder comparisons by preference
+- [x] Reorder comparisons by preference
 
 ---
 
@@ -1516,6 +1516,10 @@ const ohioTaxRates: Record<string, number> = {
   // ... etc
 };
 ```
+
+## Known Issues
+
+- **Bits promotional module** — The animated Bits gem/icon that Twitch displays on channel pages cannot currently be intercepted. MTS can intercept the "Get Bits" button in the top navigation bar, but the promotional overlay module uses a non-standard rendering path that doesn't expose a clickable element MTS can hook.
 
 ## Links & Resources
 

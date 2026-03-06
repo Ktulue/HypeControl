@@ -1,7 +1,7 @@
 # MTS - What's Left To Do
 
-**Updated:** 2026-02-21
-**Current Version:** 0.3.16
+**Updated:** 2026-03-05
+**Current Version:** 0.3.45
 **Based On:** MTS-Project-Document.md vs. actual codebase audit
 
 ---
@@ -18,7 +18,7 @@
 | MVP Part 5 — Streaming Mode               | ✅ Mostly Complete |
 | MVP Part 6 — Integration Testing & Polish | ⚠️ Partially Done |
 | Add-on 5 — Streamer Whitelist             | ✅ Mostly Complete |
-| Phase 4 — Other Add-ons                   | ❌ Not Started    |
+| Phase 4 — Other Add-ons                   | ⚠️ Partially Done |
 
 ---
 
@@ -128,16 +128,16 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 
 ### ⚠️ MVP Part 6 — Polish & Edge Cases (PARTIALLY DONE)
 
-**What's implemented:** Error handling, multiple DOM fallback selectors, debounced saves, escape-key dismissal, backdrop click to cancel, version tracking, debug functions (`MTS.testOverlay()`, `MTS.scanButtons()`), inline field validation with error messages.
+**What's implemented:** Error handling, multiple DOM fallback selectors, debounced saves, escape-key dismissal, backdrop click to cancel, version tracking, debug functions (`MTS.testOverlay()`, `MTS.scanButtons()`), inline field validation with error messages, overlay entrance animations (fadeIn + slideIn CSS keyframes). Options page UI polish: responsive two/three-column grid layout on wider screens, centered section headers, styled footer with centered buttons and version number, comparison item deduplication in migration.
 
-**What may still be missing:**
+**What is still MISSING:**
 
-- [ ] **Fresh-install onboarding** — On first install, auto-open options page prompting for setup (no settings = no rate set = overlay shows generic warning instead of work-hours)
-- [ ] **Focus trap in overlay** — Tab key should cycle only within the overlay modal, not the underlying page
-- [ ] **Overlay entrance animation** — Subtle fade/scale-in so it feels intentional, not jarring
-- [ ] **Keyboard: Enter to confirm** — Where applicable (e.g., type-to-confirm step, final step)
-- [ ] **ARIA attributes audit** — Verify all overlay modals have `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby`
-- [ ] **"No price detected" fallback** — Verified the overlay still renders gracefully when price extraction fails, with a clear warning message
+- [x] ~~**Fresh-install onboarding**~~ — ✅ Implemented: `chrome.runtime.onInstalled` handler in `serviceWorker.ts` opens the options page on first install
+- [x] ~~**Focus trap in overlay**~~ — ✅ Implemented: Tab/Shift+Tab wraps between first and last buttons in all modals (see `interceptor.ts`)
+- [x] ~~**Overlay entrance animation**~~ — ✅ Implemented: `mts-fadeIn` on backdrop, `mts-slideIn` on modal (see `styles.css`)
+- [ ] **Keyboard: Enter to confirm** — Where applicable (e.g., type-to-confirm step, final step). Not implemented (blocked on those steps not existing yet)
+- [x] ~~**ARIA attributes audit**~~ — ✅ All overlay modals (main, comparison, cooldown) have `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby`
+- [x] ~~**"No price detected" fallback**~~ — ✅ Verified: overlay shows "Price not detected" as the price display and "Unable to detect price. Proceed with caution." when `priceValue` is null (see `interceptor.ts:355-361`)
 
 ---
 
@@ -145,7 +145,7 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 
 ### ✅ Add-on 5 — Streamer Whitelist (MOSTLY COMPLETE)
 
-**What's implemented:** Full per-channel whitelist with three behaviors — `skip` (no friction, silent log), `reduced` (toast only), `track-only` (full friction with a note). Add/remove/behavior-change UI in options. URL normalization on input. Whitelist note shown in the main overlay for track-only channels.
+**What's implemented:** Full per-channel whitelist with three behaviors — `skip` (no friction, silent log), `reduced` (toast only), `full` (full friction with a note). Add/remove/behavior-change UI in options. URL normalization on input. Whitelist note shown in the main overlay for full-friction channels. Behavior legend in options explains each mode. Disclaimer note that channels are not validated against Twitch.
 
 **What is still MISSING:**
 
@@ -163,7 +163,7 @@ Listed in order of complexity per the planning doc.
       A configurable mandatory wait (5/10/30/60 seconds) before _any_ purchase can proceed, independent of friction level. Single progress bar, cancel allowed at any time.
 
 - [ ] **Add-on 4 — Custom Comparison Items (Enhanced)**
-      Basic CRUD is done. What's missing: drag-to-reorder comparisons, and the ability to set which ones appear in "nudge" mode vs. "full" mode.
+      Basic CRUD is done. Drag-to-reorder is now implemented for both preset and custom items (persisted to storage). What's still missing: the ability to set which ones appear in "nudge" mode vs. "full" mode.
 
 #### ⭐⭐ Medium
 
@@ -240,4 +240,4 @@ Listed in order of complexity per the planning doc.
 
 ---
 
-_Last updated 2026-02-21 against the v0.3.16 codebase._
+_Last updated 2026-03-05 against the v0.3.45 codebase._

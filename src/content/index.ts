@@ -10,6 +10,7 @@
 import { setupInterceptor } from './interceptor';
 import { setupModalObserver, getCurrentChannel } from './detector';
 import { checkAndUpdateLiveStatus } from './streamingMode';
+import { initThemeManager, applyThemeToOverlay } from './themeManager';
 import { log, debug, error, setVersion, loadLogs } from '../shared/logger';
 import { migrateSettings, DEFAULT_SETTINGS } from '../shared/types';
 import './styles.css';
@@ -26,7 +27,7 @@ async function loadSettings() {
 }
 
 /** Current extension version */
-const VERSION = '0.3.8';
+const VERSION = '0.3.45';
 
 // Set version immediately so logger can check for updates
 setVersion(VERSION);
@@ -135,6 +136,9 @@ function init(): void {
 
     // Show visual confirmation
     showLoadedIndicator();
+
+    // Initialize theme detection
+    initThemeManager();
 
     // Set up the click interceptor
     setupInterceptor();
@@ -257,6 +261,7 @@ function testOverlay(): void {
     }
   });
 
+  applyThemeToOverlay(overlay);
   document.body.appendChild(overlay);
   log('Test overlay displayed. Click Cancel or Proceed to dismiss.');
 }

@@ -22,6 +22,25 @@
   --mts-radius: 8px;
 }
 
+/* Light mode overrides */
+.mts-light {
+  --mts-bg-dark: #f5f5f5;
+  --mts-bg-card: #ffffff;
+  --mts-text: #1f1f23;
+  --mts-text-muted: #53535f;
+  --mts-border: #d2d2d7;
+  --mts-overlay-bg: rgba(0, 0, 0, 0.6);
+  --mts-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.mts-light .mts-whitelist-note {
+  color: #6b2fd6;
+}
+
+.mts-light .mts-price-note {
+  color: #c47600;
+}
+
 /* Overlay backdrop */
 .mts-overlay {
   position: fixed;
@@ -346,7 +365,7 @@
 
 /* Cooldown modal */
 .mts-cooldown-modal .mts-price {
-  color: #eb0400;
+  color: var(--mts-danger);
 }
 
 /* Responsive adjustments */
@@ -434,7 +453,7 @@
 }
 .mts-whitelist-toast--fade { opacity: 0; }
 
-/* Whitelist note banner inside main overlay (track-only) */
+/* Whitelist note banner inside main overlay (full behavior) */
 .mts-whitelist-note {
   background: rgba(145, 70, 255, 0.15);
   border: 1px solid rgba(145, 70, 255, 0.3);

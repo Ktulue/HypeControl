@@ -9,3 +9,12 @@ chrome.action.onClicked.addListener(() => {
     url: chrome.runtime.getURL('options.html')
   });
 });
+
+// Open options page on fresh install for onboarding
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('options.html')
+    });
+  }
+});

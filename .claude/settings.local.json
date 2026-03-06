@@ -7,7 +7,13 @@
       "Bash(git commit:*)",
       "Bash(npx webpack:*)",
       "Bash(npm)",
-      "Bash(git)"
+      "Bash(git)",
+      "Bash(npm ls:*)",
+      "Bash(command:*)",
+      "Bash(magick:*)",
+      "Bash(git:*)",
+      "Bash(GIT_DIR=\"G:/Claude Code/MTS/.git\" git show:*)",
+      "Bash(MSYS_NO_PATHCONV=1 git:*)"
     ]
   }
 }
