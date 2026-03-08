@@ -143,6 +143,37 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 
 ## PHASE 4 — OPTIONAL ADD-ONS
 
+## UX ENHANCEMENTS
+
+### Settings UI Redesign
+
+**Complexity:** ⭐⭐⭐ Medium-Hard
+**Dependencies:** MVP complete
+
+Redesign the options page with a Previews-style sidebar navigation layout. Sectioned toggle panels for each feature group (General, Friction, Streaming Mode, Whitelist, Activity Log, About/Support). Persistent brand/support sidebar with Ko-fi, GitHub, and Ktulue social links. Built with plain HTML/CSS/JS — no framework needed.
+
+**Reference:** Previews extension (previews-app.com) settings UI.
+
+- [ ] Sidebar nav with section routing
+- [ ] Toggle panels wired to chrome.storage
+- [ ] Brand/support sidebar panel (Ko-fi, GitHub, socials)
+- [ ] Changelog slide-out notification on extension update
+
+### Interactive Onboarding Tour (Long-term Milestone)
+
+**Complexity:** ⭐⭐⭐⭐⭐ Very Hard
+**Dependencies:** Settings UI Redesign
+
+Guided first-install walkthrough that overlays the Twitch page and highlights each interceptable element (Gift Sub, Subscribe, Get Bits) one at a time. Slide-out explainer panel shows what HC does at each point and where the related setting lives in the options page. Beginner/Advanced toggle so experienced users can skip the tour entirely.
+
+**Reference:** Previews extension slide-out changelog panel pattern.
+
+- [ ] First-install detection triggers tour
+- [ ] Beginner / Advanced mode selection
+- [ ] Sequential element highlighting on Twitch page
+- [ ] Slide-out explainer panel per highlighted element
+- [ ] Links from tour steps to relevant settings sections
+
 ### ✅ Add-on 5 — Streamer Whitelist (MOSTLY COMPLETE)
 
 **What's implemented:** Full per-channel whitelist with three behaviors — `skip` (no friction, silent log), `reduced` (toast only), `full` (full friction with a note). Add/remove/behavior-change UI in options. URL normalization on input. Whitelist note shown in the main overlay for full-friction channels. Behavior legend in options explains each mode. Disclaimer note that channels are not validated against Twitch.
