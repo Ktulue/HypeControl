@@ -1519,7 +1519,7 @@ const ohioTaxRates: Record<string, number> = {
 
 ## Known Issues
 
-- **Bits promotional module** — The animated Bits gem/icon that Twitch displays on channel pages cannot currently be intercepted. Hype Control can intercept the "Get Bits" button in the top navigation bar, but the promotional overlay module uses a non-standard rendering path that doesn't expose a clickable element Hype Control can hook.
+- **Bits Combo module** — The animated Bits Combo (timer/counter) that Twitch displays during cheering cannot currently be intercepted. Hype Control can intercept the "Get Bits" button in the top navigation bar, but the Combo module uses a non-standard rendering path that doesn't expose a clickable element Hype Control can hook.
 
 ## Links & Resources
 
