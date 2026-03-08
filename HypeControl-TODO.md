@@ -147,18 +147,29 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 
 ### Settings UI Redesign
 
+### Settings UI Redesign
+
 **Complexity:** ⭐⭐⭐ Medium-Hard
 **Dependencies:** MVP complete
+**Design Direction:** TBD — choose one:
 
-Redesign the options page with a Previews-style sidebar navigation layout. Sectioned toggle panels for each feature group (General, Friction, Streaming Mode, Whitelist, Activity Log, About/Support). Persistent brand/support sidebar with Ko-fi, GitHub, and Ktulue social links. Built with plain HTML/CSS/JS — no framework needed.
+**Option A: Full Settings Page (Previews-style)**
+Dedicated page with sidebar navigation, sectioned toggle panels, and persistent brand/support sidebar. More room for complex settings. User navigates away from Twitch to configure.
 
-**Reference:** Previews extension (previews-app.com) settings UI.
+**Option B: Overlay Modal (BTTV-style)**
+Floating modal over the Twitch page. Lighter feel, stays in context. Better for quick toggles but may get cramped with HC's full settings surface.
 
-- [ ] Sidebar nav with section routing
+**Option C: Hybrid**
+Overlay modal for common quick-access settings (friction level, streaming mode toggle, daily cap). Full settings page for deeper configuration (comparison items, whitelist management, activity log).
+
+**Reference:** Previews extension settings UI, BetterTTV settings modal.
+
+- [ ] Decide on design direction
+- [ ] Sidebar nav or modal section routing
 - [ ] Toggle panels wired to chrome.storage
-- [ ] Brand/support sidebar panel (Ko-fi, GitHub, socials)
+- [ ] Brand/support panel (Ko-fi, GitHub, socials)
 - [ ] Changelog slide-out notification on extension update
-
+      
 ### Interactive Onboarding Tour (Long-term Milestone)
 
 **Complexity:** ⭐⭐⭐⭐⭐ Very Hard
