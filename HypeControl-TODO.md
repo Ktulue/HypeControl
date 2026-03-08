@@ -147,8 +147,6 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 
 ### Settings UI Redesign
 
-### Settings UI Redesign
-
 **Complexity:** ⭐⭐⭐ Medium-Hard
 **Dependencies:** MVP complete
 **Design Direction:** TBD — choose one:
@@ -169,6 +167,8 @@ Overlay modal for common quick-access settings (friction level, streaming mode t
 - [ ] Toggle panels wired to chrome.storage
 - [ ] Brand/support panel (Ko-fi, GitHub, socials)
 - [ ] Changelog slide-out notification on extension update
+- [ ] Bug Report / Feedback link → github.com/Ktulue/HypeControl/issues/new
+- [ ] View Issues link → github.com/Ktulue/HypeControl/issues
       
 ### Interactive Onboarding Tour (Long-term Milestone)
 
