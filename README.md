@@ -31,7 +31,8 @@ Available on the [Chrome Web Store](https://chromewebstore.google.com/detail/hyp
 
 For development:
 1. Clone this repository
-2. Run `npm install` then `npm run build`
+2. Run `npm install` (this also triggers the build automatically via `postinstall`)
+   - On Windows you can also just double-click `setup.bat`
 3. Open Chrome → `chrome://extensions/`
 4. Enable "Developer mode"
 5. Click "Load unpacked" and select the project root folder (where `manifest.json` lives)
