@@ -504,6 +504,48 @@
   margin-top: 4px;
 }
 
+/* Reason selection step */
+.hc-actions--column {
+  flex-direction: column;
+}
+
+.hc-reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hc-reason-btn {
+  background: var(--hc-bg-dark);
+  border: 1px solid var(--hc-border);
+  border-radius: var(--hc-radius);
+  color: var(--hc-text);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 10px 14px;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+
+.hc-reason-btn:hover {
+  background: rgba(145, 71, 255, 0.1);
+  border-color: var(--hc-primary);
+}
+
+.hc-reason-btn:focus {
+  outline: 2px solid var(--hc-primary);
+  outline-offset: 2px;
+}
+
+.hc-reason-btn.selected {
+  background: rgba(145, 71, 255, 0.2);
+  border-color: var(--hc-primary);
+  color: var(--hc-text);
+  font-weight: 600;
+}
+
 /* Whitelist quick-add button */
 .hc-quick-add-wrap {
   text-align: center;

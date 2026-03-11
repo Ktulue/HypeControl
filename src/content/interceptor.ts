@@ -755,6 +755,112 @@ async function showDelayTimerStep(
   });
 }
 
+// ── Overlay: Reason Selection Step ─────────────────────────────────────
+
+const PURCHASE_REASONS = [
+  'I planned this purchase',
+  "It's a good deal / limited time",
+  'I deserve a treat',
+  'Supporting a creator I love',
+  'Just browsing, why not',
+] as const;
+
+async function showReasonSelectionStep(
+  overlay: HTMLElement,
+): Promise<{ decision: 'cancel' | 'proceed'; reason?: string }> {
+  const reasonButtonsHTML = PURCHASE_REASONS.map(reason => `
+    <button class="hc-reason-btn" data-reason="${reason}">${reason}</button>
+  `).join('');
+
+  overlay.innerHTML = `
+    <div class="hc-modal">
+      <div class="hc-header">
+        <span class="hc-icon">🤔</span>
+        <h2 class="hc-title" id="hc-overlay-heading">Why are you buying this?</h2>
+      </div>
+      <div class="hc-content" id="hc-overlay-desc">
+        <p class="hc-message">Select a reason to continue.</p>
+        <div class="hc-reason-list">
+          ${reasonButtonsHTML}
+        </div>
+      </div>
+      <div class="hc-actions hc-actions--column">
+        <button class="hc-btn hc-btn-proceed" data-action="proceed" disabled aria-disabled="true" style="opacity: 0.4; cursor: not-allowed;">
+          Continue
+        </button>
+        <button class="hc-btn hc-btn-cancel" data-action="cancel">No, cancel</button>
+      </div>
+    </div>
+  `;
+
+  log('Reason selection step shown');
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    let selectedReason: string | undefined;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const proceedBtn = overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null;
+
+    const finish = (decision: 'cancel' | 'proceed') => {
+      if (resolved) return;
+      resolved = true;
+      document.removeEventListener('keydown', handleKeydown);
+      removeOverlay(overlay);
+      previousFocus?.focus();
+      if (decision === 'proceed') {
+        resolve({ decision: 'proceed', reason: selectedReason });
+      } else {
+        resolve({ decision: 'cancel' });
+      }
+    };
+
+    // Wire reason buttons
+    overlay.querySelectorAll<HTMLButtonElement>('.hc-reason-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Deselect all, select clicked
+        overlay.querySelectorAll<HTMLButtonElement>('.hc-reason-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedReason = btn.dataset.reason;
+        // Enable proceed button
+        if (proceedBtn) {
+          proceedBtn.disabled = false;
+          proceedBtn.removeAttribute('aria-disabled');
+          proceedBtn.style.opacity = '';
+          proceedBtn.style.cursor = '';
+        }
+      });
+    });
+
+    overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => finish('cancel'));
+    overlay.querySelector('[data-action="proceed"]')?.addEventListener('click', () => {
+      if (selectedReason) finish('proceed');
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish('cancel');
+    });
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Tab') {
+        const focusable = Array.from(
+          overlay.querySelectorAll<HTMLButtonElement>('.hc-btn:not([disabled]), .hc-reason-btn')
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+
+    applyThemeToOverlay(overlay);
+    document.body.appendChild(overlay);
+    (overlay.querySelector('.hc-reason-btn') as HTMLButtonElement)?.focus();
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**
