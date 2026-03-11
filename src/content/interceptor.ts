@@ -1024,7 +1024,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
 
   log(`Friction flow starting: level=${frictionLevel}, maxComparisons=${maxComparisons ?? 'all'}${whitelistNote ? ', full whitelist' : ''}`);
   const frictionResult = await runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote, onWhitelistAdd);
-  const priceWithTax = attempt.priceValue !== null
+  const priceWithTax = (attempt.priceValue && attempt.priceValue > 0)
     ? Math.round(attempt.priceValue * (1 + settings.taxRate / 100) * 100) / 100
     : null;
 
