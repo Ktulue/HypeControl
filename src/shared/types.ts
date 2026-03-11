@@ -99,6 +99,7 @@ export interface UserSettings {
   toastDurationSeconds: number;
   whitelistedChannels: WhitelistEntry[];
   theme: ThemePreference;
+  streamingOverride?: { expiresAt: number };
 }
 
 /** Preset comparison items */
