@@ -1,0 +1,252 @@
+/* Hype Control Popup CSS - Dark Theme */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Dark theme colors matching options/logs pages */
+  --bg-primary: #18181b;
+  --bg-secondary: #1f1f23;
+  --bg-tertiary: #0e0e10;
+  --text-primary: #efeff1;
+  --text-muted: #adadb8;
+  --border-color: #3d3d42;
+  --accent-color: #9146ff;
+  --accent-dark: #772ce8;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  width: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.popup-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.popup-header {
+  background: linear-gradient(135deg, #9146ff 0%, #772ce8 100%);
+  padding: 16px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.popup-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0;
+  color: white;
+}
+
+/* Stats Panel - 2-column grid */
+.stats-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stat-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 80px;
+}
+
+/* Stat value styling (first line - big) */
+.stat-item::before {
+  content: attr(data-value);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-color);
+  line-height: 1.2;
+}
+
+/* Stat label styling (smaller text) */
+.stat-item {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Override for stat-saved */
+#stat-saved {
+  font-size: 12px;
+}
+
+#stat-saved::before {
+  content: '$0.00';
+  font-size: 20px;
+  font-weight: 700;
+  color: #00c853;
+}
+
+/* Override for stat-blocked */
+#stat-blocked {
+  font-size: 12px;
+}
+
+#stat-blocked::before {
+  content: '0';
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff9800;
+}
+
+/* Override for stat-rate */
+#stat-rate {
+  font-size: 12px;
+}
+
+#stat-rate::before {
+  content: '0%';
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+/* Override for stat-step */
+#stat-step {
+  font-size: 12px;
+}
+
+#stat-step::before {
+  content: '—';
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Streaming Override Section */
+.streaming-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(145, 70, 255, 0.08);
+  border: 1px solid rgba(145, 70, 255, 0.25);
+  border-radius: 6px;
+  margin: 16px;
+}
+
+#btn-streaming-override {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #9146ff 0%, #772ce8 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#btn-streaming-override:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(145, 70, 255, 0.3);
+}
+
+#btn-streaming-override:active {
+  transform: translateY(0);
+}
+
+.streaming-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.streaming-status.active {
+  color: #00c853;
+  font-weight: 600;
+}
+
+.streaming-status.inactive {
+  color: #ff9800;
+}
+
+/* Footer */
+.popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  margin-top: auto;
+  gap: 12px;
+}
+
+.footer-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
+  flex: 1;
+}
+
+.footer-link:hover {
+  color: #bf94ff;
+  text-decoration: underline;
+}
+
+.version-display {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Light theme support (if needed in future) */
+body.light {
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f0f2;
+  --text-primary: #1f1f23;
+  --text-muted: #53535f;
+  --border-color: #d2d2d7;
+}
