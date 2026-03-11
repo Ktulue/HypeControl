@@ -785,11 +785,14 @@ async function runFrictionFlow(
     return 'proceed';
   }
 
-  // nudge: enabled items only, limited to softNudgeSteps
-  // full: ALL items regardless of enabled state (maximum penalty — cannot be reduced by disabling items)
+  // nudge: enabled items where scope is 'nudge' or 'both', limited to softNudgeSteps
+  // full: enabled items where scope is 'full' or 'both' (scope replaces the old "all items" behavior)
   const itemPool = maxComparisons !== undefined
-    ? settings.comparisonItems.filter(i => i.enabled).slice(0, maxComparisons)
-    : settings.comparisonItems;
+    ? settings.comparisonItems
+        .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'full')
+        .slice(0, maxComparisons)
+    : settings.comparisonItems
+        .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'nudge');
 
   const taxPrice = `$${priceWithTax.toFixed(2)}`;
   const comparisonSteps: { item: ComparisonItem; display: ComparisonDisplay }[] = [];
