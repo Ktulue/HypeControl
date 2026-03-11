@@ -8,6 +8,7 @@ module.exports = {
     content: './src/content/index.ts',
     logs: './src/logs/logs.ts',
     options: './src/options/options.ts',
+    popup: './src/popup/popup.ts',
     serviceWorker: './src/background/serviceWorker.ts',
   },
   output: {
@@ -49,6 +50,7 @@ module.exports = {
         },
         { from: 'src/logs/logs.html', to: 'logs.html' },
         { from: 'src/options/options.html', to: 'options.html' },
+        { from: 'src/popup/popup.html', to: 'popup.html' },
         { from: 'assets', to: 'assets', noErrorOnMissing: true },
       ],
     }),
