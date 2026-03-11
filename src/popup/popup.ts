@@ -27,7 +27,7 @@ async function renderStats(): Promise<void> {
   }
 }
 
-async function renderStreamingOverride(): Promise<void> {
+async function updateStreamingStatus(): Promise<void> {
   const result = await chrome.storage.sync.get(SETTINGS_KEY);
   const settings: Partial<UserSettings> = result[SETTINGS_KEY] ?? {};
 
@@ -53,35 +53,36 @@ async function renderStreamingOverride(): Promise<void> {
 
   if (btnEl) {
     btnEl.textContent = isActive ? 'Cancel Override' : 'Stream Override (2 hr)';
-
-    // Remove any previous listener by replacing the button's clone
-    const newBtn = btnEl.cloneNode(true) as HTMLButtonElement;
-    btnEl.parentNode?.replaceChild(newBtn, btnEl);
-
-    newBtn.addEventListener('click', async () => {
-      const freshResult = await chrome.storage.sync.get(SETTINGS_KEY);
-      const freshSettings: Partial<UserSettings> = freshResult[SETTINGS_KEY] ?? {};
-
-      const freshOverride = freshSettings.streamingOverride;
-      const freshNow = Date.now();
-      const freshActive = !!(freshOverride && freshOverride.expiresAt > freshNow);
-
-      if (freshActive) {
-        await chrome.storage.sync.set({
-          [SETTINGS_KEY]: { ...freshSettings, streamingOverride: undefined },
-        });
-      } else {
-        await chrome.storage.sync.set({
-          [SETTINGS_KEY]: {
-            ...freshSettings,
-            streamingOverride: { expiresAt: Date.now() + 2 * 60 * 60 * 1000 },
-          },
-        });
-      }
-
-      await renderStreamingOverride();
-    });
   }
+}
+
+function setupStreamingButton(): void {
+  const btnEl = document.getElementById('btn-streaming-override') as HTMLButtonElement | null;
+  if (!btnEl) return;
+
+  btnEl.addEventListener('click', async () => {
+    const freshResult = await chrome.storage.sync.get(SETTINGS_KEY);
+    const freshSettings: Partial<UserSettings> = freshResult[SETTINGS_KEY] ?? {};
+
+    const freshOverride = freshSettings.streamingOverride;
+    const freshNow = Date.now();
+    const freshActive = !!(freshOverride && freshOverride.expiresAt > freshNow);
+
+    if (freshActive) {
+      await chrome.storage.sync.set({
+        [SETTINGS_KEY]: { ...freshSettings, streamingOverride: undefined },
+      });
+    } else {
+      await chrome.storage.sync.set({
+        [SETTINGS_KEY]: {
+          ...freshSettings,
+          streamingOverride: { expiresAt: Date.now() + 2 * 60 * 60 * 1000 },
+        },
+      });
+    }
+
+    await updateStreamingStatus();
+  });
 }
 
 function renderVersion(): void {
@@ -100,7 +101,8 @@ function setupLogsLink(): void {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderStats();
-  renderStreamingOverride();
+  setupStreamingButton();
+  updateStreamingStatus();
   renderVersion();
   setupLogsLink();
 });

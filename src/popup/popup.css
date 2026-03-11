@@ -75,67 +75,28 @@ body {
   min-height: 80px;
 }
 
-/* Stat value styling (first line - big) */
-.stat-item::before {
-  content: attr(data-value);
-  font-size: 18px;
+/* Stat value styling */
+.stat-item {
+  font-size: 20px;
   font-weight: 700;
   color: var(--accent-color);
   line-height: 1.2;
 }
 
-/* Stat label styling (smaller text) */
-.stat-item {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-/* Override for stat-saved */
+/* Per-stat color overrides */
 #stat-saved {
-  font-size: 12px;
-}
-
-#stat-saved::before {
-  content: '$0.00';
-  font-size: 20px;
-  font-weight: 700;
   color: #00c853;
 }
 
-/* Override for stat-blocked */
 #stat-blocked {
-  font-size: 12px;
-}
-
-#stat-blocked::before {
-  content: '0';
-  font-size: 20px;
-  font-weight: 700;
   color: #ff9800;
 }
 
-/* Override for stat-rate */
 #stat-rate {
-  font-size: 12px;
-}
-
-#stat-rate::before {
-  content: '0%';
-  font-size: 20px;
-  font-weight: 700;
   color: var(--accent-color);
 }
 
-/* Override for stat-step */
 #stat-step {
-  font-size: 12px;
-}
-
-#stat-step::before {
-  content: '—';
-  font-size: 20px;
-  font-weight: 700;
   color: var(--text-muted);
 }
 
