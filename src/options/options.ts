@@ -766,6 +766,47 @@ async function changeWhitelistBehavior(username: string, behavior: WhitelistBeha
 }
 
 /**
+ * Update the aria-pressed state on the delay timer duration buttons.
+ */
+function setDelayTimerDurationUI(seconds: number): void {
+  const buttons = document.querySelectorAll<HTMLButtonElement>('#delay-timer-group .intensity-btn');
+  buttons.forEach(btn => {
+    btn.setAttribute('aria-pressed', btn.dataset.delay === String(seconds) ? 'true' : 'false');
+  });
+}
+
+/**
+ * Wire up the Delay Timer section controls.
+ * The enabled toggle shows/hides the subsection and saves immediately.
+ * The duration buttons update aria-pressed state and save immediately.
+ */
+function wireDelayTimerControls(): void {
+  const enabledEl = document.getElementById('delay-timer-enabled') as HTMLInputElement | null;
+  const group = document.getElementById('delay-timer-group');
+
+  enabledEl?.addEventListener('change', async () => {
+    toggleSubsection('delay-timer-subsection', enabledEl.checked);
+    if (cachedSettings) {
+      cachedSettings.delayTimer.enabled = enabledEl.checked;
+      await saveSettings(cachedSettings);
+      settingsLog('Delay timer enabled changed', { enabled: enabledEl.checked });
+    }
+  });
+
+  group?.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.intensity-btn');
+    if (!btn || !btn.dataset.delay) return;
+    const seconds = parseInt(btn.dataset.delay, 10) as 5 | 10 | 30 | 60;
+    setDelayTimerDurationUI(seconds);
+    if (cachedSettings) {
+      cachedSettings.delayTimer.seconds = seconds;
+      await saveSettings(cachedSettings);
+      settingsLog('Delay timer duration changed', { seconds });
+    }
+  });
+}
+
+/**
  * Apply theme class to the options page body.
  * 'auto' and 'dark' both use dark (the options page isn't on Twitch, so auto = dark).
  */
@@ -806,6 +847,14 @@ async function populateForm(): Promise<void> {
   if (cooldownEnabled) cooldownEnabled.checked = settings.cooldown.enabled;
   if (cooldownMinutes) cooldownMinutes.value = settings.cooldown.minutes.toString();
   toggleSubsection('cooldown-config', settings.cooldown.enabled);
+
+  // Delay Timer
+  const delayEnabledEl = document.getElementById('delay-timer-enabled') as HTMLInputElement | null;
+  if (delayEnabledEl) {
+    delayEnabledEl.checked = settings.delayTimer.enabled;
+    toggleSubsection('delay-timer-subsection', settings.delayTimer.enabled);
+  }
+  setDelayTimerDurationUI(settings.delayTimer.seconds);
 
   // Daily cap
   const dailycapEnabled = document.getElementById('dailycap-enabled') as HTMLInputElement;
@@ -1137,6 +1186,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('theme-preference')?.addEventListener('change', (e) => {
     applyOptionsTheme((e.target as HTMLSelectElement).value);
   });
+
+  // Delay Timer controls
+  wireDelayTimerControls();
 
   // ── Main form: blur validation + numeric stripping ───────────────────
   const numericFields = ['hourly-rate', 'tax-rate', 'threshold-floor', 'threshold-ceiling', 'dailycap-amount'];

@@ -708,6 +708,60 @@
       border-color: rgba(145, 70, 255, 0.6);
       box-shadow: 0 0 12px rgba(145, 70, 255, 0.15);
     }
+
+    .intensity-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .intensity-btn {
+      background: var(--opt-bg-inset, #1f1f23);
+      color: var(--opt-text-muted, #adadb8);
+      border: 1px solid var(--opt-border, #3d3d42);
+      border-radius: 4px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .intensity-btn:hover {
+      background: var(--opt-border, #3d3d42);
+      color: var(--opt-text, #efeff1);
+    }
+
+    .intensity-btn[aria-pressed="true"] {
+      background: #9147ff;
+      color: #fff;
+      border-color: #9147ff;
+    }
+
+    /* Setting row layout for label + hint + control */
+    .setting-row {
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .setting-row + .setting-row {
+      border-top: 1px solid var(--opt-separator);
+    }
+
+    .setting-label {
+      display: block;
+      color: var(--opt-text);
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+
+    .setting-hint {
+      color: var(--opt-text-muted);
+      font-size: 12px;
+      margin: 0;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -918,6 +972,30 @@
             <option value="10">10 minutes</option>
             <option value="30">30 minutes</option>
           </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delay Timer -->
+    <div class="section">
+      <h3 class="section-title">Delay Timer</h3>
+      <div class="setting-row">
+        <label class="setting-label" for="delay-timer-enabled">Enable delay timer</label>
+        <p class="setting-hint">Shows a countdown timer as the final step before any purchase fires. Runs after all friction steps complete.</p>
+        <label class="toggle-switch">
+          <input type="checkbox" id="delay-timer-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="delay-timer-subsection" style="display:none">
+        <div class="setting-row">
+          <label class="setting-label">Timer duration</label>
+          <div class="intensity-group" id="delay-timer-group" role="radiogroup" aria-label="Delay timer duration">
+            <button class="intensity-btn" data-delay="5"  aria-pressed="false">5s</button>
+            <button class="intensity-btn" data-delay="10" aria-pressed="false">10s</button>
+            <button class="intensity-btn" data-delay="30" aria-pressed="false">30s</button>
+            <button class="intensity-btn" data-delay="60" aria-pressed="false">60s</button>
+          </div>
         </div>
       </div>
     </div>
