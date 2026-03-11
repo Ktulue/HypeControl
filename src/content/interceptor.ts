@@ -7,7 +7,7 @@
 import {
   PurchaseAttempt, OverlayDecision, OverlayCallback, UserSettings, DEFAULT_SETTINGS,
   FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings,
-  WhitelistEntry,
+  WhitelistEntry, WhitelistBehavior,
 } from '../shared/types';
 import { isPurchaseButton, createPurchaseAttempt } from './detector';
 import { shouldBypassFriction } from './streamingMode';
@@ -359,6 +359,69 @@ function showModalPromise(overlay: HTMLElement, context?: ModalContext): Promise
   });
 }
 
+// ── Overlay: Whitelist Quick-Add ────────────────────────────────────────
+
+/** Behavior descriptions for the whitelist quick-add selector */
+const WHITELIST_BEHAVIOR_LABELS: Record<WhitelistBehavior, { name: string; desc: string }> = {
+  skip:    { name: 'Skip',    desc: 'No friction, silently logged' },
+  reduced: { name: 'Reduced', desc: 'Toast notification only' },
+  full:    { name: 'Full',    desc: 'Full friction flow with a whitelist note' },
+};
+
+/**
+ * Replaces the quick-add button with an inline whitelist behavior selector.
+ */
+function showWhitelistSelector(
+  overlay: HTMLElement,
+  channel: string,
+  settings: UserSettings,
+  onConfirm: (behavior: WhitelistBehavior) => Promise<void>,
+): void {
+  const existingEntry = settings.whitelistedChannels.find(
+    e => e.username === channel.trim().toLowerCase()
+  );
+
+  const warningHTML = existingEntry
+    ? `<div class="hc-whitelist-warning">
+         ⚠️ Already whitelisted as <strong>${existingEntry.behavior}</strong>. Selecting a new behavior will update it.
+       </div>`
+    : '';
+
+  const optionsHTML = (['skip', 'reduced', 'full'] as WhitelistBehavior[]).map(behavior => {
+    const { name, desc } = WHITELIST_BEHAVIOR_LABELS[behavior];
+    const selected = existingEntry?.behavior === behavior ? ' style="border-color: #9147ff;"' : '';
+    return `
+      <button class="hc-whitelist-option" data-behavior="${behavior}"${selected}>
+        <span class="hc-whitelist-option-name">${name}</span>
+        <span class="hc-whitelist-option-desc">${desc}</span>
+      </button>
+    `;
+  }).join('');
+
+  const selectorHTML = `
+    <div class="hc-whitelist-selector">
+      <p class="hc-whitelist-selector-title">Remember <strong>${channel}</strong> as:</p>
+      ${warningHTML}
+      <div class="hc-whitelist-options">
+        ${optionsHTML}
+      </div>
+    </div>
+  `;
+
+  // Replace the quick-add wrap with the selector
+  const wrap = overlay.querySelector('.hc-quick-add-wrap');
+  if (wrap) wrap.outerHTML = selectorHTML;
+
+  // Wire behavior buttons
+  overlay.querySelectorAll<HTMLButtonElement>('[data-behavior]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const behavior = btn.dataset.behavior as WhitelistBehavior;
+      log(`Whitelist quick-add: ${channel} → ${behavior}`);
+      await onConfirm(behavior);
+    });
+  });
+}
+
 // ── Overlay: Main (Step 1) ──────────────────────────────────────────────
 
 async function showMainOverlay(
@@ -366,6 +429,7 @@ async function showMainOverlay(
   settings: UserSettings,
   tracker: SpendingTracker,
   whitelistNote?: string,
+  onWhitelistAdd?: (behavior: WhitelistBehavior) => Promise<void>,
 ): Promise<OverlayDecision> {
   if (overlayVisible) return 'cancel';
   overlayVisible = true;
@@ -378,6 +442,14 @@ async function showMainOverlay(
   } else {
     priceExtra = '<p class="hc-price-note">Unable to detect price. Proceed with caution.</p>';
   }
+
+  const quickAddBtn = onWhitelistAdd
+    ? `<div class="hc-quick-add-wrap">
+         <button class="hc-btn-text" id="hc-quick-add-btn">
+           ⭐ Remember this channel
+         </button>
+       </div>`
+    : '';
 
   const overlay = document.createElement('div');
   overlay.id = 'hc-overlay';
@@ -411,6 +483,7 @@ async function showMainOverlay(
         <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel</button>
         <button class="hc-btn hc-btn-proceed" data-action="proceed">Proceed Anyway</button>
       </div>
+      ${quickAddBtn}
     </div>
   `;
 
@@ -420,6 +493,14 @@ async function showMainOverlay(
     priceValue: attempt.priceValue,
     channel: attempt.channel,
   });
+
+  // Wire quick-add button if callback provided
+  if (onWhitelistAdd) {
+    const quickAddBtnEl = overlay.querySelector('#hc-quick-add-btn') as HTMLButtonElement | null;
+    quickAddBtnEl?.addEventListener('click', () => {
+      showWhitelistSelector(overlay, attempt.channel, settings, onWhitelistAdd);
+    });
+  }
 
   return showModalPromise(overlay, { type: attempt.type, rawPrice: attempt.rawPrice });
 }
@@ -685,9 +766,10 @@ async function runFrictionFlow(
   tracker: SpendingTracker,
   maxComparisons?: number,
   whitelistNote?: string,
+  onWhitelistAdd?: (behavior: WhitelistBehavior) => Promise<void>,
 ): Promise<OverlayDecision> {
   // Step 1: Main overlay
-  const mainDecision = await showMainOverlay(attempt, settings, tracker, whitelistNote);
+  const mainDecision = await showMainOverlay(attempt, settings, tracker, whitelistNote, onWhitelistAdd);
   if (mainDecision === 'cancel') {
     log('Friction flow: cancelled at Step 1 (main overlay)');
     return 'cancel';
@@ -916,8 +998,21 @@ async function handleClick(event: MouseEvent): Promise<void> {
   const whitelistNote = whitelistEntry?.behavior === 'full'
     ? '\u2B50 Whitelisted Channel \u2014 This is a planned support channel'
     : undefined;
+  const onWhitelistAdd = async (behavior: WhitelistBehavior): Promise<void> => {
+    const normalized = attempt.channel.trim().toLowerCase();
+    const existing = settings.whitelistedChannels.findIndex(e => e.username === normalized);
+    const newEntry: WhitelistEntry = { username: normalized, behavior };
+    if (existing >= 0) {
+      settings.whitelistedChannels[existing] = newEntry;
+    } else {
+      settings.whitelistedChannels.push(newEntry);
+    }
+    await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+    log(`Whitelist quick-add saved: ${normalized} → ${behavior}`);
+  };
+
   log(`Friction flow starting: level=${frictionLevel}, maxComparisons=${maxComparisons ?? 'all'}${whitelistNote ? ', full whitelist' : ''}`);
-  const finalDecision = await runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote);
+  const finalDecision = await runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote, onWhitelistAdd);
 
   if (finalDecision === 'proceed' && pendingPurchase) {
     log('User completed all friction steps — proceeding with purchase');

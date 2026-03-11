@@ -503,3 +503,88 @@
   color: #adadb8;
   margin-top: 4px;
 }
+
+/* Whitelist quick-add button */
+.hc-quick-add-wrap {
+  text-align: center;
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--hc-border, #3d3d42);
+  margin-top: 4px;
+}
+
+.hc-btn-text {
+  background: none;
+  border: none;
+  color: var(--hc-text-muted, #adadb8);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.hc-btn-text:hover {
+  color: var(--hc-text, #efeff1);
+  background: var(--hc-border, #3d3d42);
+}
+
+/* Whitelist inline selector */
+.hc-whitelist-selector {
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--hc-border, #3d3d42);
+  margin-top: 4px;
+}
+
+.hc-whitelist-selector-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--hc-text, #efeff1);
+  padding: 0 20px;
+}
+
+.hc-whitelist-warning {
+  background: rgba(255, 165, 0, 0.15);
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #ffa500;
+  margin: 0 20px 8px;
+}
+
+.hc-whitelist-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 20px 8px;
+}
+
+.hc-whitelist-option {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border: 1px solid var(--hc-border, #3d3d42);
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--hc-bg, #18181b);
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.hc-whitelist-option:hover {
+  border-color: #9147ff;
+  background: rgba(145, 71, 255, 0.1);
+}
+
+.hc-whitelist-option-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--hc-text, #efeff1);
+}
+
+.hc-whitelist-option-desc {
+  font-size: 11px;
+  color: var(--hc-text-muted, #adadb8);
+  margin-top: 2px;
+}
