@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hype Control</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <!-- Header -->
+        <header class="popup-header">
+            <h1>Hype Control</h1>
+        </header>
+
+        <!-- Stats Panel -->
+        <section class="stats-panel">
+            <div class="stat-item" id="stat-saved">
+                $0.00 saved
+            </div>
+            <div class="stat-item" id="stat-blocked">
+                0 blocked
+            </div>
+            <div class="stat-item" id="stat-rate">
+                0% cancel rate
+            </div>
+            <div class="stat-item" id="stat-step">
+                —
+            </div>
+        </section>
+
+        <!-- Streaming Override Section -->
+        <section class="streaming-section">
+            <button id="btn-streaming-override" class="btn-primary">
+                Stream Override (2 hr)
+            </button>
+            <div id="streaming-status" class="streaming-status">
+                Override inactive
+            </div>
+        </section>
+
+        <!-- Footer Links -->
+        <footer class="popup-footer">
+            <a id="link-logs" href="#" class="footer-link">View Logs</a>
+            <span id="popup-version" class="version-display">v0.0.0</span>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
