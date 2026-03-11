@@ -762,6 +762,42 @@
       margin: 0;
       line-height: 1.4;
     }
+
+    .scope-group {
+      display: flex;
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    .scope-btn {
+      background: var(--opt-bg-inset, #1f1f23);
+      color: var(--opt-text-muted, #adadb8);
+      border: 1px solid var(--opt-border, #3d3d42);
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .scope-btn:hover {
+      background: var(--opt-border, #3d3d42);
+      color: var(--opt-text, #efeff1);
+    }
+
+    .scope-btn[aria-pressed="true"] {
+      background: #9147ff;
+      color: #fff;
+      border-color: #9147ff;
+    }
+
+    .item-toggle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
   </style>
 </head>
 <body>

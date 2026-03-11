@@ -196,12 +196,23 @@ function renderComparisonItems(items: ComparisonItem[]): void {
       <button class="btn-icon danger" data-delete-id="${item.id}" title="Delete">&#10005;</button>
     `;
 
+    const scopeGroup = item.enabled ? `
+      <div class="scope-group" data-scope-group="${item.id}" role="radiogroup" aria-label="Friction scope for ${item.name}">
+        <button class="scope-btn" data-scope="nudge" aria-pressed="${item.frictionScope === 'nudge' ? 'true' : 'false'}">Nudge</button>
+        <button class="scope-btn" data-scope="full"  aria-pressed="${item.frictionScope === 'full'  ? 'true' : 'false'}">Full</button>
+        <button class="scope-btn" data-scope="both"  aria-pressed="${item.frictionScope === 'both'  ? 'true' : 'false'}">Both</button>
+      </div>
+    ` : '';
+
     row.innerHTML = `
       <span class="drag-handle" title="Drag to reorder">&#x2261;</span>
-      <label class="toggle-switch">
-        <input type="checkbox" data-item-id="${item.id}" ${item.enabled ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
+      <div class="item-toggle-wrap">
+        <label class="toggle-switch">
+          <input type="checkbox" data-item-id="${item.id}" ${item.enabled ? 'checked' : ''}>
+          <span class="toggle-slider"></span>
+        </label>
+        ${scopeGroup}
+      </div>
       <span class="comparison-item-info">
         <span>${item.emoji}</span>
         <span>${item.name}</span>
@@ -1224,9 +1235,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('tax-rate')?.addEventListener('input', () => clearFieldError('tax-rate'));
   document.getElementById('dailycap-amount')?.addEventListener('input', () => clearFieldError('dailycap-amount'));
 
-  // Update soft nudge step count whenever any comparison item toggle changes
-  document.querySelector('.container')?.addEventListener('change', (e) => {
-    if ((e.target as HTMLElement).matches('input[data-item-id]')) {
+  // Update soft nudge step count whenever any comparison item toggle changes; also re-render to show/hide scope group
+  document.querySelector('.container')?.addEventListener('change', async (e) => {
+    const target = e.target as HTMLElement;
+    if (target.matches('input[data-item-id]')) {
+      const itemId = (target as HTMLInputElement).dataset.itemId!;
+      const enabled = (target as HTMLInputElement).checked;
+      if (cachedSettings) {
+        const item = cachedSettings.comparisonItems.find(i => i.id === itemId);
+        if (item) {
+          item.enabled = enabled;
+          await saveSettings(cachedSettings);
+          renderComparisonItems(cachedSettings.comparisonItems);
+        }
+      }
       updateSoftNudgeStepsCount();
     }
   });
@@ -1241,9 +1263,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('new-item-price')?.addEventListener('input', () => clearItemFieldError('new-item-price'));
   document.getElementById('new-item-emoji')?.addEventListener('input', () => clearItemFieldError('new-item-emoji'));
 
-  // Delegated click handler for custom item edit/delete buttons
-  document.getElementById('comparison-items-list')?.addEventListener('click', (e) => {
+  // Delegated click handler for custom item edit/delete buttons and scope buttons
+  document.getElementById('comparison-items-list')?.addEventListener('click', async (e) => {
     const target = e.target as HTMLElement;
+
+    // Scope button click
+    const scopeBtn = target.closest<HTMLButtonElement>('.scope-btn');
+    if (scopeBtn) {
+      const scopeGroupEl = scopeBtn.closest<HTMLElement>('[data-scope-group]');
+      if (!scopeGroupEl) return;
+      const itemId = scopeGroupEl.dataset.scopeGroup!;
+      const scope = scopeBtn.dataset.scope as 'nudge' | 'full' | 'both';
+
+      // Update UI immediately
+      scopeGroupEl.querySelectorAll<HTMLButtonElement>('.scope-btn').forEach(b => {
+        b.setAttribute('aria-pressed', b.dataset.scope === scope ? 'true' : 'false');
+      });
+
+      // Persist
+      if (cachedSettings) {
+        const item = cachedSettings.comparisonItems.find(i => i.id === itemId);
+        if (item) {
+          item.frictionScope = scope;
+          await saveSettings(cachedSettings);
+          settingsLog('Comparison item scope changed', { itemId, scope });
+        }
+      }
+      return;
+    }
+
     const editBtn = target.closest('[data-edit-id]');
     if (editBtn) {
       const editId = editBtn.getAttribute('data-edit-id');
