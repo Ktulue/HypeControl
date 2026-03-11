@@ -1250,6 +1250,8 @@ async function runFrictionFlow(
   whitelistNote?: string,
   onWhitelistAdd?: (behavior: WhitelistBehavior) => Promise<void>,
 ): Promise<FrictionResult> {
+  let purchaseReason: string | undefined;
+
   // Step 1: Main overlay
   const mainDecision = await showMainOverlay(attempt, settings, tracker, whitelistNote, onWhitelistAdd);
   if (mainDecision === 'cancel') {
@@ -1264,7 +1266,7 @@ async function runFrictionFlow(
 
   if (priceWithTax === null) {
     log('Friction flow: no price detected, skipping comparison steps');
-    return { decision: 'proceed' };
+    return { decision: 'proceed', purchaseReason };
   }
 
   // nudge: enabled items where scope is 'nudge' or 'both', limited to softNudgeSteps
@@ -1290,6 +1292,14 @@ async function runFrictionFlow(
   log(`Friction flow: ${comparisonSteps.length} comparison step(s) (${maxComparisons !== undefined ? 'nudge/enabled only' : 'full/all items'}), priceWithTax=${taxPrice}`);
 
   // Steps 2+: Each comparison item
+  // We need a reference to the last overlay shown so we can pass it to subsequent steps.
+  // Comparison steps each create their own overlay element; after the loop we need
+  // the most-recently-created overlay for the intensity steps below.
+  // showComparisonStep creates its own overlay internally, so we capture it via a
+  // wrapper that returns it. For now, we create a placeholder overlay to reuse for
+  // the intensity steps (it will be re-populated by each step function).
+  let intensityOverlay: HTMLElement | null = null;
+
   for (let i = 0; i < comparisonSteps.length; i++) {
     const { item, display } = comparisonSteps[i];
     const stepNumber = i + 2; // Step 1 was the main overlay
@@ -1304,11 +1314,81 @@ async function runFrictionFlow(
     }
   }
 
-  log('Friction flow: completed all steps', {
+  log('Friction flow: completed all comparison steps', {
     totalSteps,
     channel: attempt.channel,
     rawPrice: attempt.rawPrice,
   });
+
+  // ── Intensity-gated steps ─────────────────────────────────────────────
+  // For steps 3+, we reuse a shared overlay element that each step re-populates.
+  // Note: showReasonSelectionStep appends and removes the overlay itself.
+  // The subsequent steps (cooldown, type-to-confirm, math) expect the overlay to
+  // already be in the DOM (they only set innerHTML and apply theme).
+  // So after reason selection proceeds we must re-append before the next step.
+  const intensity = settings.frictionIntensity ?? 'low';
+
+  if (intensity === 'medium' || intensity === 'high' || intensity === 'extreme') {
+    // Create the shared overlay element for intensity steps
+    intensityOverlay = document.createElement('div');
+    intensityOverlay.id = 'hc-overlay';
+    intensityOverlay.className = 'hc-overlay';
+    intensityOverlay.setAttribute('role', 'dialog');
+    intensityOverlay.setAttribute('aria-modal', 'true');
+    intensityOverlay.setAttribute('aria-labelledby', 'hc-overlay-heading');
+    intensityOverlay.setAttribute('aria-describedby', 'hc-overlay-desc');
+
+    // Step 3: Reason selection
+    // showReasonSelectionStep manages its own append/remove lifecycle.
+    log('Friction flow: starting reason selection step (step 3)');
+    const reasonResult = await showReasonSelectionStep(intensityOverlay);
+    if (reasonResult.decision === 'cancel') {
+      // Overlay was already removed by showReasonSelectionStep; nothing to clean up.
+      return { decision: 'cancel', cancelledAtStep: 3 };
+    }
+    purchaseReason = reasonResult.reason;
+  }
+
+  if (intensity === 'high' || intensity === 'extreme') {
+    // showReasonSelectionStep removed the overlay from DOM after resolving.
+    // Re-append so cooldown step can operate on it.
+    overlayVisible = true;
+    document.body.appendChild(intensityOverlay!);
+
+    const cooldownSecs = intensity === 'extreme' ? 30 : 10;
+    log(`Friction flow: starting friction cooldown step (${cooldownSecs}s, step 4)`);
+    const cooldownResult = await showFrictionCooldownStep(intensityOverlay!, cooldownSecs);
+    if (cooldownResult === 'cancel') {
+      removeOverlay(intensityOverlay!);
+      return { decision: 'cancel', cancelledAtStep: 4 };
+    }
+  }
+
+  if (intensity === 'high') {
+    // intensityOverlay is still in the DOM (cooldown step didn't remove it).
+    log('Friction flow: starting type-to-confirm step (step 5)');
+    const typeResult = await showTypeToConfirmStep(intensityOverlay!);
+    if (typeResult === 'cancel') {
+      removeOverlay(intensityOverlay!);
+      return { decision: 'cancel', cancelledAtStep: 5 };
+    }
+    // All intensity steps done for 'high' — clean up overlay.
+    removeOverlay(intensityOverlay!);
+  }
+
+  if (intensity === 'extreme') {
+    // intensityOverlay is still in the DOM (cooldown step didn't remove it).
+    log('Friction flow: starting math challenge step (step 5)');
+    const mathResult = await showMathChallengeStep(intensityOverlay!);
+    if (mathResult === 'cancel') {
+      removeOverlay(intensityOverlay!);
+      return { decision: 'cancel', cancelledAtStep: 5 };
+    }
+    // All intensity steps done for 'extreme' — clean up overlay.
+    removeOverlay(intensityOverlay!);
+  }
+
+  // For 'medium' intensity: reason step removed overlay itself; no extra cleanup needed.
 
   // ── Standalone Delay Timer (final step) ──────────────────────────────
   if (settings.delayTimer?.enabled) {
@@ -1323,7 +1403,7 @@ async function runFrictionFlow(
     }
   }
 
-  return { decision: 'proceed' };
+  return { decision: 'proceed', purchaseReason };
 }
 
 // ── Streaming Mode Toast ────────────────────────────────────────────────
