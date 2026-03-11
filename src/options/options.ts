@@ -596,6 +596,7 @@ async function addCustomItem(force = false): Promise<void> {
       pluralLabel: plural,
       enabled: true,
       isPreset: false,
+      frictionScope: 'both',
     };
 
     if (editingItemId) {

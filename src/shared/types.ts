@@ -30,6 +30,7 @@ export interface ComparisonItem {
   pluralLabel: string;
   enabled: boolean;
   isPreset: boolean;
+  frictionScope: 'nudge' | 'full' | 'both';
 }
 
 /** Friction level applied at different spend amounts */
@@ -53,6 +54,12 @@ export interface CooldownConfig {
 export interface DailyCapConfig {
   enabled: boolean;
   amount: number;
+}
+
+/** Standalone delay timer shown as the final step before purchase fires */
+export interface DelayTimerConfig {
+  enabled: boolean;
+  seconds: 5 | 10 | 30 | 60;
 }
 
 /** Whitelist behavior applied to a specific channel */
@@ -83,6 +90,7 @@ export interface UserSettings {
   cooldown: CooldownConfig;
   dailyCap: DailyCapConfig;
   frictionThresholds: FrictionThresholds;
+  delayTimer: DelayTimerConfig;
   streamingMode: StreamingModeConfig;
   toastDurationSeconds: number;
   whitelistedChannels: WhitelistEntry[];
@@ -99,6 +107,7 @@ export const PRESET_COMPARISON_ITEMS: ComparisonItem[] = [
     pluralLabel: 'Costco chickens',
     enabled: true,
     isPreset: true,
+    frictionScope: 'both',
   },
   {
     id: 'preset-hotdog',
@@ -108,6 +117,7 @@ export const PRESET_COMPARISON_ITEMS: ComparisonItem[] = [
     pluralLabel: 'Costco glizzies',
     enabled: true,
     isPreset: true,
+    frictionScope: 'both',
   },
   {
     id: 'preset-galleyboy',
@@ -117,6 +127,7 @@ export const PRESET_COMPARISON_ITEMS: ComparisonItem[] = [
     pluralLabel: 'Galley Boys',
     enabled: true,
     isPreset: true,
+    frictionScope: 'both',
   },
 ];
 
@@ -138,6 +149,10 @@ export const DEFAULT_SETTINGS: UserSettings = {
     thresholdFloor: 5,
     thresholdCeiling: 25,
     softNudgeSteps: 1,
+  },
+  delayTimer: {
+    enabled: false,
+    seconds: 10,
   },
   streamingMode: {
     enabled: false,
@@ -194,6 +209,12 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
     return true;
   });
 
+  // Backfill frictionScope for items saved before this field existed
+  items = items.map(i => ({
+    ...i,
+    frictionScope: i.frictionScope ?? 'both',
+  }));
+
   return {
     hourlyRate: saved.hourlyRate ?? DEFAULT_SETTINGS.hourlyRate,
     taxRate: saved.taxRate ?? DEFAULT_SETTINGS.taxRate,
@@ -216,6 +237,10 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
         softNudgeSteps: s.softNudgeSteps ?? DEFAULT_SETTINGS.frictionThresholds.softNudgeSteps,
       };
     })(),
+    delayTimer: {
+      ...DEFAULT_SETTINGS.delayTimer,
+      ...(saved.delayTimer || {}),
+    },
     streamingMode: {
       ...DEFAULT_SETTINGS.streamingMode,
       ...(saved.streamingMode || {}),
