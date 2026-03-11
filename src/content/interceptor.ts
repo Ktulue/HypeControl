@@ -962,6 +962,102 @@ async function showFrictionCooldownStep(
   });
 }
 
+// ── Overlay: Type-to-Confirm Step ──────────────────────────────────────
+
+const TYPE_TO_CONFIRM_PHRASE = 'I want to buy this';
+
+/**
+ * Friction step that requires the user to type a specific phrase before
+ * the Confirm button becomes enabled. Cancel/Escape/backdrop all resolve
+ * with 'cancel'. Confirm resolves with 'proceed' only when input matches.
+ */
+async function showTypeToConfirmStep(
+  overlay: HTMLElement,
+): Promise<'cancel' | 'proceed'> {
+  overlay.innerHTML = `
+    <div class="hc-modal">
+      <div class="hc-header">
+        <span class="hc-icon">⌨️</span>
+        <h2 class="hc-title" id="hc-overlay-heading">Type to confirm</h2>
+      </div>
+      <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
+        <p class="hc-message">To proceed, type the following phrase exactly:</p>
+        <p class="hc-confirm-phrase">${TYPE_TO_CONFIRM_PHRASE}</p>
+        <input
+          type="text"
+          class="hc-confirm-input"
+          id="hc-confirm-input"
+          placeholder="Type the phrase above..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <div class="hc-actions">
+        <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel</button>
+        <button class="hc-btn hc-btn-proceed" data-action="proceed" disabled aria-disabled="true" style="opacity: 0.4; cursor: not-allowed;">
+          Confirm
+        </button>
+      </div>
+    </div>
+  `;
+
+  log('Type-to-confirm step shown');
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const inputEl = overlay.querySelector('#hc-confirm-input') as HTMLInputElement | null;
+    const proceedBtn = overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null;
+
+    const finish = (decision: 'cancel' | 'proceed') => {
+      if (resolved) return;
+      resolved = true;
+      document.removeEventListener('keydown', handleKeydown);
+      previousFocus?.focus();
+      resolve(decision);
+    };
+
+    // Real-time validation: enable Confirm only when input matches phrase (case-insensitive)
+    inputEl?.addEventListener('input', () => {
+      const matches = (inputEl.value.trim().toLowerCase() === TYPE_TO_CONFIRM_PHRASE.toLowerCase());
+      if (proceedBtn) {
+        proceedBtn.disabled = !matches;
+        proceedBtn.setAttribute('aria-disabled', String(!matches));
+        proceedBtn.style.opacity = matches ? '' : '0.4';
+        proceedBtn.style.cursor = matches ? '' : 'not-allowed';
+      }
+    });
+
+    overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => finish('cancel'));
+    overlay.querySelector('[data-action="proceed"]')?.addEventListener('click', () => {
+      const matches = (inputEl?.value.trim().toLowerCase() === TYPE_TO_CONFIRM_PHRASE.toLowerCase());
+      if (matches) finish('proceed');
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish('cancel');
+    });
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Tab') {
+        const focusable = Array.from(
+          overlay.querySelectorAll<HTMLElement>('.hc-btn:not([disabled]), #hc-confirm-input')
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+
+    applyThemeToOverlay(overlay);
+    inputEl?.focus();
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**

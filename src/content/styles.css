@@ -630,3 +630,43 @@
   color: var(--hc-text-muted, #adadb8);
   margin-top: 2px;
 }
+
+/* Type-to-confirm step */
+.hc-confirm-phrase {
+  display: inline-block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--hc-primary);
+  background: rgba(145, 70, 255, 0.12);
+  border: 1px solid rgba(145, 70, 255, 0.3);
+  border-radius: 4px;
+  padding: 6px 14px;
+  margin: 12px 0 16px;
+  letter-spacing: 0.5px;
+  user-select: all;
+}
+
+.hc-confirm-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--hc-bg-dark);
+  color: var(--hc-text);
+  border: 1px solid var(--hc-border);
+  border-radius: var(--hc-radius);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.hc-confirm-input:focus {
+  border-color: var(--hc-primary);
+  box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
+}
+
+.hc-confirm-input::placeholder {
+  color: var(--hc-text-muted);
+  opacity: 0.7;
+}
