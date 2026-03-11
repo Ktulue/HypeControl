@@ -1058,6 +1058,177 @@ async function showTypeToConfirmStep(
   });
 }
 
+// ── Overlay: Math Challenge Step ────────────────────────────────────────
+
+interface MathProblem {
+  question: string;
+  answer: number;
+}
+
+/**
+ * Generates a simple arithmetic problem using two integers in [2, 20].
+ * Operations: addition, subtraction (result always positive), multiplication.
+ * Uses Unicode × (U+00D7) and − (U+2212) for display.
+ */
+function generateMathProblem(): MathProblem {
+  const ops = ['+', '-', '×'] as const;
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a = Math.floor(Math.random() * 19) + 2; // [2, 20]
+  let b = Math.floor(Math.random() * 19) + 2;
+
+  if (op === '-' && a < b) {
+    // Ensure a >= b so result is positive
+    [a, b] = [b, a];
+  }
+
+  let answer: number;
+  let question: string;
+
+  switch (op) {
+    case '+':
+      answer = a + b;
+      question = `${a} + ${b} = ?`;
+      break;
+    case '-':
+      answer = a - b;
+      question = `${a} \u2212 ${b} = ?`;
+      break;
+    case '×':
+    default:
+      answer = a * b;
+      question = `${a} \u00D7 ${b} = ?`;
+      break;
+  }
+
+  return { question, answer };
+}
+
+/**
+ * Friction step that requires the user to solve a math problem before
+ * proceeding. On wrong answer: shows an error, generates a new problem,
+ * clears the input, and keeps the modal open.
+ * Cancel/Escape/backdrop resolve with 'cancel'.
+ * Correct answer resolves with 'proceed'.
+ */
+async function showMathChallengeStep(
+  overlay: HTMLElement,
+): Promise<'cancel' | 'proceed'> {
+  let problem = generateMathProblem();
+
+  const renderContent = () => `
+    <div class="hc-modal">
+      <div class="hc-header">
+        <span class="hc-icon">🧮</span>
+        <h2 class="hc-title" id="hc-overlay-heading">Solve to proceed</h2>
+      </div>
+      <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
+        <p class="hc-math-question" id="hc-math-question">${problem.question}</p>
+        <input
+          type="number"
+          class="hc-math-input"
+          id="hc-math-input"
+          placeholder="Your answer..."
+          autocomplete="off"
+          inputmode="numeric"
+        />
+        <p class="hc-math-error" id="hc-math-error" style="display: none;">Incorrect \u2014 try again</p>
+      </div>
+      <div class="hc-actions">
+        <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel</button>
+        <button class="hc-btn hc-btn-proceed" data-action="proceed" disabled aria-disabled="true" style="opacity: 0.4; cursor: not-allowed;">
+          Submit
+        </button>
+      </div>
+    </div>
+  `;
+
+  overlay.innerHTML = renderContent();
+  log('Math challenge step shown');
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    const previousFocus = document.activeElement as HTMLElement | null;
+
+    const finish = (decision: 'cancel' | 'proceed') => {
+      if (resolved) return;
+      resolved = true;
+      document.removeEventListener('keydown', handleKeydown);
+      previousFocus?.focus();
+      resolve(decision);
+    };
+
+    const getElements = () => ({
+      inputEl: overlay.querySelector('#hc-math-input') as HTMLInputElement | null,
+      proceedBtn: overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null,
+      errorEl: overlay.querySelector('#hc-math-error') as HTMLElement | null,
+      questionEl: overlay.querySelector('#hc-math-question') as HTMLElement | null,
+    });
+
+    const wireInput = () => {
+      const { inputEl, proceedBtn } = getElements();
+
+      inputEl?.addEventListener('input', () => {
+        const hasValue = inputEl.value.trim() !== '';
+        if (proceedBtn) {
+          proceedBtn.disabled = !hasValue;
+          proceedBtn.setAttribute('aria-disabled', String(!hasValue));
+          proceedBtn.style.opacity = hasValue ? '' : '0.4';
+          proceedBtn.style.cursor = hasValue ? '' : 'not-allowed';
+        }
+      });
+
+      overlay.querySelector('[data-action="proceed"]')?.addEventListener('click', () => {
+        const { inputEl: inp, errorEl, questionEl } = getElements();
+        const submitted = parseInt(inp?.value ?? '', 10);
+        if (submitted === problem.answer) {
+          finish('proceed');
+        } else {
+          // Wrong answer: show error, generate new problem, clear input
+          if (errorEl) errorEl.style.display = '';
+          problem = generateMathProblem();
+          if (questionEl) questionEl.textContent = problem.question;
+          if (inp) {
+            inp.value = '';
+            inp.focus();
+          }
+          const { proceedBtn: btn } = getElements();
+          if (btn) {
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+            btn.style.opacity = '0.4';
+            btn.style.cursor = 'not-allowed';
+          }
+        }
+      });
+
+      inputEl?.focus();
+    };
+
+    overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => finish('cancel'));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish('cancel');
+    });
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Tab') {
+        const focusable = Array.from(
+          overlay.querySelectorAll<HTMLElement>('.hc-btn:not([disabled]), #hc-math-input')
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+
+    applyThemeToOverlay(overlay);
+    wireInput();
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**

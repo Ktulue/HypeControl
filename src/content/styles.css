@@ -670,3 +670,54 @@
   color: var(--hc-text-muted);
   opacity: 0.7;
 }
+
+/* Math challenge step */
+.hc-math-question {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--hc-text);
+  margin: 8px 0 20px;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+.hc-math-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--hc-bg-dark);
+  color: var(--hc-text);
+  border: 1px solid var(--hc-border);
+  border-radius: var(--hc-radius);
+  font-size: 18px;
+  font-weight: 600;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  text-align: center;
+  font-family: inherit;
+  /* Hide browser number input spinners */
+  -moz-appearance: textfield;
+}
+
+.hc-math-input::-webkit-outer-spin-button,
+.hc-math-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hc-math-input:focus {
+  border-color: var(--hc-primary);
+  box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
+}
+
+.hc-math-input::placeholder {
+  color: var(--hc-text-muted);
+  opacity: 0.7;
+}
+
+.hc-math-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hc-danger);
+}
