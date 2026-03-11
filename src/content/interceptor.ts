@@ -13,6 +13,14 @@ import { isPurchaseButton, createPurchaseAttempt } from './detector';
 import { shouldBypassFriction } from './streamingMode';
 import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
+import { writeInterceptEvent } from '../shared/interceptLogger';
+
+/** Result returned by runFrictionFlow */
+interface FrictionResult {
+  decision: OverlayDecision;
+  cancelledAtStep?: number;
+  purchaseReason?: string;
+}
 
 /** Storage keys */
 const SETTINGS_KEY = 'hcSettings';
@@ -767,12 +775,12 @@ async function runFrictionFlow(
   maxComparisons?: number,
   whitelistNote?: string,
   onWhitelistAdd?: (behavior: WhitelistBehavior) => Promise<void>,
-): Promise<OverlayDecision> {
+): Promise<FrictionResult> {
   // Step 1: Main overlay
   const mainDecision = await showMainOverlay(attempt, settings, tracker, whitelistNote, onWhitelistAdd);
   if (mainDecision === 'cancel') {
     log('Friction flow: cancelled at Step 1 (main overlay)');
-    return 'cancel';
+    return { decision: 'cancel', cancelledAtStep: 1 };
   }
 
   // Build comparison steps — only when price is detected
@@ -782,7 +790,7 @@ async function runFrictionFlow(
 
   if (priceWithTax === null) {
     log('Friction flow: no price detected, skipping comparison steps');
-    return 'proceed';
+    return { decision: 'proceed' };
   }
 
   // nudge: enabled items where scope is 'nudge' or 'both', limited to softNudgeSteps
@@ -818,7 +826,7 @@ async function runFrictionFlow(
         stepsCompleted: stepNumber - 1,
         totalSteps,
       });
-      return 'cancel';
+      return { decision: 'cancel', cancelledAtStep: stepNumber };
     }
   }
 
@@ -837,11 +845,11 @@ async function runFrictionFlow(
     );
     if (delayDecision === 'cancel') {
       log('Friction flow: cancelled at delay timer step');
-      return 'cancel';
+      return { decision: 'cancel' };
     }
   }
 
-  return 'proceed';
+  return { decision: 'proceed' };
 }
 
 // ── Streaming Mode Toast ────────────────────────────────────────────────
@@ -1015,14 +1023,35 @@ async function handleClick(event: MouseEvent): Promise<void> {
   };
 
   log(`Friction flow starting: level=${frictionLevel}, maxComparisons=${maxComparisons ?? 'all'}${whitelistNote ? ', full whitelist' : ''}`);
-  const finalDecision = await runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote, onWhitelistAdd);
+  const frictionResult = await runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote, onWhitelistAdd);
+  const priceWithTax = attempt.priceValue !== null
+    ? Math.round(attempt.priceValue * (1 + settings.taxRate / 100) * 100) / 100
+    : null;
 
-  if (finalDecision === 'proceed' && pendingPurchase) {
+  if (frictionResult.decision === 'proceed' && pendingPurchase) {
     log('User completed all friction steps — proceeding with purchase');
     await recordPurchase(attempt.priceValue, settings, tracker);
     allowNextClick(pendingPurchase.attempt.element);
+    await writeInterceptEvent({
+      channel: attempt.channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'proceeded',
+      purchaseReason: frictionResult.purchaseReason,
+    });
   } else {
     log('User cancelled the purchase');
+    await writeInterceptEvent({
+      channel: attempt.channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'cancelled',
+      cancelledAtStep: frictionResult.cancelledAtStep,
+      savedAmount: priceWithTax ?? 0,
+      purchaseReason: frictionResult.purchaseReason,
+    });
   }
   pendingPurchase = null;
 }
