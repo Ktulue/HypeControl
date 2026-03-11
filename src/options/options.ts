@@ -883,6 +883,8 @@ async function getFormSettings(): Promise<UserSettings> {
     // Whitelist is managed independently (add/remove/behavior-change saves immediately)
     whitelistedChannels: cachedSettings?.whitelistedChannels ?? [],
     theme: ((document.getElementById('theme-preference') as HTMLSelectElement)?.value as ThemePreference) || DEFAULT_SETTINGS.theme,
+    // Delay timer is managed independently (wired via wireDelayTimerControls)
+    delayTimer: cachedSettings?.delayTimer ?? DEFAULT_SETTINGS.delayTimer,
   };
 }
 
