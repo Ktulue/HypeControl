@@ -861,6 +861,107 @@ async function showReasonSelectionStep(
   });
 }
 
+// ── Overlay: Friction Cooldown Step ────────────────────────────────────
+
+/**
+ * Mandatory waiting step — the user must wait for the full countdown before
+ * the Proceed button becomes available. Cancel is always enabled.
+ */
+async function showFrictionCooldownStep(
+  overlay: HTMLElement,
+  durationSeconds: number,
+): Promise<'cancel' | 'proceed'> {
+  overlay.innerHTML = `
+    <div class="hc-modal">
+      <div class="hc-header">
+        <span class="hc-icon">⏳</span>
+        <h2 class="hc-title" id="hc-overlay-heading">Take a moment to reflect...</h2>
+      </div>
+      <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
+        <p class="hc-message">Please wait ${durationSeconds} seconds before continuing.</p>
+        <div class="hc-progress-wrap">
+          <div class="hc-progress-bar" id="hc-cooldown-progress"></div>
+        </div>
+        <p class="hc-countdown" id="hc-cooldown-countdown">${durationSeconds}s remaining</p>
+      </div>
+      <div class="hc-actions">
+        <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel Purchase</button>
+        <button class="hc-btn hc-btn-proceed" data-action="proceed" disabled aria-disabled="true" style="opacity: 0.4; cursor: not-allowed;">
+          Waiting...
+        </button>
+      </div>
+    </div>
+  `;
+
+  log(`Friction cooldown step (${durationSeconds}s) shown`);
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const expiresAt = Date.now() + durationSeconds * 1000;
+
+    const finish = (decision: 'cancel' | 'proceed') => {
+      if (resolved) return;
+      resolved = true;
+      if (intervalId !== null) clearInterval(intervalId);
+      document.removeEventListener('keydown', handleKeydown);
+      previousFocus?.focus();
+      resolve(decision);
+    };
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Tab') {
+        const focusable = Array.from(
+          overlay.querySelectorAll<HTMLButtonElement>('.hc-btn:not([disabled])')
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+
+    overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => finish('cancel'));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) finish('cancel'); });
+
+    const progressEl = overlay.querySelector('#hc-cooldown-progress') as HTMLElement | null;
+    const countdownEl = overlay.querySelector('#hc-cooldown-countdown') as HTMLElement | null;
+    const proceedBtn = overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null;
+
+    intervalId = setInterval(() => {
+      const left = expiresAt - Date.now();
+      const elapsed = durationSeconds * 1000 - left;
+      const pct = Math.min(100, (elapsed / (durationSeconds * 1000)) * 100);
+      if (progressEl) progressEl.style.width = `${pct}%`;
+
+      if (left <= 0) {
+        if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
+        if (countdownEl) countdownEl.textContent = 'Ready to proceed';
+        if (proceedBtn) {
+          proceedBtn.disabled = false;
+          proceedBtn.removeAttribute('aria-disabled');
+          proceedBtn.style.opacity = '';
+          proceedBtn.style.cursor = '';
+          proceedBtn.textContent = 'Proceed';
+          proceedBtn.addEventListener('click', () => finish('proceed'));
+          proceedBtn.focus();
+        }
+        return;
+      }
+
+      const sec = Math.ceil(left / 1000);
+      if (countdownEl) countdownEl.textContent = `${sec}s remaining`;
+    }, 100);
+
+    applyThemeToOverlay(overlay);
+    (overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement)?.focus();
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**
