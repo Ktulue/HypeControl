@@ -933,6 +933,7 @@ async function getFormSettings(): Promise<UserSettings> {
       thresholdCeiling: parseFloat((document.getElementById('threshold-ceiling') as HTMLInputElement)?.value) || 25,
       softNudgeSteps: Math.max(1, parseInt((document.getElementById('soft-nudge-steps') as HTMLInputElement)?.value) || 1),
     },
+    frictionIntensity: cachedSettings?.frictionIntensity ?? DEFAULT_SETTINGS.frictionIntensity,
     streamingMode: {
       enabled: (document.getElementById('streaming-enabled') as HTMLInputElement)?.checked ?? true,
       twitchUsername: (document.getElementById('streaming-username') as HTMLInputElement)?.value.trim() ?? '',

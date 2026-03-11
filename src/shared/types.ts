@@ -36,6 +36,9 @@ export interface ComparisonItem {
 /** Friction level applied at different spend amounts */
 export type FrictionLevel = 'none' | 'nudge' | 'full' | 'cap-bypass';
 
+/** User-selectable named friction intensity (how intense friction is when it triggers) */
+export type FrictionIntensity = 'low' | 'medium' | 'high' | 'extreme';
+
 /** Friction threshold tier configuration */
 export interface FrictionThresholds {
   enabled: boolean;
@@ -90,6 +93,7 @@ export interface UserSettings {
   cooldown: CooldownConfig;
   dailyCap: DailyCapConfig;
   frictionThresholds: FrictionThresholds;
+  frictionIntensity: FrictionIntensity;
   delayTimer: DelayTimerConfig;
   streamingMode: StreamingModeConfig;
   toastDurationSeconds: number;
@@ -150,6 +154,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     thresholdCeiling: 25,
     softNudgeSteps: 1,
   },
+  frictionIntensity: 'medium',
   delayTimer: {
     enabled: false,
     seconds: 10,
@@ -181,6 +186,20 @@ export const DEFAULT_SPENDING_TRACKER: SpendingTracker = {
   sessionTotal: 0,
   sessionChannel: '',
 };
+
+/** A single structured intercept event — stored in chrome.storage.local */
+export interface InterceptEvent {
+  id: string;               // Date.now().toString() + Math.random().toString(36).slice(2)
+  timestamp: number;        // unix ms
+  channel: string;
+  purchaseType: string;
+  rawPrice: string | null;
+  priceWithTax: number | null;
+  outcome: 'cancelled' | 'proceeded';
+  cancelledAtStep?: number; // which step the user cancelled at (1 = main modal, 2+ = subsequent)
+  savedAmount?: number;     // set on cancelled entries = priceWithTax (or 0 if no price)
+  purchaseReason?: string;  // set when reason-selection step is completed
+}
 
 /** Merge saved settings with defaults to handle upgrades */
 export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
@@ -237,6 +256,7 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
         softNudgeSteps: s.softNudgeSteps ?? DEFAULT_SETTINGS.frictionThresholds.softNudgeSteps,
       };
     })(),
+    frictionIntensity: saved.frictionIntensity ?? DEFAULT_SETTINGS.frictionIntensity,
     delayTimer: {
       ...DEFAULT_SETTINGS.delayTimer,
       ...(saved.delayTimer || {}),
