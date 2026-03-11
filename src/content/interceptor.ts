@@ -557,6 +557,115 @@ function showCooldownBlock(remainingMs: number): void {
   (overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement)?.focus();
 }
 
+// ── Overlay: Standalone Delay Timer Step ───────────────────────────────
+
+async function showDelayTimerStep(
+  durationSeconds: number,
+  attempt: PurchaseAttempt,
+): Promise<OverlayDecision> {
+  if (overlayVisible) return 'cancel';
+  overlayVisible = true;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'hc-overlay';
+  overlay.className = 'hc-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'hc-overlay-heading');
+  overlay.setAttribute('aria-describedby', 'hc-overlay-desc');
+  overlay.innerHTML = `
+    <div class="hc-modal">
+      <div class="hc-header">
+        <span class="hc-icon">⏱️</span>
+        <h2 class="hc-title" id="hc-overlay-heading">Last Chance to Reconsider</h2>
+      </div>
+      <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
+        <p class="hc-message">Waiting ${durationSeconds} seconds before this purchase goes through.</p>
+        <div class="hc-progress-wrap">
+          <div class="hc-progress-bar" id="hc-delay-progress"></div>
+        </div>
+        <p class="hc-countdown" id="hc-delay-countdown">${durationSeconds}s remaining</p>
+      </div>
+      <div class="hc-actions">
+        <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel Purchase</button>
+        <button class="hc-btn hc-btn-proceed" data-action="proceed" disabled aria-disabled="true" style="opacity: 0.4; cursor: not-allowed;">
+          Waiting...
+        </button>
+      </div>
+    </div>
+  `;
+
+  log(`Delay timer step (${durationSeconds}s) started`, { channel: attempt.channel });
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const expiresAt = Date.now() + durationSeconds * 1000;
+
+    const finish = (decision: OverlayDecision) => {
+      if (resolved) return;
+      resolved = true;
+      if (intervalId !== null) clearInterval(intervalId);
+      document.removeEventListener('keydown', handleKeydown);
+      removeOverlay(overlay);
+      previousFocus?.focus();
+      resolve(decision);
+    };
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Tab') {
+        const focusable = Array.from(
+          overlay.querySelectorAll<HTMLButtonElement>('.hc-btn:not([disabled])')
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+
+    overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => finish('cancel'));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) finish('cancel'); });
+
+    const progressEl = overlay.querySelector('#hc-delay-progress') as HTMLElement | null;
+    const countdownEl = overlay.querySelector('#hc-delay-countdown') as HTMLElement | null;
+    const proceedBtn = overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null;
+
+    intervalId = setInterval(() => {
+      const left = expiresAt - Date.now();
+      const elapsed = durationSeconds * 1000 - left;
+      const pct = Math.min(100, (elapsed / (durationSeconds * 1000)) * 100);
+      if (progressEl) progressEl.style.width = `${pct}%`;
+
+      if (left <= 0) {
+        if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
+        if (countdownEl) countdownEl.textContent = 'Time\'s up — proceed when ready';
+        if (proceedBtn) {
+          proceedBtn.disabled = false;
+          proceedBtn.removeAttribute('aria-disabled');
+          proceedBtn.style.opacity = '';
+          proceedBtn.style.cursor = '';
+          proceedBtn.textContent = 'Proceed';
+          proceedBtn.addEventListener('click', () => finish('proceed'));
+          proceedBtn.focus();
+        }
+        return;
+      }
+
+      const sec = Math.ceil(left / 1000);
+      if (countdownEl) countdownEl.textContent = `${sec}s remaining`;
+    }, 100);
+
+    applyThemeToOverlay(overlay);
+    document.body.appendChild(overlay);
+    (overlay.querySelector('[data-action="cancel"]') as HTMLButtonElement)?.focus();
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**
@@ -633,6 +742,19 @@ async function runFrictionFlow(
     channel: attempt.channel,
     rawPrice: attempt.rawPrice,
   });
+
+  // ── Standalone Delay Timer (final step) ──────────────────────────────
+  if (settings.delayTimer?.enabled) {
+    log(`Delay timer step starting (${settings.delayTimer.seconds}s)`);
+    const delayDecision = await showDelayTimerStep(
+      settings.delayTimer.seconds,
+      attempt,
+    );
+    if (delayDecision === 'cancel') {
+      log('Friction flow: cancelled at delay timer step');
+      return 'cancel';
+    }
+  }
 
   return 'proceed';
 }

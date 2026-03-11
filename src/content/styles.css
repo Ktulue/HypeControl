@@ -480,3 +480,26 @@
   font-family: sans-serif;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
+
+/* Delay timer progress bar */
+.hc-progress-wrap {
+  background: #2a2a2e;
+  border-radius: 4px;
+  height: 6px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+
+.hc-progress-bar {
+  background: #9147ff;
+  height: 100%;
+  width: 0%;
+  transition: width 0.1s linear;
+  border-radius: 4px;
+}
+
+.hc-countdown {
+  font-size: 13px;
+  color: #adadb8;
+  margin-top: 4px;
+}
