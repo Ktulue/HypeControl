@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-10
-**Current Version:** 0.4.5
+**Current Version:** 0.4.7
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -13,9 +13,9 @@
 | MVP Part 1 — Foundation & Detection       | ✅ Complete       |
 | MVP Part 2 — Options Page & Settings      | ✅ Complete       |
 | MVP Part 3 — Tax + Hours + Comparisons    | ✅ Complete       |
-| MVP Part 4 — Multi-Step Friction Levels   | ⚠️ Partially Done |
-| MVP Part 4b — Analytics & Popup Stats     | ⚠️ Partially Done |
-| MVP Part 5 — Streaming Mode               | ✅ Mostly Complete |
+| MVP Part 4 — Multi-Step Friction Levels   | ✅ Complete        |
+| MVP Part 4b — Analytics & Popup Stats     | ✅ Complete        |
+| MVP Part 5 — Streaming Mode               | ✅ Complete        |
 | MVP Part 6 — Integration Testing & Polish | ⚠️ Partially Done |
 | Add-on 5 — Streamer Whitelist             | ✅ Complete        |
 | Phase 4 — Other Add-ons                   | ⚠️ Partially Done |
@@ -64,47 +64,34 @@ Working:
 
 ---
 
-### ⚠️ MVP Part 4 — Multi-Step Friction Levels (PARTIALLY DONE)
+### ✅ MVP Part 4 — Multi-Step Friction Levels (COMPLETE)
 
-**What's implemented:** Friction tiers by price threshold (no-friction / nudge / full), with comparison items displayed as sequential steps.
+**What's implemented:** Friction tiers by price threshold (no-friction / nudge / full), with comparison items displayed as sequential steps. Full named intensity setting (Low/Medium/High/Extreme) with all four overlay steps.
 
-**What the design document specifies that is MISSING:**
-
-- [ ] **Named friction level setting** — User-selectable Low / Medium / High / Extreme from the options page (currently friction is determined by price thresholds, not a named setting)
-- [ ] **Reason-selection step (Medium+)** — Modal presenting:
-  - "To support the streamer"
-  - "I genuinely want this reward/emotes"
-  - "Caught up in the moment" → auto-cancels with a helpful message
-- [ ] **Cooldown timer step (High+)** — Progress bar countdown (10s for High, 30s for Extreme), proceed button disabled until timer completes
-- [ ] **Type-to-confirm step (High+)** — User must type `I WANT THIS` (case-insensitive) to proceed
-- [ ] **Math problem step (Extreme only)** — Simple arithmetic the user must solve before proceeding
-- [ ] **Step-level cancellation tracking** — Record _which step_ user cancelled at (1, 2, 3, 4) for later insight
+- [x] **Named friction level setting** — Low / Medium / High / Extreme segmented control on options page, stored in `frictionIntensity` setting
+- [x] **Reason-selection step (Medium+)** — "Why are you buying this?" modal with 5 reasons; proceed requires selecting one
+- [x] **Cooldown timer step (High+)** — Progress bar countdown (10s for High, 30s for Extreme), proceed button disabled until timer completes
+- [x] **Type-to-confirm step (High only)** — User must type "I want to buy this" (case-insensitive) to proceed
+- [x] **Math challenge step (Extreme only)** — Simple arithmetic problem; wrong answer generates a new problem, correct answer allows proceed
+- [x] **Step-level cancellation tracking** — `cancelledAtStep` field on `FrictionResult`, written to `InterceptEvent` in storage
 
 ---
 
-### ⚠️ MVP Part 4b — Analytics & Popup Stats (PARTIALLY DONE)
+### ✅ MVP Part 4b — Analytics & Popup Stats (COMPLETE)
 
-**What's implemented:** A logging system that stores intercept events, and a settings log. Logs page (`logs.html`) exists for viewing raw entries.
+**What's implemented:** Structured `InterceptEvent` store with 90-day auto-pruning. Popup stats panel showing computed insights. Streaming override accessible from popup.
 
-**What is MISSING:**
-
-- [ ] **Popup with stats** — Currently clicking the extension icon opens the options page. The doc calls for a dedicated `popup.html` showing:
-  - "Saved this week: $XX.XX"
-  - "Blocked X impulse purchases"
-  - "Most effective friction step"
-  - Link to full history
-- [ ] **"Money saved" calculation** — Sum of prices for purchases that were _cancelled_ (not proceeded)
-- [ ] **Cancel-rate insight** — % of intercepts that resulted in cancellation
-- [ ] **Most effective step insight** — Which step number has the highest cancel rate
-- [ ] **Peak spending hours** — When most intercepts happen (hour-of-day bucketing)
-- [ ] **Top channels** — Where spending/intercepts happen most
-- [ ] **Auto-prune to 90 days** — Current logger keeps 200 entries; the doc specifies 90-day window by date
+- [x] **Popup with stats** — `popup.html` shows saved total, blocked count, cancel rate, most effective friction step. Clicking extension icon opens popup (not options page).
+- [x] **"Money saved" calculation** — `savedAmount` on each cancelled `InterceptEvent`; `computePopupStats()` sums them
+- [x] **Cancel-rate insight** — % of intercepts cancelled, displayed in popup
+- [x] **Most effective step insight** — Step with highest cancel rate shown in popup
+- [x] **Auto-prune to 90 days** — `interceptLogger.ts` prunes events older than 90 days on every write
+- [ ] **Peak spending hours** — Hour-of-day bucketing (not implemented — deferred to Add-on 2)
+- [ ] **Top channels** — Per-channel stats (not implemented — deferred to Add-on 2)
 
 ---
 
-### ✅ MVP Part 5 — Streaming Mode (MOSTLY COMPLETE)
-
-Core feature is fully implemented. One item remains tied to the not-yet-built popup.
+### ✅ MVP Part 5 — Streaming Mode (COMPLETE)
 
 **What's implemented:**
 
@@ -122,7 +109,7 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 
 **What is still MISSING:**
 
-- [ ] **Manual override button** in popup — The `manualOverrideUntil` state field exists and is checked in `shouldBypassFriction()`, but there is no popup UI to set it. Blocked on popup not existing yet.
+- [x] **Manual override button** in popup — `popup.html` has a "Stream Override (2 hr)" button that sets a 2-hour streaming override window. Clears automatically when expired.
 
 ---
 
@@ -135,7 +122,7 @@ Core feature is fully implemented. One item remains tied to the not-yet-built po
 - [x] ~~**Fresh-install onboarding**~~ — ✅ Implemented: `chrome.runtime.onInstalled` handler in `serviceWorker.ts` opens the options page on first install
 - [x] ~~**Focus trap in overlay**~~ — ✅ Implemented: Tab/Shift+Tab wraps between first and last buttons in all modals (see `interceptor.ts`)
 - [x] ~~**Overlay entrance animation**~~ — ✅ Implemented: `hc-fadeIn` on backdrop, `hc-slideIn` on modal (see `styles.css`)
-- [ ] **Keyboard: Enter to confirm** — Where applicable (e.g., type-to-confirm step, final step). Not implemented (blocked on those steps not existing yet)
+- [ ] **Keyboard: Enter to confirm** — Where applicable (e.g., type-to-confirm step, final step). Steps now exist — this is implementable
 - [x] ~~**ARIA attributes audit**~~ — ✅ All overlay modals (main, comparison, cooldown) have `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby`
 - [x] ~~**"No price detected" fallback**~~ — ✅ Verified: overlay shows "Price not detected" as the price display and "Unable to detect price. Proceed with caution." when `priceValue` is null (see `interceptor.ts:355-361`)
 
