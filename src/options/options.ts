@@ -818,6 +818,36 @@ function wireDelayTimerControls(): void {
 }
 
 /**
+ * Update the aria-pressed state on the friction intensity buttons.
+ */
+function setFrictionIntensityUI(intensity: string): void {
+  const buttons = document.querySelectorAll<HTMLButtonElement>('#friction-intensity-group .intensity-btn');
+  buttons.forEach(btn => {
+    btn.setAttribute('aria-pressed', btn.dataset.intensity === intensity ? 'true' : 'false');
+  });
+}
+
+/**
+ * Wire up the Friction Intensity segmented control.
+ * Clicking a button sets it active, updates cachedSettings, and saves immediately.
+ */
+function wireFrictionIntensityControls(): void {
+  const group = document.getElementById('friction-intensity-group');
+
+  group?.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.intensity-btn');
+    if (!btn || !btn.dataset.intensity) return;
+    const intensity = btn.dataset.intensity as 'low' | 'medium' | 'high' | 'extreme';
+    setFrictionIntensityUI(intensity);
+    if (cachedSettings) {
+      cachedSettings.frictionIntensity = intensity;
+      await saveSettings(cachedSettings);
+      settingsLog('Friction intensity changed', { intensity });
+    }
+  });
+}
+
+/**
  * Apply theme class to the options page body.
  * 'auto' and 'dark' both use dark (the options page isn't on Twitch, so auto = dark).
  */
@@ -866,6 +896,9 @@ async function populateForm(): Promise<void> {
     toggleSubsection('delay-timer-subsection', settings.delayTimer.enabled);
   }
   setDelayTimerDurationUI(settings.delayTimer.seconds);
+
+  // Friction Intensity
+  setFrictionIntensityUI(settings.frictionIntensity);
 
   // Daily cap
   const dailycapEnabled = document.getElementById('dailycap-enabled') as HTMLInputElement;
@@ -933,7 +966,7 @@ async function getFormSettings(): Promise<UserSettings> {
       thresholdCeiling: parseFloat((document.getElementById('threshold-ceiling') as HTMLInputElement)?.value) || 25,
       softNudgeSteps: Math.max(1, parseInt((document.getElementById('soft-nudge-steps') as HTMLInputElement)?.value) || 1),
     },
-    frictionIntensity: cachedSettings?.frictionIntensity ?? DEFAULT_SETTINGS.frictionIntensity,
+    frictionIntensity: (document.querySelector<HTMLButtonElement>('#friction-intensity-group .intensity-btn[aria-pressed="true"]')?.dataset.intensity as 'low' | 'medium' | 'high' | 'extreme') ?? cachedSettings?.frictionIntensity ?? DEFAULT_SETTINGS.frictionIntensity,
     streamingMode: {
       enabled: (document.getElementById('streaming-enabled') as HTMLInputElement)?.checked ?? true,
       twitchUsername: (document.getElementById('streaming-username') as HTMLInputElement)?.value.trim() ?? '',
@@ -1201,6 +1234,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Delay Timer controls
   wireDelayTimerControls();
+
+  // Friction Intensity controls
+  wireFrictionIntensityControls();
 
   // ── Main form: blur validation + numeric stripping ───────────────────
   const numericFields = ['hourly-rate', 'tax-rate', 'threshold-floor', 'threshold-ceiling', 'dailycap-amount'];
