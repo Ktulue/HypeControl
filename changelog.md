@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.5] - 2026-03-10
+
+### Added
+- **Delay Timer** — configurable countdown timer (5/10/30/60s) shown as the final step before any purchase fires; enable and configure in Settings
+- **Whitelist quick-add** — "Remember this channel" button inside the main friction overlay; inline behavior selector (Skip/Reduced/Full) with duplicate detection and update support
+- **Comparison item scope** — each comparison item can now be assigned to Nudge only, Full only, or Both; scope selector appears below the enabled toggle in Settings
+
+---
+
 ## [0.4.2] - 2026-03-06
 
 ### Changed

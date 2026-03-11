@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-06
-**Current Version:** 0.4.2
+**Updated:** 2026-03-10
+**Current Version:** 0.4.5
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -17,7 +17,7 @@
 | MVP Part 4b — Analytics & Popup Stats     | ⚠️ Partially Done |
 | MVP Part 5 — Streaming Mode               | ✅ Mostly Complete |
 | MVP Part 6 — Integration Testing & Polish | ⚠️ Partially Done |
-| Add-on 5 — Streamer Whitelist             | ✅ Mostly Complete |
+| Add-on 5 — Streamer Whitelist             | ✅ Complete        |
 | Phase 4 — Other Add-ons                   | ⚠️ Partially Done |
 
 ---
@@ -185,13 +185,11 @@ Guided first-install walkthrough that overlays the Twitch page and highlights ea
 - [ ] Slide-out explainer panel per highlighted element
 - [ ] Links from tour steps to relevant settings sections
 
-### ✅ Add-on 5 — Streamer Whitelist (MOSTLY COMPLETE)
+### ✅ Add-on 5 — Streamer Whitelist (COMPLETE)
 
 **What's implemented:** Full per-channel whitelist with three behaviors — `skip` (no friction, silent log), `reduced` (toast only), `full` (full friction with a note). Add/remove/behavior-change UI in options. URL normalization on input. Whitelist note shown in the main overlay for full-friction channels. Behavior legend in options explains each mode. Disclaimer note that channels are not validated against Twitch.
 
-**What is still MISSING:**
-
-- [ ] **Quick-add from the overlay** — "Remember this choice for this channel" button within the friction modal itself
+- [x] **Quick-add from the overlay** — "Remember this channel" button within the friction modal, with inline behavior selector (Skip/Reduced/Full), duplicate detection, and update support
 
 ---
 
@@ -201,11 +199,11 @@ Listed in order of complexity per the planning doc.
 
 #### ⭐ Easy
 
-- [ ] **Add-on 1 — Delay Timer (Standalone)**
+- [x] **Add-on 1 — Delay Timer (Standalone)**
       A configurable mandatory wait (5/10/30/60 seconds) before _any_ purchase can proceed, independent of friction level. Single progress bar, cancel allowed at any time.
 
-- [ ] **Add-on 4 — Custom Comparison Items (Enhanced)**
-      Basic CRUD is done. Drag-to-reorder is now implemented for both preset and custom items (persisted to storage). What's still missing: the ability to set which ones appear in "nudge" mode vs. "full" mode.
+- [x] **Add-on 4 — Custom Comparison Items (Enhanced)**
+      Basic CRUD is done. Drag-to-reorder is now implemented for both preset and custom items (persisted to storage). Per-item scope (Nudge only / Full only / Both) is now implemented.
 
 #### ⭐⭐ Medium
 
@@ -282,4 +280,4 @@ Listed in order of complexity per the planning doc.
 
 ---
 
-_Last updated 2026-03-06 against the v0.4.2 codebase._
+_Last updated 2026-03-10 against the v0.4.5 codebase._
