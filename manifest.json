@@ -22,7 +22,8 @@
     }
   ],
   "action": {
-    "default_title": "Hype Control - Click for settings"
+    "default_title": "Hype Control - Click for settings",
+    "default_popup": "popup.html"
   },
   "options_page": "options.html"
 }
