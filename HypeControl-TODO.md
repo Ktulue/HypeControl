@@ -128,6 +128,19 @@ Working:
 
 ---
 
+## SECURITY FIXES
+
+### Stored XSS in Logs Page (High Priority)
+
+Two confirmed stored XSS vulnerabilities in `src/logs/logs.ts` found via security review. Both execute in the `chrome-extension://` page context, which has access to `chrome.storage.sync` and other extension APIs.
+
+- [ ] **Fix `e.message` injection (logs.ts:37)** — `renderLogs()` interpolates `e.message` into `innerHTML` unsanitized. Attack path: malicious Twitch URL path (`/channel`) → logged by interceptor.ts → stored in `chrome.storage.local` → rendered via `innerHTML` in logs page. Fix: build log entry DOM nodes with `textContent` instead of `innerHTML`.
+- [ ] **Fix `JSON.stringify(e.data)` injection (logs.ts:31)** — `JSON.stringify` does not escape `<`/`>`. Attack path: custom comparison item name with HTML payload (only length-validated) → `settingsLog()` in options.ts → stored in `chrome.storage.local` → `${JSON.stringify(e.data)}` rendered via `innerHTML`. Fix: use `textContent` on a `<span>` element instead.
+
+Both fixes: replace `container.innerHTML = ...` template with DOM construction (`createElement`, `textContent`, `appendChild`).
+
+---
+
 ## PHASE 4 — OPTIONAL ADD-ONS
 
 ## UX ENHANCEMENTS
