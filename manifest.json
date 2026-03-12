@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hype Control",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Create intentional friction before Twitch purchases to encourage mindful spending",
   "permissions": [
     "storage",
@@ -24,6 +24,5 @@
   "action": {
     "default_title": "Hype Control - Click for settings",
     "default_popup": "popup.html"
-  },
-  "options_page": "options.html"
+  }
 }
