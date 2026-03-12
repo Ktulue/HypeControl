@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-10
-**Current Version:** 0.4.7
+**Updated:** 2026-03-12
+**Current Version:** 0.4.8
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -145,30 +145,17 @@ Both fixes: replace `container.innerHTML = ...` template with DOM construction (
 
 ## UX ENHANCEMENTS
 
-### Settings UI Redesign
+### ✅ Settings UI Consolidation (COMPLETE — v0.4.8)
 
-**Complexity:** ⭐⭐⭐ Medium-Hard
-**Dependencies:** MVP complete
-**Design Direction:** TBD — choose one:
+All settings consolidated into a single 500×580px popup with right-side scroll-spy nav and pending-state save model. Options page retired.
 
-**Option A: Full Settings Page (Previews-style)**
-Dedicated page with sidebar navigation, sectioned toggle panels, and persistent brand/support sidebar. More room for complex settings. User navigates away from Twitch to configure.
-
-**Option B: Overlay Modal (BTTV-style)**
-Floating modal over the Twitch page. Lighter feel, stays in context. Better for quick toggles but may get cramped with HC's full settings surface.
-
-**Option C: Hybrid**
-Overlay modal for common quick-access settings (friction level, streaming mode toggle, daily cap). Full settings page for deeper configuration (comparison items, whitelist management, activity log).
-
-**Reference:** Previews extension settings UI, BetterTTV settings modal.
-
-- [ ] Decide on design direction
-- [ ] Sidebar nav or modal section routing
-- [ ] Toggle panels wired to chrome.storage
-- [ ] Brand/support panel (Ko-fi, GitHub, socials)
-- [ ] Changelog slide-out notification on extension update
-- [ ] Bug Report / Feedback link → github.com/Ktulue/HypeControl/issues/new
-- [ ] View Issues link → github.com/Ktulue/HypeControl/issues
+- [x] Consolidated popup: 6 sections (Stats · Friction · Comparisons · Limits · Channels · Settings)
+- [x] Right-side scroll-spy nav (IntersectionObserver) with active section highlight
+- [x] Pending-state model — footer Save button persists all changes to chrome.storage.sync
+- [x] Drag-and-drop comparison item reordering with inline Add/Edit sub-panel
+- [x] Bidirectional intensity + threshold sync between Stats and Friction/Limits sections
+- [x] Options page retired (deprecation notice), removed from manifest and webpack
+- [x] Jest + ts-jest test infrastructure with 9 unit tests for pendingState module
       
 ### Interactive Onboarding Tour (Long-term Milestone)
 
