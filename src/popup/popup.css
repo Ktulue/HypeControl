@@ -101,7 +101,9 @@ body {
   height: 48px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* Only .footer-links is in normal flow; .btn-save and .footer-version are
+     position:absolute. space-between left-aligns the single in-flow child. */
+  justify-content: space-between;
   border-top: 1px solid var(--border-color);
   position: relative;
   padding: 0 12px;
@@ -111,6 +113,21 @@ body {
   right: 12px;
   font-size: 11px;
   color: var(--text-muted);
+}
+.footer-links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.footer-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.footer-link:hover {
+  text-decoration: underline;
+  color: var(--text-primary);
 }
 
 /* ─── Sections ───────────────────────────────────────────── */
@@ -245,6 +262,10 @@ body {
 
 /* ─── Buttons ────────────────────────────────────────────── */
 .btn-save {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
   background: var(--accent);
   color: white;
   border: none;
