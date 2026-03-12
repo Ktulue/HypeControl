@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-12
-**Current Version:** 0.4.8
+**Current Version:** 0.4.9
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -145,6 +145,12 @@ Both fixes: replace `container.innerHTML = ...` template with DOM construction (
 
 ## UX ENHANCEMENTS
 
+### ✅ Footer Feedback Buttons (COMPLETE — v0.4.9)
+
+Added 🐛 Bug and 💡 Ideas anchor links to the popup footer (left-aligned). Bug links to GitHub Issues new form; Ideas links to GitHub Discussions with the Ideas category pre-selected. Pure HTML/CSS change, no JS.
+
+---
+
 ### ✅ Settings UI Consolidation (COMPLETE — v0.4.8)
 
 All settings consolidated into a single 500×580px popup with right-side scroll-spy nav and pending-state save model. Options page retired.
@@ -267,4 +273,4 @@ Listed in order of complexity per the planning doc.
 
 ---
 
-_Last updated 2026-03-10 against the v0.4.5 codebase._
+_Last updated 2026-03-12 against the v0.4.9 codebase._
