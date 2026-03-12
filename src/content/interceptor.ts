@@ -1040,6 +1040,11 @@ async function showTypeToConfirmStep(
 
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Enter') {
+        const matches = inputEl?.value.trim().toLowerCase() === TYPE_TO_CONFIRM_PHRASE.toLowerCase();
+        if (matches) finish('proceed');
+        return;
+      }
       if (e.key === 'Tab') {
         const focusable = Array.from(
           overlay.querySelectorAll<HTMLElement>('.hc-btn:not([disabled]), #hc-confirm-input')
@@ -1211,6 +1216,13 @@ async function showMathChallengeStep(
 
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { finish('cancel'); return; }
+      if (e.key === 'Enter') {
+        const { inputEl: inp } = getElements();
+        if (inp && inp.value.trim() !== '') {
+          overlay.querySelector<HTMLButtonElement>('[data-action="proceed"]')?.click();
+        }
+        return;
+      }
       if (e.key === 'Tab') {
         const focusable = Array.from(
           overlay.querySelectorAll<HTMLElement>('.hc-btn:not([disabled]), #hc-math-input')
@@ -1383,6 +1395,13 @@ async function runFrictionFlow(
     if (mathResult === 'cancel') {
       removeOverlay(intensityOverlay!);
       return { decision: 'cancel', cancelledAtStep: 5 };
+    }
+    // Math passed — proceed to type-to-confirm (step 6). Overlay stays in DOM.
+    log('Friction flow: starting type-to-confirm step (step 6)');
+    const typeResult = await showTypeToConfirmStep(intensityOverlay!);
+    if (typeResult === 'cancel') {
+      removeOverlay(intensityOverlay!);
+      return { decision: 'cancel', cancelledAtStep: 6 };
     }
     // All intensity steps done for 'extreme' — clean up overlay.
     removeOverlay(intensityOverlay!);
