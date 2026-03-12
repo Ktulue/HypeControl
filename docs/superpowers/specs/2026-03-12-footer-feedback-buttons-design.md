@@ -40,7 +40,9 @@ A `<div class="footer-links">` wrapper is added to the left of the footer contai
 ### CSS (`popup.css`)
 
 ```css
-/* Footer layout update */
+/* Footer layout update.
+   Only .footer-links is in normal flow — .btn-save and .footer-version are
+   both position:absolute. space-between left-aligns the single in-flow child. */
 .hc-footer {
   justify-content: space-between; /* was: center */
 }
@@ -50,6 +52,7 @@ A `<div class="footer-links">` wrapper is added to the left of the footer contai
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 0; /* footer-links (z-index:1) sits above this */
 }
 
 /* Feedback link group */
@@ -69,6 +72,7 @@ A `<div class="footer-links">` wrapper is added to the left of the footer contai
 
 .footer-link:hover {
   text-decoration: underline;
+  color: var(--text-primary);
 }
 ```
 
