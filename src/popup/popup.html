@@ -1,51 +1,264 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hype Control</title>
-    <link rel="stylesheet" href="popup.css">
+  <meta charset="UTF-8" />
+  <title>Hype Control</title>
+  <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-    <div class="popup-container">
-        <!-- Header -->
-        <header class="popup-header">
-            <h1>Hype Control</h1>
-        </header>
+  <header class="hc-header">
+    <h1 class="hc-title">Hype Control</h1>
+  </header>
 
-        <!-- Stats Panel -->
-        <section class="stats-panel">
-            <div class="stat-item" id="stat-saved">
-                $0.00 saved
-            </div>
-            <div class="stat-item" id="stat-blocked">
-                0 blocked
-            </div>
-            <div class="stat-item" id="stat-rate">
-                0% cancel rate
-            </div>
-            <div class="stat-item" id="stat-step">
-                —
-            </div>
-        </section>
+  <div class="hc-body">
+    <div class="hc-content" id="hc-content">
 
-        <!-- Streaming Override Section -->
-        <section class="streaming-section">
-            <button id="btn-streaming-override" class="btn-primary">
-                Stream Override (2 hr)
-            </button>
-            <div id="streaming-status" class="streaming-status">
-                Override inactive
-            </div>
-        </section>
+      <!-- Section 1: Stats -->
+      <section class="hc-section" id="section-stats">
+        <h2 class="section-heading">Stats</h2>
+        <div class="stat-tiles">
+          <div class="stat-tile" id="stat-saved">—</div>
+          <div class="stat-tile" id="stat-blocked">—</div>
+          <div class="stat-tile" id="stat-rate">—</div>
+          <div class="stat-tile" id="stat-step">—</div>
+        </div>
+        <div class="hc-row">
+          <span class="override-status" id="override-status">No active override</span>
+          <button class="btn-secondary" id="btn-override">Stream Override (2 hr)</button>
+        </div>
+        <div class="hc-row">
+          <label class="hc-label">Intensity</label>
+          <div class="segmented" id="stats-intensity" data-pending-field="frictionIntensity">
+            <button class="seg-btn" data-value="low">Low</button>
+            <button class="seg-btn" data-value="medium">Med</button>
+            <button class="seg-btn" data-value="high">High</button>
+            <button class="seg-btn" data-value="extreme">Extreme</button>
+          </div>
+        </div>
+        <div class="hc-row">
+          <label class="hc-label">Thresholds</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="stats-thresholds-enabled" />
+            <span class="toggle-track"></span>
+            <span class="toggle-text">enabled</span>
+          </label>
+        </div>
+      </section>
 
-        <!-- Footer Links -->
-        <footer class="popup-footer">
-            <a id="link-logs" href="#" class="footer-link">View Logs</a>
-            <span id="popup-version" class="version-display">v0.0.0</span>
-        </footer>
-    </div>
+      <!-- Section 2: Friction -->
+      <section class="hc-section" id="section-friction">
+        <h2 class="section-heading">Friction</h2>
+        <div class="hc-row">
+          <label class="hc-label" for="friction-hourly-rate">Hourly rate ($/hr)</label>
+          <input type="number" id="friction-hourly-rate" min="0" step="0.01" class="hc-input hc-input--sm" />
+        </div>
+        <div class="hc-row">
+          <label class="hc-label" for="friction-tax-rate">Tax rate (%)</label>
+          <input type="number" id="friction-tax-rate" min="0" max="100" step="0.1" class="hc-input hc-input--sm" />
+        </div>
+        <div class="hc-row">
+          <label class="hc-label">Intensity</label>
+          <div class="segmented" id="friction-intensity" data-pending-field="frictionIntensity">
+            <button class="seg-btn" data-value="low">Low</button>
+            <button class="seg-btn" data-value="medium">Med</button>
+            <button class="seg-btn" data-value="high">High</button>
+            <button class="seg-btn" data-value="extreme">Extreme</button>
+          </div>
+        </div>
+        <div class="hc-row">
+          <label class="hc-label">Delay timer</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="delay-enabled" />
+            <span class="toggle-track"></span>
+          </label>
+          <div class="segmented" id="delay-duration" data-pending-field="delayTimer.seconds" hidden>
+            <button class="seg-btn" data-value="5">5s</button>
+            <button class="seg-btn" data-value="10">10s</button>
+            <button class="seg-btn" data-value="30">30s</button>
+            <button class="seg-btn" data-value="60">60s</button>
+          </div>
+        </div>
+        <div class="hc-row">
+          <label class="hc-label">Thresholds</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="friction-thresholds-enabled" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div id="threshold-details" hidden>
+          <div class="hc-row">
+            <label class="hc-label" for="threshold-floor">Floor ($)</label>
+            <input type="number" id="threshold-floor" min="0" step="0.01" class="hc-input hc-input--sm" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="threshold-ceiling">Ceiling ($)</label>
+            <input type="number" id="threshold-ceiling" min="0" step="0.01" class="hc-input hc-input--sm" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="threshold-nudge-steps">Soft nudge steps</label>
+            <input type="number" id="threshold-nudge-steps" min="1" step="1" class="hc-input hc-input--sm" />
+          </div>
+        </div>
+      </section>
 
-    <script src="popup.js"></script>
+      <!-- Section 3: Comparisons -->
+      <section class="hc-section" id="section-comparisons">
+        <h2 class="section-heading">Comparisons</h2>
+        <ul class="comparison-list" id="comparison-list"></ul>
+        <button class="btn-secondary" id="btn-add-comparison">+ Add Custom Item</button>
+        <div class="comparison-subpanel" id="comparison-subpanel" hidden>
+          <h3 class="subpanel-title" id="subpanel-title">Add Item</h3>
+          <div class="hc-row">
+            <label class="hc-label" for="sp-emoji">Emoji</label>
+            <input type="text" id="sp-emoji" maxlength="4" class="hc-input hc-input--sm" placeholder="🛒" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="sp-name">Name</label>
+            <input type="text" id="sp-name" class="hc-input" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="sp-price">Price ($)</label>
+            <input type="number" id="sp-price" min="0.01" step="0.01" class="hc-input hc-input--sm" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="sp-plural">Plural label</label>
+            <input type="text" id="sp-plural" class="hc-input" placeholder="e.g. hot dogs" />
+          </div>
+          <div class="similarity-warning" id="sp-similarity" hidden>
+            <span id="sp-similarity-msg"></span>
+            <button class="btn-sm btn-danger" id="sp-confirm">Confirm</button>
+            <button class="btn-sm" id="sp-cancel-similarity">Cancel</button>
+          </div>
+          <div class="subpanel-actions">
+            <button class="btn-primary btn-sm" id="sp-save">Save</button>
+            <button class="btn-sm" id="sp-cancel">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Limits -->
+      <section class="hc-section" id="section-limits">
+        <h2 class="section-heading">Limits</h2>
+        <div class="hc-row">
+          <label class="hc-label">Daily cap</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="daily-cap-enabled" />
+            <span class="toggle-track"></span>
+          </label>
+          <input type="number" id="daily-cap-amount" min="0" step="0.01" class="hc-input hc-input--sm" hidden />
+        </div>
+        <div class="hc-row">
+          <label class="hc-label">Spending cooldown</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="cooldown-enabled" />
+            <span class="toggle-track"></span>
+          </label>
+          <select id="cooldown-duration" class="hc-select" hidden>
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="30">30 min</option>
+          </select>
+        </div>
+        <div class="hc-group">
+          <div class="hc-row">
+            <span class="hc-label">Daily total</span>
+            <span class="tracker-value" id="tracker-daily">—</span>
+          </div>
+          <div class="hc-row">
+            <span class="hc-label">Session total</span>
+            <span class="tracker-value" id="tracker-session">—</span>
+          </div>
+          <div class="hc-row">
+            <button class="btn-danger btn-sm" id="btn-reset-tracker">Reset Tracker</button>
+            <span class="confirm-reset" id="confirm-reset" hidden>
+              Are you sure?
+              <button class="btn-danger btn-sm" id="btn-reset-confirm">Yes, reset</button>
+              <button class="btn-sm" id="btn-reset-cancel">Cancel</button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Channels -->
+      <section class="hc-section" id="section-channels">
+        <h2 class="section-heading">Channels</h2>
+        <div class="hc-row">
+          <label class="hc-label">Streaming mode</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="streaming-mode-enabled" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div id="streaming-mode-details" hidden>
+          <div class="hc-row">
+            <label class="hc-label" for="streaming-username">Twitch username</label>
+            <input type="text" id="streaming-username" class="hc-input" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="streaming-grace">Grace period (min)</label>
+            <input type="number" id="streaming-grace" min="0" step="1" class="hc-input hc-input--sm" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label">Log bypassed</label>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="streaming-log-bypassed" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+        <div class="hc-group">
+          <h3 class="group-heading">Channel Whitelist</h3>
+          <div class="hc-row">
+            <input type="text" id="whitelist-username-input" class="hc-input" placeholder="username" />
+            <button class="btn-secondary btn-sm" id="btn-add-channel">Add Channel</button>
+          </div>
+          <ul class="whitelist-list" id="whitelist-list"></ul>
+          <div class="behavior-legend">
+            <span><strong>Skip</strong> — no friction</span>
+            <span><strong>Reduced</strong> — low intensity only</span>
+            <span><strong>Full</strong> — full friction</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Settings -->
+      <section class="hc-section" id="section-settings">
+        <h2 class="section-heading">Settings</h2>
+        <div class="hc-row">
+          <label class="hc-label" for="theme-select">Theme</label>
+          <select id="theme-select" class="hc-select">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+        <div class="hc-row">
+          <label class="hc-label" for="toast-duration">Toast duration (sec)</label>
+          <input type="number" id="toast-duration" min="1" max="30" step="1" class="hc-input hc-input--sm" />
+        </div>
+        <div class="hc-row">
+          <button class="btn-secondary" id="btn-view-logs">View Activity Logs</button>
+        </div>
+      </section>
+
+    </div><!-- /.hc-content -->
+
+    <nav class="hc-nav" id="hc-nav" aria-label="Sections">
+      <button class="nav-label" data-nav-target="stats">Stats</button>
+      <button class="nav-label" data-nav-target="friction">Friction</button>
+      <button class="nav-label" data-nav-target="comparisons">Comparisons</button>
+      <button class="nav-label" data-nav-target="limits">Limits</button>
+      <button class="nav-label" data-nav-target="channels">Channels</button>
+      <button class="nav-label" data-nav-target="settings">Settings</button>
+    </nav>
+
+  </div><!-- /.hc-body -->
+
+  <footer class="hc-footer">
+    <button class="btn-save" id="btn-save">💾 Save Settings</button>
+    <span class="footer-version" id="footer-version"></span>
+  </footer>
+
+  <script src="popup.js"></script>
 </body>
 </html>
