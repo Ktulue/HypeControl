@@ -50,4 +50,21 @@ describe('pendingState', () => {
     mod.setPendingField('hourlyRate', 99);
     expect(mod.isDirty(base)).toBe(true);
   });
+
+  test('initPending does not share nested object references with original', () => {
+    const original = { ...DEFAULT_SETTINGS };
+    mod.initPending(original);
+    // Mutate the pending nested object directly via setPendingField
+    mod.setPendingField('cooldown', { enabled: true, minutes: 30 });
+    // Original cooldown should be unchanged
+    expect(original.cooldown.enabled).toBe(false);
+  });
+
+  test('setPendingField does not mutate the original nested object', () => {
+    const original = { ...DEFAULT_SETTINGS };
+    mod.initPending(original);
+    const newThresholds = { enabled: true, thresholdFloor: 10, thresholdCeiling: 50, softNudgeSteps: 2 };
+    mod.setPendingField('frictionThresholds', newThresholds);
+    expect(original.frictionThresholds.enabled).toBe(false);
+  });
 });

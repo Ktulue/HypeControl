@@ -3,7 +3,7 @@ import type { UserSettings } from '../shared/types';
 let pending: UserSettings | null = null;
 
 export function initPending(settings: UserSettings): void {
-  pending = { ...settings, comparisonItems: [...settings.comparisonItems] };
+  pending = structuredClone(settings);
 }
 
 export function getPending(): UserSettings {
@@ -24,6 +24,6 @@ export function resetPending(settings: UserSettings): void {
 }
 
 export function isDirty(original: UserSettings): boolean {
-  if (!pending) return false;
+  if (!pending) throw new Error('pendingState not initialized');
   return JSON.stringify(pending) !== JSON.stringify(original);
 }
