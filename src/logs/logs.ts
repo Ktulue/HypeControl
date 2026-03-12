@@ -24,20 +24,38 @@ function renderLogs(entries: LogEntry[]): void {
     return;
   }
 
-  // Newest first
   const reversed = [...entries].reverse();
-  container.innerHTML = reversed.map(e => {
-    const dataStr = e.data !== undefined
-      ? `<span class="log-data">${JSON.stringify(e.data)}</span>`
-      : '';
-    return `
-      <div class="log-entry ${e.level}">
-        <span class="log-ts">${e.timestamp}</span>
-        <span class="log-level">${levelLabel(e.level)}</span>
-        ${e.message}${dataStr}
-      </div>
-    `;
-  }).join('');
+  container.innerHTML = '';
+
+  reversed.forEach(e => {
+    const row = document.createElement('div');
+    row.className = `log-entry ${e.level}`;
+
+    const ts = document.createElement('span');
+    ts.className = 'log-ts';
+    ts.textContent = e.timestamp;
+
+    const level = document.createElement('span');
+    level.className = 'log-level';
+    level.textContent = levelLabel(e.level);
+
+    const msg = document.createElement('span');
+    msg.className = 'log-message';
+    msg.textContent = e.message;
+
+    row.appendChild(ts);
+    row.appendChild(level);
+    row.appendChild(msg);
+
+    if (e.data !== undefined) {
+      const data = document.createElement('span');
+      data.className = 'log-data';
+      data.textContent = JSON.stringify(e.data);
+      row.appendChild(data);
+    }
+
+    container.appendChild(row);
+  });
 }
 
 async function loadAndRender(): Promise<void> {

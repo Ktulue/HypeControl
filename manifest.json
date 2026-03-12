@@ -3,6 +3,11 @@
   "name": "Hype Control",
   "version": "0.4.9",
   "description": "Create intentional friction before Twitch purchases to encourage mindful spending",
+  "icons": {
+    "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
+    "48": "assets/icons/ChromeWebStore/HC_icon_48px.png",
+    "128": "assets/icons/ChromeWebStore/HC_icon_128px.png"
+  },
   "permissions": [
     "storage",
     "activeTab"
@@ -23,6 +28,11 @@
   ],
   "action": {
     "default_title": "Hype Control - Click for settings",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
+      "48": "assets/icons/ChromeWebStore/HC_icon_48px.png",
+      "128": "assets/icons/ChromeWebStore/HC_icon_128px.png"
+    }
   }
 }

@@ -8,6 +8,9 @@ logs
 # Playwright MCP cache
 .playwright-mcp/
 
+# Editor backup files
+*.png~
+
 # Superpowers brainstorm session artifacts
 .superpowers/
 *.log

@@ -71,8 +71,8 @@ Working:
 - [x] **Named friction level setting** — Low / Medium / High / Extreme segmented control on options page, stored in `frictionIntensity` setting
 - [x] **Reason-selection step (Medium+)** — "Why are you buying this?" modal with 5 reasons; proceed requires selecting one
 - [x] **Cooldown timer step (High+)** — Progress bar countdown (10s for High, 30s for Extreme), proceed button disabled until timer completes
-- [x] **Type-to-confirm step (High only)** — User must type "I want to buy this" (case-insensitive) to proceed
-- [x] **Math challenge step (Extreme only)** — Simple arithmetic problem; wrong answer generates a new problem, correct answer allows proceed
+- [x] **Type-to-confirm step (High+)** — User must type "I want to buy this" (case-insensitive) to proceed. For Extreme: final step (step 6) after math challenge. Enter key supported.
+- [x] **Math challenge step (Extreme only)** — Simple arithmetic problem (step 5); wrong answer generates a new problem, correct answer advances to type-to-confirm. Enter key supported.
 - [x] **Step-level cancellation tracking** — `cancelledAtStep` field on `FrictionResult`, written to `InterceptEvent` in storage
 
 ---
@@ -122,7 +122,7 @@ Working:
 - [x] ~~**Fresh-install onboarding**~~ — ✅ Implemented: `chrome.runtime.onInstalled` handler in `serviceWorker.ts` opens the options page on first install
 - [x] ~~**Focus trap in overlay**~~ — ✅ Implemented: Tab/Shift+Tab wraps between first and last buttons in all modals (see `interceptor.ts`)
 - [x] ~~**Overlay entrance animation**~~ — ✅ Implemented: `hc-fadeIn` on backdrop, `hc-slideIn` on modal (see `styles.css`)
-- [ ] **Keyboard: Enter to confirm** — Where applicable (e.g., type-to-confirm step, final step). Steps now exist — this is implementable
+- [x] ~~**Keyboard: Enter to confirm**~~ — ✅ Implemented: Enter key support added to `showTypeToConfirmStep` and `showMathChallengeStep` (see `interceptor.ts`)
 - [x] ~~**ARIA attributes audit**~~ — ✅ All overlay modals (main, comparison, cooldown) have `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby`
 - [x] ~~**"No price detected" fallback**~~ — ✅ Verified: overlay shows "Price not detected" as the price display and "Unable to detect price. Proceed with caution." when `priceValue` is null (see `interceptor.ts:355-361`)
 
@@ -134,10 +134,10 @@ Working:
 
 Two confirmed stored XSS vulnerabilities in `src/logs/logs.ts` found via security review. Both execute in the `chrome-extension://` page context, which has access to `chrome.storage.sync` and other extension APIs.
 
-- [ ] **Fix `e.message` injection (logs.ts:37)** — `renderLogs()` interpolates `e.message` into `innerHTML` unsanitized. Attack path: malicious Twitch URL path (`/channel`) → logged by interceptor.ts → stored in `chrome.storage.local` → rendered via `innerHTML` in logs page. Fix: build log entry DOM nodes with `textContent` instead of `innerHTML`.
-- [ ] **Fix `JSON.stringify(e.data)` injection (logs.ts:31)** — `JSON.stringify` does not escape `<`/`>`. Attack path: custom comparison item name with HTML payload (only length-validated) → `settingsLog()` in options.ts → stored in `chrome.storage.local` → `${JSON.stringify(e.data)}` rendered via `innerHTML`. Fix: use `textContent` on a `<span>` element instead.
+- [x] **Fix `e.message` injection (logs.ts:37)** — ✅ Fixed in v0.4.9: `renderLogs()` rewritten with DOM construction (`createElement`, `textContent`, `appendChild`).
+- [x] **Fix `JSON.stringify(e.data)` injection (logs.ts:31)** — ✅ Fixed in v0.4.9: `e.data` field rendered via `textContent` on a `<span>` element.
 
-Both fixes: replace `container.innerHTML = ...` template with DOM construction (`createElement`, `textContent`, `appendChild`).
+Both fixes: `container.innerHTML` template replaced with full DOM construction.
 
 ---
 
