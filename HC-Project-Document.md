@@ -1521,6 +1521,20 @@ const ohioTaxRates: Record<string, number> = {
 
 - **Bits Combo module** — The animated Bits Combo (timer/counter) that Twitch displays during cheering cannot currently be intercepted. Hype Control can intercept the "Get Bits" button in the top navigation bar, but the Combo module uses a non-standard rendering path that doesn't expose a clickable element Hype Control can hook.
 
+## Version History
+
+### v0.4.12 — Round 2 Bug Fixes (2026-03-13)
+
+Seven UX issues addressed from Round 2 feedback:
+
+1. **Popup — duplicate Thresholds toggle removed** from Stats section (was duplicate of the one in Friction)
+2. **Popup — scroll fixed** (`min-height: 0` added to `.hc-content` so overflow region activates correctly)
+3. **Friction — Nudge Steps capped** at total comparison item count (prevents setting more steps than items)
+4. **Settings Log — popup saves now logged** (`settingsLog` wired into popup save handler; `setVersion` called at startup)
+5. **Logs page — content centered** (wrapped body content in `.log-wrapper` with `max-width: 900px`)
+6. **Comparison subpanel — emoji picker hint restored** (keyboard shortcuts for Windows/Mac shown below emoji input)
+7. **Whitelist friction overlay — copy corrected** ("This channel is on your whitelist" replaces placeholder dev text)
+
 ## Links & Resources
 
 - **Chrome Extension Docs:** https://developer.chrome.com/docs/extensions/
@@ -1530,6 +1544,6 @@ const ohioTaxRates: Record<string, number> = {
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** January 2026  
+**Document Version:** 1.1
+**Last Updated:** 2026-03-13
 **Ready for:** Software Saturdays Stream Series
