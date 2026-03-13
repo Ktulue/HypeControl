@@ -1,5 +1,5 @@
 // tests/popup/sections/friction.test.ts
-import { DEFAULT_SETTINGS, UserSettings, ComparisonItem } from '../../../src/shared/types';
+import { DEFAULT_SETTINGS, UserSettings } from '../../../src/shared/types';
 
 function settingsWithItems(count: number): UserSettings {
   const items = Array.from({ length: count }, (_, i) => ({
