@@ -1583,7 +1583,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
   // Full friction: main overlay + ALL comparison items
   const maxComparisons = frictionLevel === 'nudge' ? settings.frictionThresholds.softNudgeSteps : undefined;
   const whitelistNote = whitelistEntry?.behavior === 'full'
-    ? '\u2B50 Whitelisted Channel \u2014 This is a planned support channel'
+    ? '\u2B50 Whitelisted Channel \u2014 This channel is on your whitelist'
     : undefined;
   const onWhitelistAdd = async (behavior: WhitelistBehavior): Promise<void> => {
     const normalized = attempt.channel.trim().toLowerCase();

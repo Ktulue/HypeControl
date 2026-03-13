@@ -21,6 +21,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   const ceilingEl = el.querySelector<HTMLInputElement>('#threshold-ceiling')!;
   const nudgeStepsEl = el.querySelector<HTMLInputElement>('#threshold-nudge-steps')!;
 
+  let currentSettings: UserSettings = { ...DEFAULT_SETTINGS };
+
   function renderSegmented(container: HTMLElement, value: string): void {
     container.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.value === value);
@@ -76,7 +78,7 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
       enabled: getPending().frictionThresholds.enabled,
       thresholdFloor: parseFloat(floorEl.value) || 0,
       thresholdCeiling: parseFloat(ceilingEl.value) || 0,
-      softNudgeSteps: parseInt(nudgeStepsEl.value, 10) || 1,
+      softNudgeSteps: Math.min(parseInt(nudgeStepsEl.value, 10) || 1, currentSettings.comparisonItems.length || 1),
     };
     setPendingField('frictionThresholds', t);
   }
@@ -85,6 +87,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   nudgeStepsEl.addEventListener('input', updateThresholds);
 
   function render(settings: UserSettings): void {
+    currentSettings = settings;
+    nudgeStepsEl.max = String(settings.comparisonItems.length);
     hourlyRateEl.value = String(settings.hourlyRate);
     taxRateEl.value = String(settings.taxRate);
     renderSegmented(intensityEl, settings.frictionIntensity);
