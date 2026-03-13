@@ -567,3 +567,17 @@ body {
 .stat-tile:focus-within .stat-tooltip {
   display: block;
 }
+
+/* ─── Fieldset reset ─────────────────────────────────────── */
+.hc-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: contents;
+}
+.hc-fieldset .hc-label,
+.hc-fieldset legend {
+  font: inherit;
+  color: inherit;
+}
