@@ -329,6 +329,7 @@ body {
   margin-bottom: 12px;
 }
 .stat-tile {
+  position: relative;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
@@ -483,4 +484,43 @@ body {
   font-size: 12px;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+/* ─── Stat card info icon & tooltip ─────────────────────── */
+.stat-info {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: default;
+  line-height: 1;
+  user-select: none;
+}
+.stat-tile:hover .stat-info,
+.stat-tile:focus-within .stat-info {
+  color: var(--text-secondary);
+}
+
+.stat-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+}
+.stat-tile:hover .stat-tooltip,
+.stat-tile:focus-within .stat-tooltip {
+  display: block;
 }
