@@ -61,13 +61,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const limits = initLimits(limitsEl, {
-    onThresholdToggle: (enabled) => {
-      // Stats threshold toggle mirror
-      const statsThresholdCb = statsEl.querySelector<HTMLInputElement>('#stats-thresholds-enabled');
-      if (statsThresholdCb) statsThresholdCb.checked = enabled;
-    },
-  });
+  const limits = initLimits(limitsEl);
 
   const stats = initStats(statsEl, {
     onIntensityChange: (v) => {
@@ -75,14 +69,6 @@ async function main(): Promise<void> {
       frictionEl.querySelectorAll<HTMLButtonElement>('#friction-intensity .seg-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.value === v);
       });
-    },
-    onThresholdToggle: (enabled) => {
-      // Limits threshold toggle mirror via setPendingField already done in stats.ts
-      // Sync friction thresholds toggle
-      const frictionThresholdsCb = frictionEl.querySelector<HTMLInputElement>('#friction-thresholds-enabled');
-      const thresholdDetails = frictionEl.querySelector<HTMLElement>('#threshold-details');
-      if (frictionThresholdsCb) frictionThresholdsCb.checked = enabled;
-      if (thresholdDetails) thresholdDetails.hidden = !enabled;
     },
   });
 

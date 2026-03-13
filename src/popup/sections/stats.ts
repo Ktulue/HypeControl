@@ -1,12 +1,11 @@
 import { computePopupStats } from '../../shared/interceptLogger';
 import { UserSettings } from '../../shared/types';
-import { setPendingField, getPending } from '../pendingState';
+import { setPendingField } from '../pendingState';
 
 const SETTINGS_KEY = 'hcSettings';
 
 export interface StatsCallbacks {
   onIntensityChange: (value: UserSettings['frictionIntensity']) => void;
-  onThresholdToggle: (enabled: boolean) => void;
 }
 
 export interface StatsController {
@@ -22,8 +21,6 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
   const overrideStatusEl = el.querySelector<HTMLElement>('#override-status')!;
   const overrideBtnEl = el.querySelector<HTMLButtonElement>('#btn-override')!;
   const intensityEl = el.querySelector<HTMLElement>('#stats-intensity')!;
-  const thresholdsCbEl = el.querySelector<HTMLInputElement>('#stats-thresholds-enabled')!;
-
   function renderSegmented(container: HTMLElement, value: string): void {
     container.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.value === value);
@@ -54,16 +51,6 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
       callbacks.onIntensityChange(val);
       renderSegmented(intensityEl, val);
     });
-  });
-
-  // Wire threshold toggle
-  thresholdsCbEl.addEventListener('change', () => {
-    const enabled = thresholdsCbEl.checked;
-    setPendingField('frictionThresholds', {
-      ...getPending().frictionThresholds,
-      enabled,
-    });
-    callbacks.onThresholdToggle(enabled);
   });
 
   // Wire override button (immediate save — bypasses pending state)
@@ -100,7 +87,6 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
 
   function render(settings: UserSettings): void {
     renderSegmented(intensityEl, settings.frictionIntensity);
-    thresholdsCbEl.checked = settings.frictionThresholds.enabled;
     renderOverride(settings);
   }
 
