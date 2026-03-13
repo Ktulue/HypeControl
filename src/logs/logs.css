@@ -1,0 +1,176 @@
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('assets/fonts/SpaceGrotesk-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('assets/fonts/SpaceGrotesk-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('assets/fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('assets/fonts/SpaceGrotesk-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ─── Variables ─────────────────────────────────────────── */
+:root {
+  --bg-primary:    #18181b;
+  --bg-secondary:  #1f1f23;
+  --bg-input:      #0e0e10;
+  --border-color:  #2a2a2e;
+  --accent:        #06B6D4;
+  --accent-hover:  #0891B2;
+  --accent-rgb:    6, 182, 212;
+  --text-primary:  #efeff1;
+  --text-secondary:#adadb8;
+  --text-muted:    #666;
+  --danger:        #e91916;
+  --danger-hover:  #c71512;
+  --danger-rgb:    233, 25, 22;
+  --success:       #22C55E;
+  --radius:        4px;
+  --font:          'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ─── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Base ───────────────────────────────────────────────── */
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 16px;
+}
+
+/* ─── Layout ─────────────────────────────────────────────── */
+.log-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ─── Heading ────────────────────────────────────────────── */
+h1 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Tabs ───────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.tab-btn {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.tab-btn:hover {
+  background: #2a2a2e;
+  color: var(--text-primary);
+}
+
+.tab-btn[aria-selected="true"],
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Controls ───────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.btn:hover { background: #2a2a2e; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.btn.danger:hover { background: rgba(var(--danger-rgb), 0.1); }
+
+/* ─── Log container ──────────────────────────────────────── */
+.log-container {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.log-container:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Log entries ────────────────────────────────────────── */
+.log-entry {
+  padding: 4px 6px;
+  border-bottom: 1px solid #1a1a1e;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.log-entry:last-child { border-bottom: none; }
+
+.log-entry.error { color: var(--danger); }
+.log-entry.warn  { color: #ff9800; }
+.log-entry.debug { color: var(--text-muted); }
+.log-entry.log   { color: var(--text-primary); }
+
+.log-ts    { color: var(--text-muted); margin-right: 8px; }
+.log-level { font-weight: bold; margin-right: 8px; min-width: 40px; display: inline-block; }
+.log-data  { color: var(--text-secondary); margin-left: 8px; font-size: 11px; }
+
+/* ─── Empty state ────────────────────────────────────────── */
+.empty {
+  color: var(--text-muted);
+  padding: 24px;
+  text-align: center;
+}

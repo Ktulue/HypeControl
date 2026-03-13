@@ -3,6 +3,7 @@
  * Displays extension and settings logs from chrome.storage.local
  */
 
+import './logs.css';
 import {
   getExtensionLogs,
   getSettingsLogs,
@@ -68,10 +69,16 @@ async function loadAndRender(): Promise<void> {
 }
 
 function setupTabs(): void {
+  const panel = document.getElementById('log-container')!;
   document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      panel.setAttribute('aria-labelledby', btn.id);
       activeTab = btn.dataset.tab as 'extension' | 'settings';
       loadAndRender();
     });
