@@ -428,6 +428,22 @@ body {
   flex-wrap: wrap;
 }
 
+/* ─── Emoji hint ─────────────────────────────────────────── */
+.hc-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+.hc-hint kbd {
+  font-family: var(--font);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+}
+
 /* ─── Whitelist ──────────────────────────────────────────── */
 .whitelist-list { list-style: none; margin-top: 6px; }
 .whitelist-row {
