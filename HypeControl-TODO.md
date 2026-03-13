@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-13
-**Current Version:** 0.4.13
+**Current Version:** 0.4.14
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -283,4 +283,14 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-13 against the v0.4.13 codebase. Round 2 bug fixes complete. Stat Card Tooltips (Enhancement 8) added. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
+## UI POLISH & REBRAND (v0.4.14)
+
+- [x] **Rebrand styles.css** — teal/green token system, sweep hardcoded colors, fix transition and progress bar
+- [x] **Rebrand popup.css** — Space Grotesk, teal/green tokens, focus rings, touch targets
+- [x] **Extract logs.css** — teal/green tokens, Space Grotesk, ARIA tab pattern (tablist/tab/tabpanel + aria-selected management)
+- [x] **ARIA label associations** — label-for and fieldsets added to segmented controls in popup.html
+- [x] **Light mode token fixes** — hc-primary-rgb, accent-rgb, success-rgb overrides added to styles.css
+
+---
+
+_Last updated 2026-03-13 against the v0.4.14 codebase. UI polish/rebrand branch complete. Logs page fully rebranded with ARIA tab pattern and extracted CSS._
