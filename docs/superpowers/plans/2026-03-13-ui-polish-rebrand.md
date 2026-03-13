@@ -582,24 +582,24 @@ In `<head>`, after `<meta charset>`, add:
 
 Note: No separate font link tag needed — `logs.css` will contain its own `@font-face` declarations.
 
-- [ ] **Step 3: Implement ARIA tab pattern**
+- [ ] **Step 3: Implement ARIA tab pattern and add panel role**
 
-Find the tab button area. Replace with:
+`logs.ts` writes all log output to a single `id="log-container"` element. Both tabs rewrite this same container — there is only ONE panel. Both tab buttons must point `aria-controls` to `log-container`.
+
+Find the tab button area and replace it, and update the log container element, in one pass:
 
 ```html
 <div role="tablist" aria-label="Log type">
-  <button role="tab" id="tab-ext" data-tab="extension" aria-selected="true" aria-controls="ext-log" class="tab-btn active">Extension Log</button>
-  <button role="tab" id="tab-settings" data-tab="settings" aria-selected="false" aria-controls="settings-log" class="tab-btn">Settings Log</button>
+  <button role="tab" id="tab-ext" data-tab="extension"
+          aria-selected="true" aria-controls="log-container"
+          class="tab-btn active">Extension Log</button>
+  <button role="tab" id="tab-settings" data-tab="settings"
+          aria-selected="false" aria-controls="log-container"
+          class="tab-btn">Settings Log</button>
 </div>
 ```
 
-Note: `data-tab="extension"` and `data-tab="settings"` are retained exactly as they were — `logs.ts` reads these.
-
-- [ ] **Step 4: Add ARIA attributes to the log panel**
-
-`logs.ts` writes all log output to a single element: `document.getElementById('log-container')`. Both tabs update this same container (they change what is displayed, not which container is shown). The ARIA structure should reflect this — one panel that both tabs control.
-
-Update the log container element to add panel role. Keep `id="log-container"` exactly as-is (logs.ts depends on it):
+Update the log container div (keep `id="log-container"` exactly — `logs.ts` depends on it):
 
 ```html
 <div role="tabpanel"
@@ -610,18 +610,7 @@ Update the log container element to add panel role. Keep `id="log-container"` ex
 </div>
 ```
 
-Update both tab buttons' `aria-controls` to point to `log-container`:
-
-```html
-<button role="tab" id="tab-ext" data-tab="extension" aria-selected="true"
-        aria-controls="log-container" class="tab-btn active">Extension Log</button>
-<button role="tab" id="tab-settings" data-tab="settings" aria-selected="false"
-        aria-controls="log-container" class="tab-btn">Settings Log</button>
-```
-
-In `logs.ts` (Task 7), when switching tabs, also update `aria-labelledby` on the panel to reflect the active tab's id.
-
-Note: There is only ONE panel div. Do NOT add a second hidden panel — the tab switching works by rewriting the panel's content, not by toggling two separate panels.
+Note: `data-tab="extension"` and `data-tab="settings"` are retained — `logs.ts` reads these. Do NOT add a second hidden panel — content is rewritten by `loadAndRender()`, not toggled.
 
 - [ ] **Step 5: Commit**
 
@@ -686,7 +675,7 @@ Expected: same pass count as before. If any test fails, fix before continuing.
 
 ```bash
 git add src/logs/logs.ts
-git commit -m "fix: update setupTabs() to manage aria-selected and hidden panel attributes"
+git commit -m "fix: update setupTabs() to manage aria-selected state on tab switch"
 ```
 
 ---
