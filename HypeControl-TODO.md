@@ -265,4 +265,5 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
+_Last updated 2026-03-12 against the v0.4.9 codebase. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
 _Last updated 2026-03-12 against the v0.4.11 codebase. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
