@@ -93,23 +93,30 @@
     .log-data { color: #adadb8; margin-left: 8px; font-size: 11px; }
 
     .empty { color: #666; padding: 24px; text-align: center; }
+
+    .log-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
-  <h1>🛡️ Hype Control Logs</h1>
+  <div class="log-wrapper">
+    <h1>🛡️ Hype Control Logs</h1>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="extension">Extension Log</button>
-    <button class="tab-btn" data-tab="settings">Settings Log</button>
-  </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="extension">Extension Log</button>
+      <button class="tab-btn" data-tab="settings">Settings Log</button>
+    </div>
 
-  <div class="controls">
-    <button class="btn" id="btn-refresh">↻ Refresh</button>
-    <button class="btn danger" id="btn-clear">Clear Log</button>
-  </div>
+    <div class="controls">
+      <button class="btn" id="btn-refresh">↻ Refresh</button>
+      <button class="btn danger" id="btn-clear">Clear Log</button>
+    </div>
 
-  <div class="log-container" id="log-container">
-    <p class="empty">Loading...</p>
+    <div class="log-container" id="log-container">
+      <p class="empty">Loading...</p>
+    </div>
   </div>
 
   <script src="logs.js"></script>
