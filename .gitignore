@@ -2,11 +2,19 @@
 logs
 !src/logs
 
-# Claude Code local settings
+# Claude Code local settings and artifacts
 .claude/settings.local.json
+.claude/skills/
+
+# Superpowers / Claude Code agent artifacts
+.agents/
+skills-lock.json
 
 # Playwright MCP cache
 .playwright-mcp/
+
+# Root-level scratch screenshots
+/*.png
 
 # Editor backup files
 *.png~
