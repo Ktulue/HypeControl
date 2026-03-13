@@ -3,16 +3,12 @@ import { getPending, setPendingField } from '../pendingState';
 
 const TRACKER_KEY = 'hcSpending'; // Matches interceptor.ts SPENDING_KEY
 
-export interface LimitsCallbacks {
-  onThresholdToggle: (enabled: boolean) => void;
-}
-
 export interface LimitsController {
   render(settings: UserSettings): void;
   refreshTracker(): Promise<void>;
 }
 
-export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks): LimitsController {
+export function initLimits(el: HTMLElement): LimitsController {
   const dailyCapEnabledEl = el.querySelector<HTMLInputElement>('#daily-cap-enabled')!;
   const dailyCapAmountEl = el.querySelector<HTMLInputElement>('#daily-cap-amount')!;
   const cooldownEnabledEl = el.querySelector<HTMLInputElement>('#cooldown-enabled')!;

@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-12
-**Current Version:** 0.4.11
+**Updated:** 2026-03-13
+**Current Version:** 0.4.12
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -147,6 +147,20 @@ Both fixes: `container.innerHTML` template replaced with full DOM construction.
 
 ---
 
+## ROUND 2 BUG FIXES (v0.4.12)
+
+All 7 issues from the Round 2 feedback pass — fixed and shipped.
+
+- [x] **Duplicate Thresholds toggle removed from Stats section** — Stats section no longer renders a second Thresholds toggle; the authoritative toggle lives in Friction section only.
+- [x] **Popup scroll fixed** — `.hc-content` now has `min-height: 0` so the flex child can shrink and the scroll container behaves correctly on all section heights.
+- [x] **Soft Nudge Steps capped at comparison item count** — Step count is now clamped to `Math.min(stepCount, comparisonItems.length)` so the UI never shows more steps than there are items to display.
+- [x] **Popup saves write to Settings Log tab** — Save operations now append an entry to the Settings Log tab in addition to triggering the toast, so all setting changes are traceable.
+- [x] **Logs page content centered** — Logs page layout updated so content is horizontally centered in the viewport.
+- [x] **Emoji picker hint restored in comparison subpanel** — The "type : to open the emoji picker" hint text is shown again in the comparison item add/edit subpanel.
+- [x] **Whitelist banner copy fixed** — Banner in the friction overlay now reads "This channel is on your whitelist" (was previously incorrect copy).
+
+---
+
 ## PHASE 4 — OPTIONAL ADD-ONS
 
 ## UX ENHANCEMENTS
@@ -265,5 +279,4 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-12 against the v0.4.9 codebase. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
-_Last updated 2026-03-12 against the v0.4.11 codebase. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
+_Last updated 2026-03-13 against the v0.4.12 codebase. Round 2 bug fixes complete. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
