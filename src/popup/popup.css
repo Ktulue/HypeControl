@@ -69,7 +69,7 @@ body {
 /* ─── Right-side nav ─────────────────────────────────────── */
 .hc-nav {
   flex-shrink: 0;
-  width: 110px;
+  width: 90px;
   display: flex;
   flex-direction: column;
   padding: 8px 0;
@@ -121,7 +121,7 @@ body {
 }
 .footer-link {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-decoration: none;
   cursor: pointer;
 }
