@@ -86,10 +86,16 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
 
   async function refreshStats(): Promise<void> {
     const stats = await computePopupStats();
-    savedEl.textContent = `$${stats.savedTotal.toFixed(2)} saved`;
-    blockedEl.textContent = `${stats.blockedCount} blocked`;
-    rateEl.textContent = `${Math.round(stats.cancelRate)}% cancel rate`;
-    stepEl.textContent = stats.mostEffectiveStep != null ? `Step ${stats.mostEffectiveStep}` : '—';
+    const saved = savedEl.querySelector<HTMLElement>('.stat-value');
+    const blocked = blockedEl.querySelector<HTMLElement>('.stat-value');
+    const rate = rateEl.querySelector<HTMLElement>('.stat-value');
+    const step = stepEl.querySelector<HTMLElement>('.stat-value');
+    if (saved)   saved.textContent   = `$${stats.savedTotal.toFixed(2)}`;
+    if (blocked) blocked.textContent = `${stats.blockedCount}`;
+    if (rate)    rate.textContent    = `${Math.round(stats.cancelRate)}%`;
+    if (step)    step.textContent    = stats.mostEffectiveStep != null
+      ? `Step ${stats.mostEffectiveStep}`
+      : '—';
   }
 
   function render(settings: UserSettings): void {

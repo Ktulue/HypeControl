@@ -1,6 +1,33 @@
 import { UserSettings, WhitelistBehavior, WhitelistEntry } from '../../shared/types';
 import { getPending, setPendingField } from '../pendingState';
 
+const RESERVED_TWITCH_PATHS = new Set([
+  'directory', 'search', 'following', 'subscriptions', 'wallet',
+  'settings', 'downloads', 'jobs', 'p', 'products', 'videos',
+  'clips', 'schedule', 'about', 'moderator', 'login', 'signup',
+  'friends', 'inbox', 'drops', 'prime',
+]);
+
+/**
+ * Extracts a Twitch channel slug from a URL string.
+ * Returns null if the URL is not a Twitch channel page.
+ * Exported for unit testing.
+ */
+export function extractTwitchSlug(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const h = parsed.hostname;
+    // Must be exactly twitch.tv or a subdomain (.twitch.tv)
+    // NOT just .endsWith('twitch.tv') — that incorrectly matches notwitch.tv
+    if (h !== 'twitch.tv' && !h.endsWith('.twitch.tv')) return null;
+    const slug = parsed.pathname.split('/')[1]?.toLowerCase();
+    if (!slug || RESERVED_TWITCH_PATHS.has(slug)) return null;
+    return slug;
+  } catch {
+    return null;
+  }
+}
+
 export interface ChannelsController {
   render(settings: UserSettings): void;
 }
@@ -14,6 +41,13 @@ export function initChannels(el: HTMLElement): ChannelsController {
   const whitelistInputEl = el.querySelector<HTMLInputElement>('#whitelist-username-input')!;
   const addChannelBtnEl = el.querySelector<HTMLButtonElement>('#btn-add-channel')!;
   const whitelistListEl = el.querySelector<HTMLUListElement>('#whitelist-list')!;
+
+  // Auto-detect current Twitch channel from active tab
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs.length) return;
+    const slug = extractTwitchSlug(tabs[0]?.url ?? '');
+    if (slug) whitelistInputEl.value = slug;
+  });
 
   function updateStreaming(): void {
     setPendingField('streamingMode', {

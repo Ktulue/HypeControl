@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-12
-**Current Version:** 0.4.9
+**Current Version:** 0.4.11
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -13,12 +13,18 @@
 | MVP Part 1 — Foundation & Detection       | ✅ Complete       |
 | MVP Part 2 — Options Page & Settings      | ✅ Complete       |
 | MVP Part 3 — Tax + Hours + Comparisons    | ✅ Complete       |
-| MVP Part 4 — Multi-Step Friction Levels   | ✅ Complete        |
-| MVP Part 4b — Analytics & Popup Stats     | ✅ Complete        |
-| MVP Part 5 — Streaming Mode               | ✅ Complete        |
-| MVP Part 6 — Integration Testing & Polish | ⚠️ Partially Done |
-| Add-on 5 — Streamer Whitelist             | ✅ Complete        |
-| Phase 4 — Other Add-ons                   | ⚠️ Partially Done |
+| MVP Part 4 — Multi-Step Friction Levels   | ✅ Complete       |
+| MVP Part 4b — Analytics & Popup Stats     | ✅ Complete       |
+| MVP Part 5 — Streaming Mode               | ✅ Complete       |
+| MVP Part 6 — Integration Testing & Polish | ✅ Complete       |
+| Add-on 5 — Streamer Whitelist             | ✅ Complete       |
+| Add-on 1 — Delay Timer                   | ✅ Complete       |
+| Add-on 4 — Custom Comparison Items       | ✅ Complete       |
+| Add-on 2 — Spending History View         | 🔲 Not Started    |
+| Add-on 3 — Weekly/Monthly Limits         | 🔲 Not Started    |
+| Interactive Onboarding Tour              | 🔲 Not Started    |
+| Firefox AMO Port                         | 🔲 Not Started    |
+| Add-ons 6–12 — Future Enhancements       | ⏸️ Deferred       |
 
 ---
 
@@ -186,91 +192,77 @@ Guided first-install walkthrough that overlays the Twitch page and highlights ea
 
 ---
 
-### Remaining Add-ons (Not Started)
+### Completed Add-ons
 
-Listed in order of complexity per the planning doc.
+- [x] **Add-on 1 — Delay Timer (Standalone)** — Configurable mandatory wait before any purchase can proceed, independent of friction level.
+- [x] **Add-on 4 — Custom Comparison Items (Enhanced)** — Drag-to-reorder for preset and custom items (persisted). Per-item scope (Nudge only / Full only / Both).
+- [x] **Add-on 5 — Streamer Whitelist** — Per-channel whitelist with Skip / Reduced / Full behavior modes and quick-add from overlay.
 
-#### ⭐ Easy
+### In-Scope (Still To Build)
 
-- [x] **Add-on 1 — Delay Timer (Standalone)**
-      A configurable mandatory wait (5/10/30/60 seconds) before _any_ purchase can proceed, independent of friction level. Single progress bar, cancel allowed at any time.
-
-- [x] **Add-on 4 — Custom Comparison Items (Enhanced)**
-      Basic CRUD is done. Drag-to-reorder is now implemented for both preset and custom items (persisted to storage). Per-item scope (Nudge only / Full only / Both) is now implemented.
-
-#### ⭐⭐ Medium
-
-- [ ] **Add-on 2 — Spending Tracker (History View)**
+- [ ] **Add-on 2 — Spending Tracker (History View)** ⭐⭐
       Full-page view of all logged intercept events. Filter by date range, channel, outcome (cancelled/proceeded). Sort controls. Totals row (total spent, total blocked, total "saved").
 
-- [ ] **Add-on 3 — Weekly/Monthly Spending Limits**
-      The daily cap exists but the doc also calls for weekly and monthly limits. Progress bar in overlay showing "You've spent $X of $Y this week." Warning at 80%, hard block at 100% with override option (with extra friction).
+- [ ] **Add-on 3 — Weekly/Monthly Spending Limits** ⭐⭐
+      The daily cap exists but weekly and monthly limits are still needed. Progress bar in overlay: "You've spent $X of $Y this week." Warning at 80%, hard block at 100% with override option (extra friction).
 
-- [ ] **Add-on 6 — Export Data (CSV/JSON)**
-      Button in history view or options page to export all stored log data. Choose date range. Toggle whether to include cancelled-only or all events.
+### Deferred (Future Enhancements)
 
-#### ⭐⭐⭐ Medium-Hard
-
-- [ ] **Add-on 7 — Accountability Partner**
-      Shareable read-only dashboard link. Partner sees total spent, recent purchases, blocked count. Optional: partner can nudge friction level. Requires a small backend or a service like Firebase.
-
-- [ ] **Add-on 8 — Discord Webhook Integration**
-      Configure a webhook URL in options. Post a formatted message to Discord when a purchase proceeds (or optionally on every intercept). Configurable trigger: all / over $X / only when friction was bypassed. Rate-limiting to prevent spam.
-
-  Example message:
-
-  ```
-  🎮 Twitch Spending Alert
-  Josh just spent $26.86 on twitch.tv/ktulue
-  That's 46 minutes of work!
-  Made it through 3 friction steps before proceeding.
-  Monthly total: $127.50 / $150.00 budget (85%)
-  ```
-
-- [ ] **Add-on 9 — Weekly Email Summary**
-      Via Google Apps Script (no dedicated server). Weekly digest: spent, blocked, saved, top channels, trend vs. prior week. Configurable delivery day/time.
-
-#### ⭐⭐⭐⭐ Hard
-
-- [ ] **Add-on 10 — Regret Scoring (24-Hour Check-in)**
-      24 hours after a proceeded purchase, show a browser notification: "How do you feel about this?" with a 😊 / 😐 / 😞 scale. Track regret rates over time. Surface insight: "You regret 60% of purchases over $20."
-
-- [ ] **Add-on 11 — Monthly Budget & Rollover System**
-      Set a monthly Twitch budget. Track blocked/cancelled amounts as "saved" money. Roll unused budget forward to next month (with a cap). Overlay shows budget status during purchase flow. Strict mode blocks purchases that would exceed remaining budget.
-
-#### ⭐⭐⭐⭐⭐ Very Hard
-
-- [ ] **Add-on 12 — Reporting Dashboard + Google Sheets**
-      Full-page chart-based analytics dashboard. Auto-sync to Google Sheets via Apps Script. Track multi-year spending. Month-over-month and year-over-year comparisons. Pre-built pivot tables and charts in the sheet.
+- [ ] **Add-on 6 — Export Data (CSV/JSON)** ⭐⭐
+- [ ] **Add-on 7 — Accountability Partner** ⭐⭐⭐
+- [ ] **Add-on 8 — Discord Webhook Integration** ⭐⭐⭐
+- [ ] **Add-on 9 — Weekly Email Summary** ⭐⭐⭐
+- [ ] **Add-on 10 — Regret Scoring (24-Hour Check-in)** ⭐⭐⭐⭐
+- [ ] **Add-on 11 — Monthly Budget & Rollover System** ⭐⭐⭐⭐
+- [ ] **Add-on 12 — Reporting Dashboard + Google Sheets** ⭐⭐⭐⭐⭐
 
 ---
 
-## RECOMMENDED FOCUS FOR "WRAP UP" SESSION
+## CURRENT ROADMAP
 
-### Must-Haves to Call MVP Complete
+### Next Up (In Order)
 
-1. **Popup stats panel** (Part 4b) — Adds real value, visible every time user clicks the icon; also unblocks the streaming mode manual override button
-2. **Fresh-install onboarding** (Part 6) — Important UX for first-time users
+1. **Add-on 2 — Spending History View** — Full-page view of all logged intercept events. Filter by date range, channel, outcome. Sort controls. Totals row.
+2. **Add-on 3 — Weekly/Monthly Spending Limits** — Weekly and monthly caps with progress bar in overlay. Warning at 80%, hard block at 100% with override option.
+3. **Interactive Onboarding Tour** — Guided first-install walkthrough. Highlights interceptable Twitch elements, slide-out explainer panel, beginner/advanced toggle.
+4. **Firefox AMO Port** — Adapt extension for Firefox. Requires `browser_specific_settings` in manifest, MV3 background script adjustment, `browser.*` API compatibility review, and AMO submission assets.
 
-### Nice-to-Haves If Time Allows
+### Deferred to Future Enhancements
 
-3. **Friction level setting** (Part 4) — Named Low/Medium/High/Extreme with the full step flow
-4. **Money saved calculation** (Part 4b) — Makes the popup stats meaningful
-5. **Focus trap + ARIA audit** (Part 6) — Polish pass
-6. **Whitelist quick-add from overlay** (Add-on 5) — Small addition since the whitelist is already built
+Add-ons 6–12 are out of scope for the current build phase:
 
-### Phase 4 Add-ons to Consider (Pick 1-2 for the stream)
+- Add-on 6 — Export Data (CSV/JSON)
+- Add-on 7 — Accountability Partner
+- Add-on 8 — Discord Webhook Integration
+- Add-on 9 — Weekly Email Summary
+- Add-on 10 — Regret Scoring (24-Hour Check-in)
+- Add-on 11 — Monthly Budget & Rollover System
+- Add-on 12 — Reporting Dashboard + Google Sheets
 
-- **Discord Webhook (Add-on 8)** — High streamer appeal, demonstrates webhook integration
-- **Spending History View (Add-on 2)** — Visually satisfying, completes the analytics story
-- **Export Data (Add-on 6)** — Easy win, useful for users who track finances externally
+---
+
+---
+
+## FIREFOX AMO PORT
+
+**Status:** 🔲 Not Started — Planned as final release milestone after all in-scope add-ons are complete.
+
+Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a rewrite. Key differences to address:
+
+- [ ] Add `browser_specific_settings` block to `manifest.json` with a Firefox extension ID (e.g. `hypecontrol@ktulue`)
+- [ ] Adjust background script: Firefox MV3 uses `background.scripts` array alongside `service_worker`
+- [ ] Audit all `chrome.*` API calls — swap to `browser.*` or add the `webextension-polyfill` package for cross-browser compatibility
+- [ ] Verify content script injection and `host_permissions` work identically on Firefox
+- [ ] Use `assets/icons/FirefoxAMO/` icons (16, 32, 48, 64, 128px) for AMO listing — already present
+- [ ] Create AMO listing: screenshots, description, privacy policy
+- [ ] Submit to addons.mozilla.org for review
 
 ---
 
 ## COMMUNITY ITEMS (From Planning Doc)
 
-- [ ] **Icon Design Contest** — Currently using placeholder icons. Planning doc suggested a community contest (submit via Discord, vote on stream, winner gets credit in README). Icon sizes needed: 16×16, 32×32, 48×48, 128×128 PNG.
+- [x] **Icon Design Contest** — ✅ Complete. Custom icons designed and added to `assets/icons/ChromeWebStore/` (16, 48, 128px) and `assets/icons/FirefoxAMO/` (16, 32, 48, 64, 128px).
 
 ---
 
-_Last updated 2026-03-12 against the v0.4.9 codebase._
+_Last updated 2026-03-12 against the v0.4.11 codebase. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._

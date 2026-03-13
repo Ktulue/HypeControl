@@ -1,6 +1,6 @@
 // src/popup/popup.ts
 import './popup.css';
-import { migrateSettings } from '../shared/types';
+import { migrateSettings, ThemePreference } from '../shared/types';
 import { initPending, getPending, setPendingField } from './pendingState';
 import { initScrollSpy, ScrollSpyItem } from './scrollSpy';
 import { initStats } from './sections/stats';
@@ -11,6 +11,31 @@ import { initChannels } from './sections/channels';
 import { initSettingsSection } from './sections/settings-section';
 
 const SETTINGS_KEY = 'hcSettings';
+
+let activeMql: MediaQueryList | null = null;
+let mqlHandler: (() => void) | null = null;
+
+function applyTheme(theme: ThemePreference): void {
+  // Always clean up any existing MQL listener first (for all theme values)
+  if (activeMql && mqlHandler) {
+    activeMql.removeEventListener('change', mqlHandler);
+    activeMql = null;
+    mqlHandler = null;
+  }
+
+  let resolved: 'light' | 'dark';
+  if (theme === 'auto') {
+    const mql = window.matchMedia('(prefers-color-scheme: light)');
+    resolved = mql.matches ? 'light' : 'dark'; // defaults to dark if media query unavailable
+    mqlHandler = () => applyTheme('auto');
+    activeMql = mql;
+    mql.addEventListener('change', mqlHandler);
+  } else {
+    resolved = theme;
+  }
+
+  document.documentElement.dataset.theme = resolved;
+}
 
 async function main(): Promise<void> {
   // Load and migrate settings
@@ -63,7 +88,9 @@ async function main(): Promise<void> {
 
   const comparisons = initComparisons(comparisonsEl);
   const channels = initChannels(channelsEl);
-  const settingsSection = initSettingsSection(settingsEl);
+  const settingsSection = initSettingsSection(settingsEl, {
+    onThemeChange: (v) => applyTheme(v),
+  });
 
   // Initial render of all sections
   function renderAll(): void {
@@ -76,6 +103,7 @@ async function main(): Promise<void> {
     settingsSection.render(s);
   }
   renderAll();
+  applyTheme(settings.theme);
 
   // Async data that doesn't come from pending state
   stats.refreshStats();
