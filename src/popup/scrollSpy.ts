@@ -50,6 +50,7 @@ export function initScrollSpy(
     observer.observe(item.headingEl);
 
     item.navEl.addEventListener('click', () => {
+      activate(item.id);
       item.sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });

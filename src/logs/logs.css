@@ -111,6 +111,7 @@ h1 {
 /* ─── Controls ───────────────────────────────────────────── */
 .controls {
   display: flex;
+  justify-content: center;
   gap: 8px;
   margin-bottom: 12px;
 }
