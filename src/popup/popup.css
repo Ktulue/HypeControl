@@ -327,6 +327,7 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 12px;
+  overflow: visible;
 }
 .stat-tile {
   position: relative;
@@ -500,6 +501,12 @@ body {
 .stat-tile:hover .stat-info,
 .stat-tile:focus-within .stat-info {
   color: var(--text-secondary);
+}
+
+.stat-info:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .stat-tooltip {
