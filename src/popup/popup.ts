@@ -9,6 +9,7 @@ import { initComparisons } from './sections/comparisons';
 import { initLimits } from './sections/limits';
 import { initChannels } from './sections/channels';
 import { initSettingsSection } from './sections/settings-section';
+import { settingsLog, setVersion } from '../shared/logger';
 
 const SETTINGS_KEY = 'hcSettings';
 
@@ -42,6 +43,7 @@ async function main(): Promise<void> {
   const result = await chrome.storage.sync.get(SETTINGS_KEY);
   const settings = migrateSettings(result[SETTINGS_KEY] ?? {});
   initPending(settings);
+  setVersion(chrome.runtime.getManifest().version);
 
   // Section elements
   const statsEl = document.getElementById('section-stats')!;
@@ -118,6 +120,7 @@ async function main(): Promise<void> {
     saveBtnEl.textContent = 'Saving…';
     try {
       await chrome.storage.sync.set({ [SETTINGS_KEY]: getPending() });
+      settingsLog('Settings saved via popup', { snapshot: getPending() });
       saveBtnEl.textContent = '✓ Saved';
       setTimeout(() => {
         saveBtnEl.disabled = false;
