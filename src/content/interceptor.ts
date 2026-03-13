@@ -242,7 +242,12 @@ function formatComparisonDisplay(item: ComparisonItem, purchaseAmount: number, t
  */
 function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker: SpendingTracker): string {
   const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
-  const hoursOfWork = priceWithTax / settings.hourlyRate;
+
+  const hoursLine = settings.hourlyRate > 0
+    ? `<p class="hc-cost-line hc-cost-hours">
+        That's <strong>${formatWorkTime(priceWithTax / settings.hourlyRate)}</strong> of work
+      </p>`
+    : '';
 
   let dailyInfo = '';
   if (settings.dailyCap.enabled) {
@@ -269,9 +274,7 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
         <span class="hc-cost-label">With ${settings.taxRate}% tax:</span>
         <span class="hc-cost-value">$${priceWithTax.toFixed(2)}</span>
       </p>
-      <p class="hc-cost-line hc-cost-hours">
-        That's <strong>${formatWorkTime(hoursOfWork)}</strong> of work
-      </p>
+      ${hoursLine}
       ${dailyInfo}
       ${sessionInfo}
     </div>

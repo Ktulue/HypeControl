@@ -1,4 +1,4 @@
-import { UserSettings, FrictionIntensity, DelayTimerConfig, FrictionThresholds } from '../../shared/types';
+import { UserSettings, FrictionIntensity, DelayTimerConfig, FrictionThresholds, DEFAULT_SETTINGS } from '../../shared/types';
 import { setPendingField, getPending } from '../pendingState';
 
 export interface FrictionCallbacks {
@@ -29,7 +29,7 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
 
   // Hourly rate
   hourlyRateEl.addEventListener('input', () => {
-    setPendingField('hourlyRate', parseFloat(hourlyRateEl.value) || 0);
+    setPendingField('hourlyRate', parseFloat(hourlyRateEl.value) || DEFAULT_SETTINGS.hourlyRate);
   });
 
   // Tax rate
