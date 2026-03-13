@@ -2,17 +2,23 @@
 import { UserSettings, ThemePreference } from '../../shared/types';
 import { setPendingField } from '../pendingState';
 
+export interface SettingsSectionCallbacks {
+  onThemeChange?: (theme: ThemePreference) => void;
+}
+
 export interface SettingsSectionController {
   render(settings: UserSettings): void;
 }
 
-export function initSettingsSection(el: HTMLElement): SettingsSectionController {
+export function initSettingsSection(el: HTMLElement, callbacks: SettingsSectionCallbacks = {}): SettingsSectionController {
   const themeEl = el.querySelector<HTMLSelectElement>('#theme-select')!;
   const toastEl = el.querySelector<HTMLInputElement>('#toast-duration')!;
   const logsBtn = el.querySelector<HTMLButtonElement>('#btn-view-logs')!;
 
   themeEl.addEventListener('change', () => {
-    setPendingField('theme', themeEl.value as ThemePreference);
+    const theme = themeEl.value as ThemePreference;
+    callbacks.onThemeChange?.(theme);
+    setPendingField('theme', theme);
   });
 
   toastEl.addEventListener('input', () => {
