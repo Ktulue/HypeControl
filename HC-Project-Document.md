@@ -1535,6 +1535,10 @@ Seven UX issues addressed from Round 2 feedback:
 6. **Comparison subpanel — emoji picker hint restored** (keyboard shortcuts for Windows/Mac shown below emoji input)
 7. **Whitelist friction overlay — copy corrected** ("This channel is on your whitelist" replaces placeholder dev text)
 
+### v0.4.13 — Stat Card Tooltips (2026-03-13)
+
+Enhancement 8: All 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step) now show a ⓘ icon in the bottom-right corner. Hovering or focusing the tile reveals a tooltip explaining the stat. CSS-only implementation — no JS required.
+
 ## Links & Resources
 
 - **Chrome Extension Docs:** https://developer.chrome.com/docs/extensions/
@@ -1544,6 +1548,6 @@ Seven UX issues addressed from Round 2 feedback:
 
 ---
 
-**Document Version:** 1.1
+**Document Version:** 1.2
 **Last Updated:** 2026-03-13
 **Ready for:** Software Saturdays Stream Series
