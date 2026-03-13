@@ -115,6 +115,7 @@ You **cannot**:
 ## Acknowledgments
 
 - **HolmsB** — For helping name the extension "Hype Control"
+- **Lanzirelli** — Logo & Icons design
 
 ## Support
 
