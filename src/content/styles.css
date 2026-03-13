@@ -40,6 +40,7 @@
   --hc-overlay-bg: rgba(0, 0, 0, 0.6);
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   --hc-primary: #0891B2;
+  --hc-primary-rgb: 8, 145, 178;
   --hc-primary-dark: #0E7490;
   --hc-success: #16A34A;
   --hc-warning: #EA580C;
