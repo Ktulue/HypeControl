@@ -26,7 +26,7 @@ function applyTheme(theme: ThemePreference): void {
   let resolved: 'light' | 'dark';
   if (theme === 'auto') {
     const mql = window.matchMedia('(prefers-color-scheme: light)');
-    resolved = mql.matches ? 'light' : 'dark';
+    resolved = mql.matches ? 'light' : 'dark'; // defaults to dark if media query unavailable
     mqlHandler = () => applyTheme('auto');
     activeMql = mql;
     mql.addEventListener('change', mqlHandler);
