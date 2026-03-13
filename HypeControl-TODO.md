@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-13
-**Current Version:** 0.4.12
+**Current Version:** 0.4.13
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -159,6 +159,10 @@ All 7 issues from the Round 2 feedback pass — fixed and shipped.
 - [x] **Emoji picker hint restored in comparison subpanel** — The "type : to open the emoji picker" hint text is shown again in the comparison item add/edit subpanel.
 - [x] **Whitelist banner copy fixed** — Banner in the friction overlay now reads "This channel is on your whitelist" (was previously incorrect copy).
 
+## STAT CARD TOOLTIPS (v0.4.13)
+
+- [x] Enhancement 8: Added ⓘ hover tooltips to all 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step)
+
 ---
 
 ## PHASE 4 — OPTIONAL ADD-ONS
@@ -279,4 +283,4 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-13 against the v0.4.12 codebase. Round 2 bug fixes complete. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
+_Last updated 2026-03-13 against the v0.4.13 codebase. Round 2 bug fixes complete. Stat Card Tooltips (Enhancement 8) added. Roadmap updated: Add-ons 6–12 deferred, Firefox AMO port added as final milestone._
