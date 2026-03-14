@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hype Control",
-  "version": "0.4.15",
+  "version": "0.4.20",
   "description": "Create intentional friction before Twitch purchases to encourage mindful spending",
   "icons": {
     "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
@@ -25,6 +25,18 @@
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/icons/ChromeWebStore/HC_icon_48px.png",
+        "assets/fonts/SpaceGrotesk-Regular.woff2",
+        "assets/fonts/SpaceGrotesk-Medium.woff2",
+        "assets/fonts/SpaceGrotesk-SemiBold.woff2",
+        "assets/fonts/SpaceGrotesk-Bold.woff2"
+      ],
+      "matches": ["https://*.twitch.tv/*"]
     }
   ],
   "action": {

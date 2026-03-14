@@ -89,6 +89,8 @@ HypeControl/
 ## Known Issues
 
 - **Bits Combo module** — The animated Bits Combo (timer/counter) that Twitch displays during cheering cannot currently be intercepted. Hype Control can intercept the "Get Bits" button in the top navigation bar, but the Combo module uses a non-standard rendering path that doesn't expose a clickable element Hype Control can hook.
+- **Emoji input (Windows)** — The Windows emoji picker (Win + .) allows inserting non-emoji characters (Latin symbols, special characters) into the emoji field. GIF selection is not supported. For best results, stick to standard emoji from the Smileys or Symbols categories.
+- **Emoji input (macOS)** — The macOS Character Viewer works as expected for standard emoji. GIF insertion is not supported.
 
 ## Contributing
 

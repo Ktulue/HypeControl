@@ -472,7 +472,7 @@ async function showMainOverlay(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">\u{1F6E1}\uFE0F</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title">Hype Control</h2>
       </div>
       <div class="hc-content">
@@ -593,7 +593,7 @@ function showCooldownBlock(remainingMs: number): void {
   overlay.setAttribute('aria-describedby', 'hc-overlay-desc');
   overlay.innerHTML = `
     <div class="hc-modal hc-cooldown-modal">
-      <div class="hc-header" style="background: linear-gradient(135deg, var(--hc-danger), var(--hc-danger-dark));">
+      <div class="hc-header">
         <span class="hc-icon">\u231B</span>
         <h2 class="hc-title" id="hc-overlay-heading">COOLDOWN ACTIVE</h2>
       </div>

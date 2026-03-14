@@ -5,6 +5,32 @@
  * Designed to be visible and intentional, not easily dismissed
  */
 
+/* Font Loading */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* CSS Variables */
 :root {
   --hc-primary: #9147ff;
@@ -16,10 +42,10 @@
   --hc-bg-card: #1f1f23;
   --hc-text: #efeff1;
   --hc-text-muted: #adadb8;
-  --hc-border: #3d3d42;
+  --hc-border: #2d2d35;
   --hc-overlay-bg: rgba(0, 0, 0, 0.85);
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --hc-radius: 8px;
+  --hc-radius: 6px;
   --hc-font: 'Space Grotesk', sans-serif;
   --hc-primary-rgb: 145, 71, 255;
   --hc-danger-rgb: 233, 25, 22;
@@ -28,6 +54,7 @@
   --hc-warning-rgb: 249, 115, 22;
   --hc-primary-light: rgba(145, 71, 255, 0.12);
   --hc-progress-bg: #2a2a2e;
+  --hc-primary-text: #bf94ff;
 }
 
 /* Light mode overrides */
@@ -45,6 +72,7 @@
   --hc-success: #16A34A;
   --hc-warning: #EA580C;
   --hc-primary-light: rgba(124, 58, 237, 0.12);
+  --hc-primary-text: #7c3aed;
 }
 
 .hc-light .hc-whitelist-note {
@@ -90,6 +118,8 @@
   margin: 20px;
   animation: hc-slideIn 0.3s ease-out;
   overflow: hidden;
+  font-family: var(--hc-font);
+  font-size: 13px;
 }
 
 @keyframes hc-slideIn {
@@ -105,7 +135,8 @@
 
 /* Header section */
 .hc-header {
-  background: linear-gradient(135deg, var(--hc-primary) 0%, var(--hc-primary-dark) 100%);
+  background: var(--hc-bg-card);
+  border-bottom: 1px solid var(--hc-border);
   padding: 16px 20px;
   display: flex;
   align-items: center;
@@ -116,15 +147,14 @@
 .hc-icon {
   font-size: 28px;
   line-height: 1;
+  display: block;
 }
 
 .hc-title {
-  color: white;
-  font-size: 18px;
+  color: var(--hc-text);
+  font-size: 15px;
   font-weight: 700;
   margin: 0;
-  letter-spacing: 1px;
-  text-transform: uppercase;
 }
 
 /* Content section */
@@ -192,7 +222,7 @@
 .hc-cost-hours {
   margin-top: 8px;
   font-size: 15px;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
 }
 
 .hc-cost-hours strong {
@@ -218,7 +248,7 @@
 
 .hc-comparison-label {
   font-size: 18px;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   margin: 4px 0 0 0;
   font-weight: 600;
   text-transform: lowercase;
@@ -297,15 +327,13 @@
 
 .hc-btn {
   flex: 1;
-  padding: 12px 20px;
-  font-size: 14px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 600;
   border: none;
   border-radius: var(--hc-radius);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .hc-btn:focus {
@@ -357,7 +385,7 @@
 }
 
 .hc-nudge-comparison {
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   font-size: 14px;
   margin: 0 0 16px 0;
 }
@@ -472,7 +500,7 @@
   background: rgba(var(--hc-primary-rgb), 0.15);
   border: 1px solid rgba(var(--hc-primary-rgb), 0.3);
   border-radius: 6px;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   font-size: 13px;
   padding: 8px 12px;
   margin-bottom: 16px;
@@ -650,16 +678,15 @@
 /* Type-to-confirm step */
 .hc-confirm-phrase {
   display: inline-block;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--hc-font);
   font-size: 16px;
   font-weight: 700;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   background: rgba(var(--hc-primary-rgb), 0.12);
   border: 1px solid rgba(var(--hc-primary-rgb), 0.3);
   border-radius: 4px;
   padding: 6px 14px;
   margin: 12px 0 16px;
-  letter-spacing: 0.5px;
   user-select: all;
 }
 
