@@ -47,13 +47,15 @@
           <button class="btn-secondary" id="btn-override">Stream Override (2 hr)</button>
         </div>
         <div class="hc-row">
-          <label class="hc-label">Intensity</label>
-          <div class="segmented" id="stats-intensity" data-pending-field="frictionIntensity">
-            <button class="seg-btn" data-value="low">Low</button>
-            <button class="seg-btn" data-value="medium">Med</button>
-            <button class="seg-btn" data-value="high">High</button>
-            <button class="seg-btn" data-value="extreme">Extreme</button>
-          </div>
+          <fieldset class="hc-fieldset">
+            <legend class="hc-label">Intensity</legend>
+            <div class="segmented" id="stats-intensity" data-pending-field="frictionIntensity">
+              <button class="seg-btn" data-value="low">Low</button>
+              <button class="seg-btn" data-value="medium">Med</button>
+              <button class="seg-btn" data-value="high">High</button>
+              <button class="seg-btn" data-value="extreme">Extreme</button>
+            </div>
+          </fieldset>
         </div>
       </section>
 
@@ -69,16 +71,18 @@
           <input type="number" id="friction-tax-rate" min="0" max="100" step="0.1" class="hc-input hc-input--sm" />
         </div>
         <div class="hc-row">
-          <label class="hc-label">Intensity</label>
-          <div class="segmented" id="friction-intensity" data-pending-field="frictionIntensity">
-            <button class="seg-btn" data-value="low">Low</button>
-            <button class="seg-btn" data-value="medium">Med</button>
-            <button class="seg-btn" data-value="high">High</button>
-            <button class="seg-btn" data-value="extreme">Extreme</button>
-          </div>
+          <fieldset class="hc-fieldset">
+            <legend class="hc-label">Intensity</legend>
+            <div class="segmented" id="friction-intensity" data-pending-field="frictionIntensity">
+              <button class="seg-btn" data-value="low">Low</button>
+              <button class="seg-btn" data-value="medium">Med</button>
+              <button class="seg-btn" data-value="high">High</button>
+              <button class="seg-btn" data-value="extreme">Extreme</button>
+            </div>
+          </fieldset>
         </div>
         <div class="hc-row">
-          <label class="hc-label">Delay timer</label>
+          <label class="hc-label" for="delay-enabled">Delay timer</label>
           <label class="toggle-wrap">
             <input type="checkbox" id="delay-enabled" />
             <span class="toggle-track"></span>
@@ -91,7 +95,7 @@
           </div>
         </div>
         <div class="hc-row">
-          <label class="hc-label">Thresholds</label>
+          <label class="hc-label" for="friction-thresholds-enabled">Thresholds</label>
           <label class="toggle-wrap">
             <input type="checkbox" id="friction-thresholds-enabled" />
             <span class="toggle-track"></span>
@@ -153,7 +157,7 @@
       <section class="hc-section" id="section-limits">
         <h2 class="section-heading">Limits</h2>
         <div class="hc-row">
-          <label class="hc-label">Daily cap</label>
+          <label class="hc-label" for="daily-cap-enabled">Daily cap</label>
           <label class="toggle-wrap">
             <input type="checkbox" id="daily-cap-enabled" />
             <span class="toggle-track"></span>
@@ -161,7 +165,7 @@
           <input type="number" id="daily-cap-amount" min="0" step="0.01" class="hc-input hc-input--sm" hidden />
         </div>
         <div class="hc-row">
-          <label class="hc-label">Spending cooldown</label>
+          <label class="hc-label" for="cooldown-enabled">Spending cooldown</label>
           <label class="toggle-wrap">
             <input type="checkbox" id="cooldown-enabled" />
             <span class="toggle-track"></span>
@@ -196,7 +200,7 @@
       <section class="hc-section" id="section-channels">
         <h2 class="section-heading">Channels</h2>
         <div class="hc-row">
-          <label class="hc-label">Streaming mode</label>
+          <label class="hc-label" for="streaming-mode-enabled">Streaming mode</label>
           <label class="toggle-wrap">
             <input type="checkbox" id="streaming-mode-enabled" />
             <span class="toggle-track"></span>
@@ -254,6 +258,20 @@
         </div>
       </section>
 
+      <!-- Section 7: Credits -->
+      <section class="hc-section" id="section-credits">
+        <h2 class="section-heading">Credits</h2>
+        <ul class="credits-list">
+          <li class="credit-line">HolmsB — <span class="credit-role">Naming of "Hype Control"</span></li>
+          <li class="credit-line">Lanzirelli — <span class="credit-role">Logo/Icon</span> <img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="14" height="14" alt="" class="credit-icon"></li>
+        </ul>
+        <div class="credits-links">
+          <a class="credits-link" href="https://ko-fi.com/ktulue" target="_blank" rel="noopener">☕ Support on Ko-fi</a>
+          <a class="credits-link" href="https://github.com/Ktulue/HypeControl" target="_blank" rel="noopener">&lt;/&gt; Peep the Code</a>
+        </div>
+        <p class="credits-byline">Created by <a class="credits-link" href="http://www.ktulue.com/" target="_blank" rel="noopener">Ktulue</a> | The Water Father 🌊</p>
+      </section>
+
     </div><!-- /.hc-content -->
 
     <nav class="hc-nav" id="hc-nav" aria-label="Sections">
@@ -263,6 +281,7 @@
       <button class="nav-label" data-nav-target="limits">Limits</button>
       <button class="nav-label" data-nav-target="channels">Channels</button>
       <button class="nav-label" data-nav-target="settings">Settings</button>
+      <button class="nav-label" data-nav-target="credits">Credits</button>
     </nav>
 
   </div><!-- /.hc-body -->

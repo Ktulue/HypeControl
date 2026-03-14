@@ -7,11 +7,11 @@
 
 /* CSS Variables */
 :root {
-  --hc-primary: #9146ff;
+  --hc-primary: #9147ff;
   --hc-primary-dark: #772ce8;
-  --hc-danger: #eb0400;
+  --hc-danger: #e91916;
   --hc-danger-dark: #c00;
-  --hc-success: #00c853;
+  --hc-success: #22C55E;
   --hc-bg-dark: #18181b;
   --hc-bg-card: #1f1f23;
   --hc-text: #efeff1;
@@ -20,6 +20,14 @@
   --hc-overlay-bg: rgba(0, 0, 0, 0.85);
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   --hc-radius: 8px;
+  --hc-font: 'Space Grotesk', sans-serif;
+  --hc-primary-rgb: 145, 71, 255;
+  --hc-danger-rgb: 233, 25, 22;
+  --hc-success-rgb: 34, 197, 94;
+  --hc-warning: #F97316;
+  --hc-warning-rgb: 249, 115, 22;
+  --hc-primary-light: rgba(145, 71, 255, 0.12);
+  --hc-progress-bg: #2a2a2e;
 }
 
 /* Light mode overrides */
@@ -31,10 +39,16 @@
   --hc-border: #d2d2d7;
   --hc-overlay-bg: rgba(0, 0, 0, 0.6);
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --hc-primary: #7c3aed;
+  --hc-primary-rgb: 124, 58, 237;
+  --hc-primary-dark: #6d28d9;
+  --hc-success: #16A34A;
+  --hc-warning: #EA580C;
+  --hc-primary-light: rgba(124, 58, 237, 0.12);
 }
 
 .hc-light .hc-whitelist-note {
-  color: #6b2fd6;
+  color: var(--hc-primary-light);
 }
 
 .hc-light .hc-price-note {
@@ -139,7 +153,7 @@
 }
 
 .hc-price-note {
-  color: #ffa500;
+  color: var(--hc-warning);
   font-size: 12px;
   margin: 8px 0 0 0;
   font-style: italic;
@@ -217,21 +231,21 @@
   border-radius: 4px;
   font-size: 12px;
   text-align: center;
-  background: rgba(145, 70, 255, 0.1);
+  background: rgba(var(--hc-primary-rgb), 0.1);
   color: var(--hc-text-muted);
-  border: 1px solid rgba(145, 70, 255, 0.2);
+  border: 1px solid rgba(var(--hc-primary-rgb), 0.2);
 }
 
 .hc-daily-warning {
-  background: rgba(255, 165, 0, 0.15);
-  color: #ffa500;
-  border-color: rgba(255, 165, 0, 0.3);
+  background: rgba(var(--hc-warning-rgb), 0.15);
+  color: var(--hc-warning);
+  border-color: rgba(var(--hc-warning-rgb), 0.3);
 }
 
 .hc-daily-over {
-  background: rgba(235, 4, 0, 0.15);
-  color: #eb0400;
-  border-color: rgba(235, 4, 0, 0.3);
+  background: rgba(var(--hc-danger-rgb), 0.15);
+  color: var(--hc-danger);
+  border-color: rgba(var(--hc-danger-rgb), 0.3);
   font-weight: 600;
 }
 
@@ -289,7 +303,7 @@
   border: none;
   border-radius: var(--hc-radius);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -305,7 +319,7 @@
 }
 
 .hc-btn-cancel:hover {
-  background: #00a344;
+  background: var(--hc-success);
   transform: translateY(-1px);
 }
 
@@ -401,14 +415,14 @@
   position: fixed;
   bottom: 48px;
   right: 10px;
-  background: #eb0400;
+  background: var(--hc-danger);
   color: white;
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   z-index: 999998;
-  font-family: sans-serif;
+  font-family: var(--hc-font);
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   transition: opacity 0.3s;
   pointer-events: none;
@@ -420,14 +434,14 @@
   position: fixed;
   bottom: 48px;
   right: 10px;
-  background: #00c853;
+  background: var(--hc-success);
   color: white;
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   z-index: 999998;
-  font-family: sans-serif;
+  font-family: var(--hc-font);
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   transition: opacity 0.3s;
   pointer-events: none;
@@ -439,14 +453,14 @@
   position: fixed;
   bottom: 48px;
   right: 10px;
-  background: #9146ff;
+  background: var(--hc-primary);
   color: white;
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   z-index: 999998;
-  font-family: sans-serif;
+  font-family: var(--hc-font);
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   transition: opacity 0.3s;
   pointer-events: none;
@@ -455,10 +469,10 @@
 
 /* Whitelist note banner inside main overlay (full behavior) */
 .hc-whitelist-note {
-  background: rgba(145, 70, 255, 0.15);
-  border: 1px solid rgba(145, 70, 255, 0.3);
+  background: rgba(var(--hc-primary-rgb), 0.15);
+  border: 1px solid rgba(var(--hc-primary-rgb), 0.3);
   border-radius: 6px;
-  color: #c59eff;
+  color: var(--hc-primary);
   font-size: 13px;
   padding: 8px 12px;
   margin-bottom: 16px;
@@ -470,20 +484,20 @@
   position: fixed;
   bottom: 10px;
   right: 10px;
-  background: #ff8c00;
+  background: var(--hc-warning);
   color: white;
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
   z-index: 999997;
-  font-family: sans-serif;
+  font-family: var(--hc-font);
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* Delay timer progress bar */
 .hc-progress-wrap {
-  background: #2a2a2e;
+  background: var(--hc-progress-bg);
   border-radius: 4px;
   height: 6px;
   margin: 12px 0;
@@ -491,16 +505,18 @@
 }
 
 .hc-progress-bar {
-  background: #9147ff;
+  background: var(--hc-primary);
   height: 100%;
-  width: 0%;
-  transition: width 0.1s linear;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.1s linear;
   border-radius: 4px;
 }
 
 .hc-countdown {
   font-size: 13px;
-  color: #adadb8;
+  color: var(--hc-text-muted);
   margin-top: 4px;
 }
 
@@ -530,7 +546,7 @@
 }
 
 .hc-reason-btn:hover {
-  background: rgba(145, 71, 255, 0.1);
+  background: rgba(var(--hc-primary-rgb), 0.1);
   border-color: var(--hc-primary);
 }
 
@@ -540,7 +556,7 @@
 }
 
 .hc-reason-btn.selected {
-  background: rgba(145, 71, 255, 0.2);
+  background: rgba(var(--hc-primary-rgb), 0.2);
   border-color: var(--hc-primary);
   color: var(--hc-text);
   font-weight: 600;
@@ -586,12 +602,12 @@
 }
 
 .hc-whitelist-warning {
-  background: rgba(255, 165, 0, 0.15);
-  border: 1px solid rgba(255, 165, 0, 0.4);
+  background: rgba(var(--hc-warning-rgb), 0.15);
+  border: 1px solid rgba(var(--hc-warning-rgb), 0.4);
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 12px;
-  color: #ffa500;
+  color: var(--hc-warning);
   margin: 0 20px 8px;
 }
 
@@ -615,8 +631,8 @@
 }
 
 .hc-whitelist-option:hover {
-  border-color: #9147ff;
-  background: rgba(145, 71, 255, 0.1);
+  border-color: var(--hc-primary);
+  background: rgba(var(--hc-primary-rgb), 0.1);
 }
 
 .hc-whitelist-option-name {
@@ -638,8 +654,8 @@
   font-size: 16px;
   font-weight: 700;
   color: var(--hc-primary);
-  background: rgba(145, 70, 255, 0.12);
-  border: 1px solid rgba(145, 70, 255, 0.3);
+  background: rgba(var(--hc-primary-rgb), 0.12);
+  border: 1px solid rgba(var(--hc-primary-rgb), 0.3);
   border-radius: 4px;
   padding: 6px 14px;
   margin: 12px 0 16px;
@@ -663,7 +679,7 @@
 
 .hc-confirm-input:focus {
   border-color: var(--hc-primary);
-  box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(var(--hc-primary-rgb), 0.2);
 }
 
 .hc-confirm-input::placeholder {
@@ -707,7 +723,7 @@
 
 .hc-math-input:focus {
   border-color: var(--hc-primary);
-  box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(var(--hc-primary-rgb), 0.2);
 }
 
 .hc-math-input::placeholder {

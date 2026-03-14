@@ -1,6 +1,6 @@
 {
   "name": "hype-control",
-  "version": "0.4.13",
+  "version": "0.4.15",
   "description": "Chrome extension that creates intentional friction before Twitch spending",
   "scripts": {
     "build": "webpack --mode production",

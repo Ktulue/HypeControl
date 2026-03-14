@@ -731,7 +731,7 @@ async function showDelayTimerStep(
       const left = expiresAt - Date.now();
       const elapsed = durationSeconds * 1000 - left;
       const pct = Math.min(100, (elapsed / (durationSeconds * 1000)) * 100);
-      if (progressEl) progressEl.style.width = `${pct}%`;
+      if (progressEl) progressEl.style.transform = `scaleX(${pct / 100})`;
 
       if (left <= 0) {
         if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
@@ -771,10 +771,6 @@ const PURCHASE_REASONS = [
 async function showReasonSelectionStep(
   overlay: HTMLElement,
 ): Promise<{ decision: 'cancel' | 'proceed'; reason?: string }> {
-  const reasonButtonsHTML = PURCHASE_REASONS.map(reason => `
-    <button class="hc-reason-btn" data-reason="${reason}">${reason}</button>
-  `).join('');
-
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
@@ -783,9 +779,7 @@ async function showReasonSelectionStep(
       </div>
       <div class="hc-content" id="hc-overlay-desc">
         <p class="hc-message">Select a reason to continue.</p>
-        <div class="hc-reason-list">
-          ${reasonButtonsHTML}
-        </div>
+        <div class="hc-reason-list" id="hc-reason-container"></div>
       </div>
       <div class="hc-actions hc-actions--column">
         <button class="hc-btn hc-btn-proceed" data-action="proceed" disabled aria-disabled="true" style="opacity: 0.4; cursor: not-allowed;">
@@ -795,6 +789,17 @@ async function showReasonSelectionStep(
       </div>
     </div>
   `;
+
+  const container = overlay.querySelector('#hc-reason-container');
+  if (container) {
+    PURCHASE_REASONS.forEach(reason => {
+      const btn = document.createElement('button');
+      btn.className = 'hc-reason-btn';
+      btn.setAttribute('data-reason', reason);
+      btn.textContent = reason;
+      container.appendChild(btn);
+    });
+  }
 
   log('Reason selection step shown');
 
@@ -939,7 +944,7 @@ async function showFrictionCooldownStep(
       const left = expiresAt - Date.now();
       const elapsed = durationSeconds * 1000 - left;
       const pct = Math.min(100, (elapsed / (durationSeconds * 1000)) * 100);
-      if (progressEl) progressEl.style.width = `${pct}%`;
+      if (progressEl) progressEl.style.transform = `scaleX(${pct / 100})`;
 
       if (left <= 0) {
         if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }

@@ -3,6 +3,7 @@
  * Displays extension and settings logs from chrome.storage.local
  */
 
+import './logs.css';
 import {
   getExtensionLogs,
   getSettingsLogs,
@@ -68,10 +69,16 @@ async function loadAndRender(): Promise<void> {
 }
 
 function setupTabs(): void {
+  const panel = document.getElementById('log-container')!;
   document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      panel.setAttribute('aria-labelledby', btn.id);
       activeTab = btn.dataset.tab as 'extension' | 'settings';
       loadAndRender();
     });
@@ -92,7 +99,22 @@ function setupControls(): void {
   });
 }
 
+async function initTheme(): Promise<void> {
+  try {
+    const result = await chrome.storage.sync.get('hcSettings');
+    const theme = result?.hcSettings?.theme;
+    if (theme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  } catch {
+    // non-extension context — ignore
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   setupTabs();
   setupControls();
   loadAndRender();

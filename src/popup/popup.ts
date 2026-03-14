@@ -99,6 +99,8 @@ async function main(): Promise<void> {
 
   // Scroll-spy
   const contentEl = document.getElementById('hc-content')!;
+  const creditsEl = document.getElementById('section-credits')!;
+
   const spyItems: ScrollSpyItem[] = [
     { id: 'stats',       sectionEl: statsEl,       headingEl: statsEl.querySelector('.section-heading')!,       navEl: document.querySelector('[data-nav-target="stats"]')! },
     { id: 'friction',    sectionEl: frictionEl,    headingEl: frictionEl.querySelector('.section-heading')!,    navEl: document.querySelector('[data-nav-target="friction"]')! },
@@ -106,8 +108,13 @@ async function main(): Promise<void> {
     { id: 'limits',      sectionEl: limitsEl,      headingEl: limitsEl.querySelector('.section-heading')!,      navEl: document.querySelector('[data-nav-target="limits"]')! },
     { id: 'channels',    sectionEl: channelsEl,    headingEl: channelsEl.querySelector('.section-heading')!,    navEl: document.querySelector('[data-nav-target="channels"]')! },
     { id: 'settings',    sectionEl: settingsEl,    headingEl: settingsEl.querySelector('.section-heading')!,    navEl: document.querySelector('[data-nav-target="settings"]')! },
+    { id: 'credits',     sectionEl: creditsEl,     headingEl: creditsEl.querySelector('.section-heading')!,     navEl: document.querySelector('[data-nav-target="credits"]')! },
   ];
-  initScrollSpy(contentEl, spyItems);
+  const spy = initScrollSpy(contentEl, spyItems);
+
+  // If navigated back from another page with a hash, jump to that section
+  const hash = window.location.hash.slice(1);
+  if (hash) spy.jumpTo(hash);
 
   // Version
   const versionEl = document.getElementById('footer-version');
