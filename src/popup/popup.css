@@ -29,15 +29,15 @@
   --bg-secondary: #1f1f23;
   --bg-input: #0e0e10;
   --border-color: #2d2d35;
-  --accent: #06B6D4;
-  --accent-hover: #0891B2;
+  --accent: #9147ff;
+  --accent-hover: #772ce8;
   --text-primary: #efeff1;
   --text-secondary: #adadb8;
   --text-muted: #6b6b80;
   --danger: #e91916;
   --danger-hover: #c71512;
   --success: #22C55E;
-  --accent-rgb: 6, 182, 212;
+  --accent-rgb: 145, 71, 255;
   --danger-rgb: 233, 25, 22;
   --success-rgb: 34, 197, 94;
   --radius: 6px;
@@ -53,10 +53,10 @@
   --text-primary:  #18181b;
   --text-secondary:#3f3f46;
   --text-muted:    #71717a;
-  --accent: #0891B2;
-  --accent-hover: #0E7490;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
   --success: #16A34A;
-  --accent-rgb: 8, 145, 178;
+  --accent-rgb: 124, 58, 237;
   --success-rgb: 22, 163, 74;
 }
 
@@ -566,6 +566,42 @@ body {
 .stat-tile:hover .stat-tooltip,
 .stat-tile:focus-within .stat-tooltip {
   display: block;
+}
+
+/* ─── Credits section ────────────────────────────────────── */
+.credits-list {
+  list-style: none;
+  margin-bottom: 10px;
+}
+.credit-line {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 2px 0;
+}
+.credit-role {
+  color: var(--text-secondary);
+}
+.credits-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.credit-icon {
+  vertical-align: middle;
+  margin-left: 2px;
+}
+.credits-link {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.credits-link:hover {
+  text-decoration: underline;
+}
+.credits-byline {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* ─── Fieldset reset ─────────────────────────────────────── */

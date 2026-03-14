@@ -7,8 +7,8 @@
 
 /* CSS Variables */
 :root {
-  --hc-primary: #06B6D4;
-  --hc-primary-dark: #0891B2;
+  --hc-primary: #9147ff;
+  --hc-primary-dark: #772ce8;
   --hc-danger: #e91916;
   --hc-danger-dark: #c00;
   --hc-success: #22C55E;
@@ -21,12 +21,12 @@
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   --hc-radius: 8px;
   --hc-font: 'Space Grotesk', sans-serif;
-  --hc-primary-rgb: 6, 182, 212;
+  --hc-primary-rgb: 145, 71, 255;
   --hc-danger-rgb: 233, 25, 22;
   --hc-success-rgb: 34, 197, 94;
   --hc-warning: #F97316;
   --hc-warning-rgb: 249, 115, 22;
-  --hc-primary-light: rgba(6, 182, 212, 0.12);
+  --hc-primary-light: rgba(145, 71, 255, 0.12);
   --hc-progress-bg: #2a2a2e;
 }
 
@@ -39,12 +39,12 @@
   --hc-border: #d2d2d7;
   --hc-overlay-bg: rgba(0, 0, 0, 0.6);
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  --hc-primary: #0891B2;
-  --hc-primary-rgb: 8, 145, 178;
-  --hc-primary-dark: #0E7490;
+  --hc-primary: #7c3aed;
+  --hc-primary-rgb: 124, 58, 237;
+  --hc-primary-dark: #6d28d9;
   --hc-success: #16A34A;
   --hc-warning: #EA580C;
-  --hc-primary-light: rgba(8, 145, 178, 0.12);
+  --hc-primary-light: rgba(124, 58, 237, 0.12);
 }
 
 .hc-light .hc-whitelist-note {

@@ -7,30 +7,32 @@
 </head>
 <body>
   <div class="log-wrapper">
-    <h1><img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="24" height="24" alt="Hype Control"> Hype Control Logs</h1>
+    <h1><img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="40" height="40" alt="Hype Control"> Hype Control Logs</h1>
 
-    <div class="tabs" role="tablist" aria-label="Log type">
-      <button
-        class="tab-btn active"
-        role="tab"
-        id="tab-extension"
-        data-tab="extension"
-        aria-selected="true"
-        aria-controls="log-container"
-      >Extension Log</button>
-      <button
-        class="tab-btn"
-        role="tab"
-        id="tab-settings"
-        data-tab="settings"
-        aria-selected="false"
-        aria-controls="log-container"
-      >Settings Log</button>
-    </div>
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="Log type">
+        <button
+          class="tab-btn active"
+          role="tab"
+          id="tab-extension"
+          data-tab="extension"
+          aria-selected="true"
+          aria-controls="log-container"
+        >Extension Log</button>
+        <button
+          class="tab-btn"
+          role="tab"
+          id="tab-settings"
+          data-tab="settings"
+          aria-selected="false"
+          aria-controls="log-container"
+        >Settings Log</button>
+      </div>
 
-    <div class="controls">
-      <button class="btn" id="btn-refresh">↻ Refresh</button>
-      <button class="btn danger" id="btn-clear">Clear Log</button>
+      <div class="actions">
+        <button class="btn" id="btn-refresh">↻ Refresh</button>
+        <button class="btn danger" id="btn-clear">Clear Log</button>
+      </div>
     </div>
 
     <div
