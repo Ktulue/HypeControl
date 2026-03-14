@@ -9,7 +9,7 @@ import {
   FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings,
   WhitelistEntry, WhitelistBehavior,
 } from '../shared/types';
-import { isPurchaseButton, createPurchaseAttempt } from './detector';
+import { isPurchaseButton, createPurchaseAttempt, getCurrentChannel } from './detector';
 import { shouldBypassFriction } from './streamingMode';
 import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
@@ -476,6 +476,7 @@ async function showMainOverlay(
         <h2 class="hc-title">Hype Control</h2>
       </div>
       <div class="hc-content">
+        ${attempt.isDemoMode ? '<div class="hc-demo-badge">Demo mode — no real purchase will be made</div>' : ''}
         ${whitelistNote ? `<div class="hc-whitelist-note">${whitelistNote}</div>` : ''}
         <div class="hc-price-section" id="hc-overlay-desc">
           <p class="hc-label" id="hc-overlay-heading">You're about to spend:</p>
@@ -1688,4 +1689,26 @@ export function setupInterceptor(): void {
 export function teardownInterceptor(): void {
   document.removeEventListener('click', clickHandler, { capture: true });
   log('Interceptor removed');
+}
+
+/**
+ * Fires the real friction overlay with mock purchase data.
+ * Used by the onboarding tour (Phase 2) and by HC.testOverlay().
+ * Does NOT write to storage — no spend tracking, no event log.
+ */
+export async function triggerDemoOverlay(): Promise<void> {
+  const settings = await loadSettings();
+  const mockAttempt: PurchaseAttempt = {
+    type: 'Subscribe',
+    rawPrice: '$4.99',
+    priceValue: 4.99,
+    channel: getCurrentChannel() || 'example_channel',
+    timestamp: new Date(),
+    element: document.body,
+    isDemoMode: true,
+  };
+  // Use a fresh tracker so demo never affects daily totals or cooldown
+  const freshTracker = { ...DEFAULT_SPENDING_TRACKER };
+  await runFrictionFlow(mockAttempt, settings, freshTracker);
+  // Intentionally no recordPurchase or writeInterceptEvent — demo mode
 }
