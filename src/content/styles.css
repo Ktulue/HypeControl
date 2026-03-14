@@ -54,6 +54,7 @@
   --hc-warning-rgb: 249, 115, 22;
   --hc-primary-light: rgba(145, 71, 255, 0.12);
   --hc-progress-bg: #2a2a2e;
+  --hc-primary-text: #bf94ff;
 }
 
 /* Light mode overrides */
@@ -71,6 +72,7 @@
   --hc-success: #16A34A;
   --hc-warning: #EA580C;
   --hc-primary-light: rgba(124, 58, 237, 0.12);
+  --hc-primary-text: #7c3aed;
 }
 
 .hc-light .hc-whitelist-note {
@@ -220,7 +222,7 @@
 .hc-cost-hours {
   margin-top: 8px;
   font-size: 15px;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
 }
 
 .hc-cost-hours strong {
@@ -246,7 +248,7 @@
 
 .hc-comparison-label {
   font-size: 18px;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   margin: 4px 0 0 0;
   font-weight: 600;
   text-transform: lowercase;
@@ -383,7 +385,7 @@
 }
 
 .hc-nudge-comparison {
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   font-size: 14px;
   margin: 0 0 16px 0;
 }
@@ -498,7 +500,7 @@
   background: rgba(var(--hc-primary-rgb), 0.15);
   border: 1px solid rgba(var(--hc-primary-rgb), 0.3);
   border-radius: 6px;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   font-size: 13px;
   padding: 8px 12px;
   margin-bottom: 16px;
@@ -679,7 +681,7 @@
   font-family: var(--hc-font);
   font-size: 16px;
   font-weight: 700;
-  color: var(--hc-primary);
+  color: var(--hc-primary-text);
   background: rgba(var(--hc-primary-rgb), 0.12);
   border: 1px solid rgba(var(--hc-primary-rgb), 0.3);
   border-radius: 4px;
