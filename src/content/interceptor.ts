@@ -538,7 +538,7 @@ async function showComparisonStep(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">${item.emoji}</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">STEP ${stepNumber} OF ${totalSteps}</h2>
       </div>
       <div class="hc-content">
@@ -593,8 +593,8 @@ function showCooldownBlock(remainingMs: number): void {
   overlay.setAttribute('aria-describedby', 'hc-overlay-desc');
   overlay.innerHTML = `
     <div class="hc-modal hc-cooldown-modal">
-      <div class="hc-header" style="background: linear-gradient(135deg, var(--hc-danger), var(--hc-danger-dark));">
-        <span class="hc-icon">\u231B</span>
+      <div class="hc-header">
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">COOLDOWN ACTIVE</h2>
       </div>
       <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
@@ -668,7 +668,7 @@ async function showDelayTimerStep(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">⏱️</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">Last Chance to Reconsider</h2>
       </div>
       <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
@@ -774,7 +774,7 @@ async function showReasonSelectionStep(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">🤔</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">Why are you buying this?</h2>
       </div>
       <div class="hc-content" id="hc-overlay-desc">
@@ -882,7 +882,7 @@ async function showFrictionCooldownStep(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">⏳</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">Take a moment to reflect...</h2>
       </div>
       <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
@@ -985,7 +985,7 @@ async function showTypeToConfirmStep(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">⌨️</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">Type to confirm</h2>
       </div>
       <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">
@@ -1131,7 +1131,7 @@ async function showMathChallengeStep(
   const renderContent = () => `
     <div class="hc-modal">
       <div class="hc-header">
-        <span class="hc-icon">🧮</span>
+        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title" id="hc-overlay-heading">Solve to proceed</h2>
       </div>
       <div class="hc-content" id="hc-overlay-desc" style="text-align: center;">

@@ -116,6 +116,8 @@
   margin: 20px;
   animation: hc-slideIn 0.3s ease-out;
   overflow: hidden;
+  font-family: var(--hc-font);
+  font-size: 13px;
 }
 
 @keyframes hc-slideIn {
