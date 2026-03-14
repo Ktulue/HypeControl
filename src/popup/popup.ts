@@ -290,12 +290,12 @@ async function main(): Promise<void> {
   });
 
   // Replay tour triggers
-  document.getElementById('footer-replay-tour')?.addEventListener('click', (e) => {
+  document.getElementById('footer-replay-tour')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    triggerReplay();
+    await triggerReplay();
   });
-  document.getElementById('btn-replay-tour')?.addEventListener('click', () => {
-    triggerReplay();
+  document.getElementById('btn-replay-tour')?.addEventListener('click', async () => {
+    await triggerReplay();
   });
 }
 
