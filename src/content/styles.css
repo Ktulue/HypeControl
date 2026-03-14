@@ -42,10 +42,10 @@
   --hc-bg-card: #1f1f23;
   --hc-text: #efeff1;
   --hc-text-muted: #adadb8;
-  --hc-border: #3d3d42;
+  --hc-border: #2d2d35;
   --hc-overlay-bg: rgba(0, 0, 0, 0.85);
   --hc-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --hc-radius: 8px;
+  --hc-radius: 6px;
   --hc-font: 'Space Grotesk', sans-serif;
   --hc-primary-rgb: 145, 71, 255;
   --hc-danger-rgb: 233, 25, 22;
@@ -131,7 +131,8 @@
 
 /* Header section */
 .hc-header {
-  background: linear-gradient(135deg, var(--hc-primary) 0%, var(--hc-primary-dark) 100%);
+  background: var(--hc-bg-card);
+  border-bottom: 1px solid var(--hc-border);
   padding: 16px 20px;
   display: flex;
   align-items: center;
@@ -146,12 +147,10 @@
 }
 
 .hc-title {
-  color: white;
-  font-size: 18px;
+  color: var(--hc-text);
+  font-size: 15px;
   font-weight: 700;
   margin: 0;
-  letter-spacing: 1px;
-  text-transform: uppercase;
 }
 
 /* Content section */
@@ -324,15 +323,13 @@
 
 .hc-btn {
   flex: 1;
-  padding: 12px 20px;
-  font-size: 14px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 600;
   border: none;
   border-radius: var(--hc-radius);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .hc-btn:focus {
@@ -677,7 +674,7 @@
 /* Type-to-confirm step */
 .hc-confirm-phrase {
   display: inline-block;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--hc-font);
   font-size: 16px;
   font-weight: 700;
   color: var(--hc-primary);
@@ -686,7 +683,6 @@
   border-radius: 4px;
   padding: 6px 14px;
   margin: 12px 0 16px;
-  letter-spacing: 0.5px;
   user-select: all;
 }
 
