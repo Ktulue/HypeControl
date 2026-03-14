@@ -629,3 +629,209 @@ body {
   font: inherit;
   color: inherit;
 }
+
+/* ── Onboarding Wizard ─────────────────────────────────────────────── */
+
+.hc-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.hc-wizard[hidden] { display: none; }
+
+.hc-wizard-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hc-wizard-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.hc-wizard-skip {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  align-self: flex-start;
+}
+.hc-wizard-skip:hover { color: var(--text-primary); text-decoration: underline; }
+
+.hc-wizard-skip-confirm {
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hc-wizard-defaults-msg {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hc-wizard-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hc-wizard-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hc-wizard-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hc-wizard-input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hc-wizard-prefix,
+.hc-wizard-suffix {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.hc-wizard-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 8px;
+  width: 100%;
+  min-width: 0;
+}
+.hc-wizard-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.hc-wizard-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
+.hc-wizard-hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.hc-wizard-hint a:hover { text-decoration: underline; }
+
+.hc-wizard-calc-toggle {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  align-self: flex-start;
+}
+.hc-wizard-calc-toggle:hover { text-decoration: underline; }
+
+.hc-wizard-salary-calc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+.hc-wizard-salary-calc[hidden] { display: none; }
+
+/* Friction segmented control */
+.hc-wizard-seg {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.hc-wizard-seg-btn {
+  flex: 1;
+  padding: 5px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.hc-wizard-seg-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+.hc-wizard-seg-btn:hover:not(.active) {
+  background: var(--bg-secondary, rgba(255,255,255,0.08));
+  color: var(--text-primary);
+}
+
+.hc-wizard-friction-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+  min-height: 16px;
+}
+
+/* Comparison chips */
+.hc-wizard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hc-wizard-chip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hc-wizard-continue {
+  margin-top: 4px;
+  width: 100%;
+}
+
+/* Replay button in settings section */
+.hc-row--replay {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-replay-tour {
+  font-size: 12px;
+}
+
+/* NOTE: .hc-demo-badge is intentionally NOT defined here.
+   It is used in overlay HTML rendered by interceptor.ts (content script),
+   which loads src/content/styles.css — not popup.css.
+   The badge style is defined in Task 9 (styles.css). */

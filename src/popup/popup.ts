@@ -1,6 +1,6 @@
 // src/popup/popup.ts
 import './popup.css';
-import { migrateSettings, ThemePreference } from '../shared/types';
+import { migrateSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings } from '../shared/types';
 import { initPending, getPending, setPendingField } from './pendingState';
 import { initScrollSpy, ScrollSpyItem } from './scrollSpy';
 import { initStats } from './sections/stats';
@@ -38,7 +38,157 @@ function applyTheme(theme: ThemePreference): void {
   document.documentElement.dataset.theme = resolved;
 }
 
+const FRICTION_DESCRIPTIONS: Record<string, string> = {
+  low: 'Main overlay only — one click to cancel',
+  medium: 'Overlay + reason selection',
+  high: 'Overlay + reason + cooldown timer',
+  extreme: 'Everything + math challenge + type-to-confirm',
+};
+
+function showWizard(onComplete: () => void): void {
+  const wizard = document.getElementById('hc-wizard')!;
+  const form = document.getElementById('wizard-form')!;
+  const skipLink = document.getElementById('wizard-skip')!;
+  const skipConfirm = document.getElementById('wizard-skip-confirm')!;
+  const gotItBtn = document.getElementById('wizard-got-it')!;
+  const hourlyInput = document.getElementById('wizard-hourly-rate') as HTMLInputElement;
+  const taxInput = document.getElementById('wizard-tax-rate') as HTMLInputElement;
+  const calcToggle = document.getElementById('wizard-calc-toggle')!;
+  const salaryCalc = document.getElementById('wizard-salary-calc')!;
+  const salaryInput = document.getElementById('wizard-annual-salary') as HTMLInputElement;
+  const hoursInput = document.getElementById('wizard-hours-per-week') as HTMLInputElement;
+  const frictionSeg = document.getElementById('wizard-friction-seg')!;
+  const frictionDesc = document.getElementById('wizard-friction-desc')!;
+  const chips = document.getElementById('wizard-chips')!;
+  const continueBtn = document.getElementById('wizard-continue')!;
+  const customizeLink = document.getElementById('wizard-customize-link')!;
+
+  // Show wizard, hide main content
+  wizard.removeAttribute('hidden');
+  const content = document.getElementById('hc-content')!;
+  const nav = document.getElementById('hc-nav')!;
+  content.setAttribute('hidden', '');
+  nav.setAttribute('hidden', '');
+
+  // Populate comparison chips (first 4 enabled presets)
+  const previewItems = PRESET_COMPARISON_ITEMS.filter(i => i.enabled).slice(0, 4);
+  chips.innerHTML = '';
+  previewItems.forEach(item => {
+    const chip = document.createElement('span');
+    chip.className = 'hc-wizard-chip';
+    chip.textContent = `${item.emoji} ${item.name}`;
+    chips.appendChild(chip);
+  });
+
+  // Salary calculator toggle
+  calcToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isHidden = salaryCalc.hasAttribute('hidden');
+    if (isHidden) {
+      salaryCalc.removeAttribute('hidden');
+      calcToggle.textContent = 'Hide calculator ↑';
+    } else {
+      salaryCalc.setAttribute('hidden', '');
+      calcToggle.textContent = 'Calculate from salary →';
+    }
+  });
+
+  // Salary calculator: auto-compute hourly rate
+  function updateHourlyFromSalary(): void {
+    const salary = parseFloat(salaryInput.value);
+    const hours = parseFloat(hoursInput.value) || 40;
+    if (salary > 0 && hours > 0) {
+      hourlyInput.value = (salary / 52 / hours).toFixed(2);
+    }
+  }
+  salaryInput.addEventListener('input', updateHourlyFromSalary);
+  hoursInput.addEventListener('input', updateHourlyFromSalary);
+
+  // Friction segmented control
+  frictionSeg.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.hc-wizard-seg-btn') as HTMLButtonElement | null;
+    if (!btn) return;
+    frictionSeg.querySelectorAll('.hc-wizard-seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    frictionDesc.textContent = FRICTION_DESCRIPTIONS[btn.dataset.value ?? 'medium'] ?? '';
+  });
+
+  // Skip path
+  skipLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    // Write defaults to storage
+    await chrome.storage.sync.set({ hcSettings: DEFAULT_SETTINGS });
+    // Clear wizard pending flag; leave phase2 pending
+    await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
+    // Show skip confirmation
+    form.setAttribute('hidden', '');
+    skipLink.setAttribute('hidden', '');
+    skipConfirm.removeAttribute('hidden');
+    // Auto-close after 3s fallback
+    const autoClose = setTimeout(() => closeWizard(), 3000);
+    gotItBtn.addEventListener('click', () => {
+      clearTimeout(autoClose);
+      closeWizard();
+    });
+  });
+
+  // Customize link — close wizard and navigate to Comparisons section
+  customizeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeWizard();
+    // Scroll to comparisons section
+    setTimeout(() => {
+      document.getElementById('section-comparisons')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  });
+
+  // Continue button
+  continueBtn.addEventListener('click', async () => {
+    const hourlyRate = parseFloat(hourlyInput.value) || 20;
+    const taxRate = parseFloat(taxInput.value) || 7;
+    const activeBtn = frictionSeg.querySelector<HTMLButtonElement>('.hc-wizard-seg-btn.active');
+    const frictionIntensity = (activeBtn?.dataset.value ?? 'medium') as UserSettings['frictionIntensity'];
+
+    // Load current settings (handles reinstall case — prefills from existing)
+    const result = await chrome.storage.sync.get('hcSettings');
+    const current = migrateSettings(result.hcSettings ?? {});
+    const updated = { ...current, hourlyRate, taxRate, frictionIntensity };
+    await chrome.storage.sync.set({ hcSettings: updated });
+    await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
+    closeWizard();
+  });
+
+  function closeWizard(): void {
+    wizard.setAttribute('hidden', '');
+    content.removeAttribute('hidden');
+    nav.removeAttribute('hidden');
+    onComplete();
+  }
+}
+
+async function triggerReplay(): Promise<void> {
+  await chrome.storage.local.set({
+    [ONBOARDING_KEYS.wizardPending]: true,
+    [ONBOARDING_KEYS.phase2Pending]: true,
+    [ONBOARDING_KEYS.complete]: false,
+  });
+  // Re-render wizard in place.
+  // On completion, reload the popup window to avoid double-initializing
+  // section controllers and event listeners (main() already ran once).
+  showWizard(() => window.location.reload());
+}
+
 async function main(): Promise<void> {
+  // Check if onboarding wizard should be shown (first open)
+  const onboardingState = await chrome.storage.local.get([
+    ONBOARDING_KEYS.wizardPending,
+  ]);
+  if (onboardingState[ONBOARDING_KEYS.wizardPending] === true) {
+    // Show wizard; when complete, re-run main() to populate normal popup state
+    showWizard(() => main());
+    return;
+  }
+
   // Load and migrate settings
   const result = await chrome.storage.sync.get(SETTINGS_KEY);
   const settings = migrateSettings(result[SETTINGS_KEY] ?? {});
@@ -137,6 +287,15 @@ async function main(): Promise<void> {
       saveBtnEl.disabled = false;
       saveBtnEl.textContent = '💾 Save Settings';
     }
+  });
+
+  // Replay tour triggers
+  document.getElementById('footer-replay-tour')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await triggerReplay();
+  });
+  document.getElementById('btn-replay-tour')?.addEventListener('click', async () => {
+    await triggerReplay();
   });
 }
 

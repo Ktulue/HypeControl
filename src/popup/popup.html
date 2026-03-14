@@ -11,6 +11,75 @@
   </header>
 
   <div class="hc-body">
+
+    <!-- Onboarding Wizard (Phase 1) — shown on first popup open -->
+    <div id="hc-wizard" class="hc-wizard" hidden>
+      <div class="hc-wizard-header">
+        <img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="28" height="28" alt="">
+        <h2 class="hc-wizard-title">Welcome to Hype Control</h2>
+      </div>
+
+      <a class="hc-wizard-skip" id="wizard-skip" href="#">Skip setup, I'll configure it myself →</a>
+
+      <!-- Skip confirmation (shown after skip click) -->
+      <div id="wizard-skip-confirm" class="hc-wizard-skip-confirm" hidden>
+        <p class="hc-wizard-defaults-msg">You're all set with defaults: <strong>$20/hr wage · 7% sales tax · Medium friction · Preset comparison items enabled.</strong> Update these in Settings anytime.</p>
+        <button class="btn-primary" id="wizard-got-it">Got it →</button>
+      </div>
+
+      <!-- Main wizard form -->
+      <div id="wizard-form" class="hc-wizard-form">
+        <div class="hc-wizard-field">
+          <label class="hc-wizard-label" for="wizard-hourly-rate">Hourly Rate (take-home)</label>
+          <div class="hc-wizard-input-row">
+            <span class="hc-wizard-prefix">$</span>
+            <input type="number" id="wizard-hourly-rate" class="hc-wizard-input" value="20" min="1" max="999" step="0.01">
+          </div>
+          <p class="hc-wizard-hint">$20/hr is our default — update this for accurate results</p>
+          <a class="hc-wizard-calc-toggle" id="wizard-calc-toggle" href="#">Calculate from salary →</a>
+          <div id="wizard-salary-calc" class="hc-wizard-salary-calc" hidden>
+            <div class="hc-wizard-input-row">
+              <span class="hc-wizard-prefix">$</span>
+              <input type="number" id="wizard-annual-salary" class="hc-wizard-input" placeholder="Annual salary" min="1">
+            </div>
+            <div class="hc-wizard-input-row">
+              <input type="number" id="wizard-hours-per-week" class="hc-wizard-input" placeholder="Hours/week" value="40" min="1" max="168">
+              <span class="hc-wizard-suffix">hrs/wk</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hc-wizard-field">
+          <label class="hc-wizard-label" for="wizard-tax-rate">Sales Tax Rate</label>
+          <div class="hc-wizard-input-row">
+            <input type="number" id="wizard-tax-rate" class="hc-wizard-input" value="7" min="0" max="20" step="0.1">
+            <span class="hc-wizard-suffix">%</span>
+          </div>
+        </div>
+
+        <div class="hc-wizard-field">
+          <span class="hc-wizard-label">Friction Level</span>
+          <div class="hc-wizard-seg" id="wizard-friction-seg" role="group" aria-label="Friction level">
+            <button class="hc-wizard-seg-btn" data-value="low">Low</button>
+            <button class="hc-wizard-seg-btn active" data-value="medium">Medium</button>
+            <button class="hc-wizard-seg-btn" data-value="high">High</button>
+            <button class="hc-wizard-seg-btn" data-value="extreme">Extreme</button>
+          </div>
+          <p class="hc-wizard-friction-desc" id="wizard-friction-desc">Overlay + reason selection</p>
+        </div>
+
+        <div class="hc-wizard-field">
+          <span class="hc-wizard-label">Comparison Items</span>
+          <div class="hc-wizard-chips" id="wizard-chips">
+            <!-- Populated by popup.ts from PRESET_COMPARISON_ITEMS -->
+          </div>
+          <p class="hc-wizard-hint">These are your default comparisons. <a href="#" id="wizard-customize-link">Customize in Settings →</a></p>
+        </div>
+
+        <button class="btn-primary hc-wizard-continue" id="wizard-continue">Continue →</button>
+      </div>
+    </div><!-- /#hc-wizard -->
+
     <div class="hc-content" id="hc-content">
 
       <!-- Section 1: Stats -->
@@ -257,6 +326,9 @@
         <div class="hc-row">
           <button class="btn-secondary" id="btn-view-logs">View Activity Logs</button>
         </div>
+        <div class="hc-row hc-row--replay">
+          <button class="btn-secondary btn-replay-tour" id="btn-replay-tour">↺ Replay setup tour</button>
+        </div>
       </section>
 
       <!-- Section 7: Credits -->
@@ -291,6 +363,7 @@
     <div class="footer-links">
       <a class="footer-link" href="https://github.com/Ktulue/HypeControl/issues/new" target="_blank" rel="noopener noreferrer">🐛 Bug</a>
       <a class="footer-link" href="https://github.com/Ktulue/HypeControl/discussions/new?category=ideas" target="_blank" rel="noopener noreferrer">💡 Ideas</a>
+      <a class="footer-link" href="#" id="footer-replay-tour">↺ Tour</a>
     </div>
     <button class="btn-save" id="btn-save">💾 Save Settings</button>
     <span class="footer-version" id="footer-version"></span>

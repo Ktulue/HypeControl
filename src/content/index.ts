@@ -7,13 +7,14 @@
  * 3. Overlay display for confirmation
  */
 
-import { setupInterceptor } from './interceptor';
+import { setupInterceptor, triggerDemoOverlay } from './interceptor';
 import { setupModalObserver, getCurrentChannel } from './detector';
 import { checkAndUpdateLiveStatus } from './streamingMode';
-import { initThemeManager, applyThemeToOverlay } from './themeManager';
+import { initThemeManager } from './themeManager';
 import { log, debug, error, setVersion, loadLogs } from '../shared/logger';
-import { migrateSettings, DEFAULT_SETTINGS } from '../shared/types';
+import { migrateSettings, DEFAULT_SETTINGS, ONBOARDING_KEYS } from '../shared/types';
 import './styles.css';
+import { initTourPanel } from './tourPanel';
 
 const SETTINGS_KEY = 'hcSettings';
 
@@ -127,6 +128,45 @@ function scanForButtons(): void {
   log(`=== Scan complete: ${interceptCount} interceptable button(s) found ===`);
 }
 
+/**
+ * Checks if the Phase 2 onboarding tour should run on this page load.
+ * Waits for a known stable Twitch selector before injecting.
+ * Times out silently after 10 seconds if selector never appears.
+ */
+async function maybeInitTourPanel(): Promise<void> {
+  try {
+    const state = await chrome.storage.local.get(ONBOARDING_KEYS.phase2Pending);
+    if (!state[ONBOARDING_KEYS.phase2Pending]) return;
+
+    // Wait for a stable Twitch selector (same strategy as detector.ts uses)
+    // NOTE: This selector targets the top-nav avatar present for logged-in users.
+    // Logged-out users will not have this element, causing the tour to silently
+    // skip on that page load and retry on the next navigation. This is acceptable —
+    // HypeControl only intercepts purchases, which require a logged-in Twitch account.
+    const STABLE_SELECTOR = '[data-a-target="top-nav-avatar"]';
+    const TIMEOUT_MS = 10_000;
+    const POLL_MS = 300;
+
+    await new Promise<void>((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        if (document.querySelector(STABLE_SELECTOR)) {
+          clearInterval(interval);
+          resolve();
+        } else if (Date.now() - start > TIMEOUT_MS) {
+          clearInterval(interval);
+          reject(new Error('Twitch selector timeout'));
+        }
+      }, POLL_MS);
+    });
+
+    initTourPanel();
+  } catch (e) {
+    // Timeout or storage error — skip silently, retry on next navigation
+    debug('Tour panel init skipped:', e);
+  }
+}
+
 // Extension initialization
 function init(): void {
   try {
@@ -143,6 +183,9 @@ function init(): void {
     // Set up the click interceptor
     setupInterceptor();
     log('Click interceptor active');
+
+    // Phase 2 onboarding tour (fires on first Twitch visit after install)
+    maybeInitTourPanel();
 
     // Start streaming mode polling (every 30s)
     const startStreamingPoller = async () => {
@@ -212,58 +255,8 @@ declare global {
  * Call from console: HC.testOverlay()
  */
 function testOverlay(): void {
-  log('Testing overlay display...');
-
-  const testAttempt = {
-    type: 'subscribe' as const,
-    rawPrice: '$4.99',
-    priceValue: 4.99,
-    channel: getCurrentChannel(),
-    timestamp: new Date(),
-    element: document.body,
-  };
-
-  // Create overlay directly
-  const overlay = document.createElement('div');
-  overlay.id = 'hc-overlay';
-  overlay.className = 'hc-overlay';
-  overlay.innerHTML = `
-    <div class="hc-modal">
-      <div class="hc-header">
-        <span class="hc-icon">🛡️</span>
-        <h2 class="hc-title">SPENDING GUARDIAN</h2>
-      </div>
-      <div class="hc-content">
-        <div class="hc-price-section">
-          <p class="hc-label">TEST MODE - You're about to spend:</p>
-          <p class="hc-price">${testAttempt.rawPrice}</p>
-        </div>
-        <div class="hc-info">
-          <p class="hc-channel">Channel: <strong>${testAttempt.channel}</strong></p>
-          <p class="hc-type">Type: <strong>Subscription</strong></p>
-        </div>
-        <p class="hc-message">
-          This is a TEST overlay. Click Cancel or Proceed to dismiss.
-        </p>
-      </div>
-      <div class="hc-actions">
-        <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel</button>
-        <button class="hc-btn hc-btn-proceed" data-action="proceed">Proceed Anyway</button>
-      </div>
-    </div>
-  `;
-
-  overlay.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.dataset.action || e.target === overlay) {
-      overlay.remove();
-      log('Test overlay dismissed');
-    }
-  });
-
-  applyThemeToOverlay(overlay);
-  document.body.appendChild(overlay);
-  log('Test overlay displayed. Click Cancel or Proceed to dismiss.');
+  log('Testing overlay display via triggerDemoOverlay()...');
+  triggerDemoOverlay().catch((e) => log('testOverlay error:', e));
 }
 
 // Expose to window
