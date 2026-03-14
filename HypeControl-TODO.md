@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-13
-**Current Version:** 0.4.14
+**Updated:** 2026-03-14
+**Current Version:** 0.4.21
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -22,7 +22,7 @@
 | Add-on 4 — Custom Comparison Items       | ✅ Complete       |
 | Add-on 2 — Spending History View         | 🔲 Not Started    |
 | Add-on 3 — Weekly/Monthly Limits         | 🔲 Not Started    |
-| Interactive Onboarding Tour              | 🔲 Not Started    |
+| Interactive Onboarding Tour              | ✅ Complete        |
 | Firefox AMO Port                         | 🔲 Not Started    |
 | Add-ons 6–12 — Future Enhancements       | ⏸️ Deferred       |
 
@@ -293,4 +293,4 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-13 against the v0.4.14 codebase. UI polish/rebrand branch complete. Logs page fully rebranded with ARIA tab pattern and extracted CSS._
+_Last updated 2026-03-14 against the v0.4.21 codebase. Interactive onboarding tour complete — Phase 1 popup wizard and Phase 2 Twitch-side live demo panel._
