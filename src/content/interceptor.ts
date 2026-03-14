@@ -409,19 +409,33 @@ function showWhitelistSelector(
     `;
   }).join('');
 
-  const selectorHTML = `
-    <div class="hc-whitelist-selector">
-      <p class="hc-whitelist-selector-title">Remember <strong>${channel}</strong> as:</p>
-      ${warningHTML}
-      <div class="hc-whitelist-options">
-        ${optionsHTML}
-      </div>
-    </div>
-  `;
+  // Build selector via DOM construction so channel name is never treated as HTML
+  const selector = document.createElement('div');
+  selector.className = 'hc-whitelist-selector';
+
+  const title = document.createElement('p');
+  title.className = 'hc-whitelist-selector-title';
+  title.append('Remember ');
+  const strong = document.createElement('strong');
+  strong.textContent = channel;
+  title.appendChild(strong);
+  title.append(' as:');
+  selector.appendChild(title);
+
+  if (warningHTML) {
+    const warningWrap = document.createElement('div');
+    warningWrap.innerHTML = warningHTML; // safe: existingEntry.behavior is a WhitelistBehavior enum
+    selector.appendChild(warningWrap.firstElementChild!);
+  }
+
+  const optionsWrap = document.createElement('div');
+  optionsWrap.className = 'hc-whitelist-options';
+  optionsWrap.innerHTML = optionsHTML; // safe: name/desc are hardcoded WHITELIST_BEHAVIOR_LABELS
+  selector.appendChild(optionsWrap);
 
   // Replace the quick-add wrap with the selector
   const wrap = overlay.querySelector('.hc-quick-add-wrap');
-  if (wrap) wrap.outerHTML = selectorHTML;
+  if (wrap) wrap.replaceWith(selector);
 
   // Wire behavior buttons
   overlay.querySelectorAll<HTMLButtonElement>('[data-behavior]').forEach(btn => {
