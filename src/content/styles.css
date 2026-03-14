@@ -764,3 +764,170 @@
   font-weight: 600;
   color: var(--hc-danger);
 }
+
+/* ── Onboarding Tour Panel ─────────────────────────────────────────── */
+
+#hc-tour-panel {
+  position: fixed;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  width: 260px;
+  background: var(--hc-modal-bg, #1f1f23);
+  border: 1px solid var(--hc-border, rgba(255,255,255,0.1));
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 999996;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow: hidden;
+  transition: width 0.2s, opacity 0.2s;
+}
+
+/* Collapsed tab state (shown while demo overlay is active) */
+.hc-tour-panel--collapsed .hc-tour-header,
+.hc-tour-panel--collapsed .hc-tour-body {
+  display: none;
+}
+
+.hc-tour-panel--collapsed {
+  width: 44px;
+  border-radius: 8px;
+}
+
+.hc-tour-tab {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--hc-text-muted, rgba(255,255,255,0.5));
+}
+
+.hc-tour-panel--collapsed .hc-tour-tab {
+  display: flex;
+}
+
+/* Panel header */
+.hc-tour-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--hc-border, rgba(255,255,255,0.08));
+}
+
+.hc-tour-icon {
+  flex-shrink: 0;
+}
+
+.hc-tour-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hc-text-primary, #fff);
+}
+
+.hc-tour-close {
+  background: none;
+  border: none;
+  color: var(--hc-text-muted, rgba(255,255,255,0.4));
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  line-height: 1;
+}
+.hc-tour-close:hover {
+  color: var(--hc-text-primary, #fff);
+  background: rgba(255,255,255,0.08);
+}
+
+/* Panel body */
+.hc-tour-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hc-tour-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hc-text-primary, #fff);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hc-tour-sub {
+  font-size: 12px;
+  color: var(--hc-text-muted, rgba(255,255,255,0.5));
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hc-tour-complete {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hc-success, #22C55E);
+  margin: 0;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.hc-tour-btn-primary {
+  background: var(--hc-accent, #9147ff);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: opacity 0.15s;
+}
+.hc-tour-btn-primary:hover { opacity: 0.88; }
+
+/* ── Highlight ring on Twitch buttons ──────────────────────────────── */
+
+.hc-tour-highlight-ring {
+  border: 2px solid var(--hc-accent, #9147ff);
+  box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.3);
+  animation: hc-tour-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes hc-tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(145, 71, 255, 0.1); }
+}
+
+.hc-tour-highlight-label {
+  background: var(--hc-accent, #9147ff);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── Demo mode badge (shown in friction overlay during demo) ────────── */
+
+.hc-demo-badge {
+  display: inline-block;
+  background: rgba(145, 71, 255, 0.15);
+  border: 1px solid rgba(145, 71, 255, 0.4);
+  color: var(--hc-accent, #9147ff);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+  text-align: center;
+  align-self: flex-start;
+}
