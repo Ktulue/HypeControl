@@ -13,6 +13,7 @@ export interface PurchaseAttempt {
   channel: string;
   timestamp: Date;
   element: HTMLElement;
+  isDemoMode?: boolean;  // true when fired from triggerDemoOverlay() — skips storage writes
 }
 
 /** Result of the user's decision on the overlay */
@@ -274,3 +275,10 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
     theme: saved.theme ?? DEFAULT_SETTINGS.theme,
   };
 }
+
+/** Storage keys for onboarding state — all stored in chrome.storage.local */
+export const ONBOARDING_KEYS = {
+  wizardPending: 'hcOnboardingWizardPending',
+  phase2Pending: 'hcOnboardingPhase2Pending',
+  complete: 'hcOnboardingComplete',
+} as const;
