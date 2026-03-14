@@ -12,8 +12,9 @@ import { setupModalObserver, getCurrentChannel } from './detector';
 import { checkAndUpdateLiveStatus } from './streamingMode';
 import { initThemeManager } from './themeManager';
 import { log, debug, error, setVersion, loadLogs } from '../shared/logger';
-import { migrateSettings, DEFAULT_SETTINGS } from '../shared/types';
+import { migrateSettings, DEFAULT_SETTINGS, ONBOARDING_KEYS } from '../shared/types';
 import './styles.css';
+import { initTourPanel } from './tourPanel';
 
 const SETTINGS_KEY = 'hcSettings';
 
@@ -127,6 +128,45 @@ function scanForButtons(): void {
   log(`=== Scan complete: ${interceptCount} interceptable button(s) found ===`);
 }
 
+/**
+ * Checks if the Phase 2 onboarding tour should run on this page load.
+ * Waits for a known stable Twitch selector before injecting.
+ * Times out silently after 10 seconds if selector never appears.
+ */
+async function maybeInitTourPanel(): Promise<void> {
+  try {
+    const state = await chrome.storage.local.get(ONBOARDING_KEYS.phase2Pending);
+    if (!state[ONBOARDING_KEYS.phase2Pending]) return;
+
+    // Wait for a stable Twitch selector (same strategy as detector.ts uses)
+    // NOTE: This selector targets the top-nav avatar present for logged-in users.
+    // Logged-out users will not have this element, causing the tour to silently
+    // skip on that page load and retry on the next navigation. This is acceptable —
+    // HypeControl only intercepts purchases, which require a logged-in Twitch account.
+    const STABLE_SELECTOR = '[data-a-target="top-nav-avatar"]';
+    const TIMEOUT_MS = 10_000;
+    const POLL_MS = 300;
+
+    await new Promise<void>((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        if (document.querySelector(STABLE_SELECTOR)) {
+          clearInterval(interval);
+          resolve();
+        } else if (Date.now() - start > TIMEOUT_MS) {
+          clearInterval(interval);
+          reject(new Error('Twitch selector timeout'));
+        }
+      }, POLL_MS);
+    });
+
+    initTourPanel();
+  } catch (e) {
+    // Timeout or storage error — skip silently, retry on next navigation
+    debug('Tour panel init skipped:', e);
+  }
+}
+
 // Extension initialization
 function init(): void {
   try {
@@ -143,6 +183,9 @@ function init(): void {
     // Set up the click interceptor
     setupInterceptor();
     log('Click interceptor active');
+
+    // Phase 2 onboarding tour (fires on first Twitch visit after install)
+    maybeInitTourPanel();
 
     // Start streaming mode polling (every 30s)
     const startStreamingPoller = async () => {
