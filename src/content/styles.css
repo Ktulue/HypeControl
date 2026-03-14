@@ -5,6 +5,32 @@
  * Designed to be visible and intentional, not easily dismissed
  */
 
+/* Font Loading */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('chrome-extension://__MSG_@@extension_id__/assets/fonts/SpaceGrotesk-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* CSS Variables */
 :root {
   --hc-primary: #9147ff;
@@ -116,6 +142,7 @@
 .hc-icon {
   font-size: 28px;
   line-height: 1;
+  display: block;
 }
 
 .hc-title {
