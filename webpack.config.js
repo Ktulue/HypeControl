@@ -6,6 +6,7 @@ const pkg = require('./package.json');
 module.exports = {
   entry: {
     content: './src/content/index.ts',
+    history: './src/history/history.ts',
     logs: './src/logs/logs.ts',
     popup: './src/popup/popup.ts',
     serviceWorker: './src/background/serviceWorker.ts',
@@ -47,6 +48,7 @@ module.exports = {
             return JSON.stringify(manifest, null, 2);
           },
         },
+        { from: 'src/history/history.html', to: 'history.html' },
         { from: 'src/logs/logs.html', to: 'logs.html' },
         { from: 'src/popup/popup.html', to: 'popup.html' },
         { from: 'assets', to: 'assets', noErrorOnMissing: true },
