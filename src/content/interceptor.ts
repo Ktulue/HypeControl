@@ -1449,21 +1449,43 @@ function showCapExceedanceStep(
     const baseDelay = settings.delayTimer?.enabled ? settings.delayTimer.seconds : 10;
     const escalatedDelay = baseDelay * 2;
 
-    const card = document.createElement('div');
-    card.className = 'hc-card';
+    const modal = document.createElement('div');
+    modal.className = 'hc-modal';
+
+    // Header (matches existing overlay pattern)
+    const header = document.createElement('div');
+    header.className = 'hc-header';
+    const headerIcon = document.createElement('img');
+    headerIcon.className = 'hc-icon';
+    headerIcon.src = chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png');
+    headerIcon.width = 32;
+    headerIcon.height = 32;
+    headerIcon.alt = 'Hype Control';
+    const headerTitle = document.createElement('h2');
+    headerTitle.className = 'hc-title';
+    headerTitle.textContent = 'Hype Control';
+    header.appendChild(headerIcon);
+    header.appendChild(headerTitle);
+    modal.appendChild(header);
+
+    // Content wrapper
+    const content = document.createElement('div');
+    content.className = 'hc-content';
 
     // Heading
-    const heading = document.createElement('h2');
-    heading.className = 'hc-heading';
+    const heading = document.createElement('p');
+    heading.className = 'hc-label';
     heading.style.color = 'var(--hc-danger)';
+    heading.style.fontWeight = '600';
+    heading.style.fontSize = '15px';
     heading.textContent = `You're exceeding your ${periodText} budget`;
-    card.appendChild(heading);
+    content.appendChild(heading);
 
     // Subtext
     const subtext = document.createElement('p');
-    subtext.className = 'hc-subtext';
+    subtext.className = 'hc-message';
     subtext.textContent = 'You set this limit for a reason. Still going?';
-    card.appendChild(subtext);
+    content.appendChild(subtext);
 
     // Cap info
     const infoDiv = document.createElement('div');
@@ -1478,7 +1500,7 @@ function showCapExceedanceStep(
       p.textContent = `Monthly: $${tracker.monthlyTotal.toFixed(2)} / $${settings.monthlyCap.amount.toFixed(2)}`;
       infoDiv.appendChild(p);
     }
-    card.appendChild(infoDiv);
+    content.appendChild(infoDiv);
 
     // Progress bar (use existing hc-progress-wrap class from the codebase)
     const progressWrap = document.createElement('div');
@@ -1486,28 +1508,27 @@ function showCapExceedanceStep(
     progressWrap.style.margin = '16px 0';
     const progressBar = document.createElement('div');
     progressBar.className = 'hc-progress-bar';
-    progressBar.id = 'hc-escalated-progress';
     progressWrap.appendChild(progressBar);
-    card.appendChild(progressWrap);
+    content.appendChild(progressWrap);
 
     // Countdown
     const countdown = document.createElement('p');
     countdown.className = 'hc-countdown';
-    countdown.id = 'hc-escalated-countdown';
     countdown.textContent = `${escalatedDelay}s`;
-    card.appendChild(countdown);
+    content.appendChild(countdown);
 
     // Acknowledgment checkbox
     const ackLabel = document.createElement('label');
     ackLabel.className = 'hc-cap-acknowledge';
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.id = 'hc-cap-ack-checkbox';
     const ackSpan = document.createElement('span');
     ackSpan.textContent = `I'm exceeding my ${periodText} budget`;
     ackLabel.appendChild(checkbox);
     ackLabel.appendChild(ackSpan);
-    card.appendChild(ackLabel);
+    content.appendChild(ackLabel);
+
+    modal.appendChild(content);
 
     // Action buttons
     const actions = document.createElement('div');
@@ -1523,16 +1544,17 @@ function showCapExceedanceStep(
     proceedBtn.textContent = 'Proceed Anyway';
     actions.appendChild(cancelBtn);
     actions.appendChild(proceedBtn);
-    card.appendChild(actions);
+    modal.appendChild(actions);
 
-    overlay.appendChild(card);
+    overlay.appendChild(modal);
     applyThemeToOverlay(overlay);
     document.body.appendChild(overlay);
     overlayVisible = true;
 
     let timerDone = false;
     let ackChecked = false;
-    let elapsed = 0;
+    const escalatedDelayMs = escalatedDelay * 1000;
+    const startTime = Date.now();
 
     const updateProceedState = () => {
       proceedBtn.disabled = !(timerDone && ackChecked);
@@ -1544,24 +1566,29 @@ function showCapExceedanceStep(
     });
 
     const intervalId = setInterval(() => {
-      elapsed++;
-      const pct = Math.min((elapsed / escalatedDelay) * 100, 100);
-      progressBar.style.width = `${pct}%`;
-      const remaining = escalatedDelay - elapsed;
-      countdown.textContent = `${Math.max(remaining, 0)}s`;
+      const elapsedMs = Date.now() - startTime;
+      const pct = Math.min(elapsedMs / escalatedDelayMs, 1);
+      progressBar.style.transform = `scaleX(${pct})`;
+      const remainingSec = Math.max(0, Math.ceil((escalatedDelayMs - elapsedMs) / 1000));
+      countdown.textContent = `${remainingSec}s`;
 
-      if (elapsed >= escalatedDelay) {
+      if (elapsedMs >= escalatedDelayMs) {
         clearInterval(intervalId);
+        progressBar.style.transform = 'scaleX(1)';
         timerDone = true;
         updateProceedState();
       }
-    }, 1000);
+    }, 100);
 
     let resolved = false;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') finish('cancel');
+    };
     const finish = (decision: OverlayDecision) => {
       if (resolved) return;
       resolved = true;
       clearInterval(intervalId);
+      document.removeEventListener('keydown', handleKeydown);
       removeOverlay(overlay);
       resolve(decision);
     };
@@ -1571,12 +1598,7 @@ function showCapExceedanceStep(
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) finish('cancel');
     });
-    document.addEventListener('keydown', function handleEsc(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        document.removeEventListener('keydown', handleEsc);
-        finish('cancel');
-      }
-    });
+    document.addEventListener('keydown', handleKeydown);
   });
 }
 
@@ -1803,6 +1825,8 @@ function showBudgetToast(
     const remaining = Math.max(0, Math.round((settings.monthlyCap.amount - (tracker.monthlyTotal + priceWithTax)) * 100) / 100);
     lines.push(`Monthly: $${remaining.toFixed(2)} left`);
   }
+
+  if (lines.length === 0) return;
 
   const toast = document.createElement('div');
   toast.id = 'hc-budget-toast';
