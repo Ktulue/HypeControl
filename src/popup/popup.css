@@ -723,7 +723,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   padding: 5px 8px;
-  width: 100%;
+  width: 120px;
   min-width: 0;
 }
 .hc-wizard-input:focus {
@@ -743,7 +743,8 @@ body {
 .hc-wizard-hint a:hover { text-decoration: underline; }
 
 .hc-wizard-calc-toggle {
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--accent);
   text-decoration: none;
   align-self: flex-start;
@@ -847,13 +848,26 @@ body {
   cursor: help;
   position: relative;
 }
-.escalation-info:hover + .stat-tooltip,
-.escalation-info:focus + .stat-tooltip {
-  display: block;
-  left: auto;
+.escalation-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
   right: 0;
-  transform: none;
   width: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+}
+.escalation-info:hover .escalation-tooltip,
+.escalation-info:focus .escalation-tooltip {
+  display: block;
 }
 
 /* Escalated segmented button highlight */

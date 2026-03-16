@@ -332,6 +332,9 @@ function renderTable(): void {
 
     const tdAmount = document.createElement('td');
     tdAmount.textContent = formatCurrency(event.priceWithTax);
+    if (event.outcome === 'proceeded') {
+      tdAmount.className = 'amount-proceeded';
+    }
     tr.appendChild(tdAmount);
 
     const tdOutcome = document.createElement('td');

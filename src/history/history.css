@@ -305,6 +305,11 @@ body {
   color: var(--outcome-proceeded);
 }
 
+.amount-proceeded {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .saved-value {
   color: var(--success);
   font-weight: 600;

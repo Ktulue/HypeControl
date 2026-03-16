@@ -1,35 +1,20 @@
 import { computePopupStats } from '../../shared/interceptLogger';
-import { UserSettings, FrictionIntensity } from '../../shared/types';
-import { setPendingField } from '../pendingState';
+import { UserSettings } from '../../shared/types';
 
 const SETTINGS_KEY = 'hcSettings';
-
-export interface StatsCallbacks {
-  onIntensityChange: (value: UserSettings['frictionIntensity']) => void;
-  onLockChange?: () => void;
-}
 
 export interface StatsController {
   render(settings: UserSettings): void;
   refreshStats(): Promise<void>;
-  showEscalation(base: FrictionIntensity, effective: FrictionIntensity): void;
 }
 
-export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsController {
+export function initStats(el: HTMLElement): StatsController {
   const savedEl = el.querySelector<HTMLElement>('#stat-saved')!;
   const blockedEl = el.querySelector<HTMLElement>('#stat-blocked')!;
   const rateEl = el.querySelector<HTMLElement>('#stat-rate')!;
   const stepEl = el.querySelector<HTMLElement>('#stat-step')!;
   const overrideStatusEl = el.querySelector<HTMLElement>('#override-status')!;
   const overrideBtnEl = el.querySelector<HTMLButtonElement>('#btn-override')!;
-  const intensityEl = el.querySelector<HTMLElement>('#stats-intensity')!;
-  const lockEl = el.querySelector<HTMLInputElement>('#stats-intensity-lock')!;
-  const escalationIndicatorEl = el.querySelector<HTMLElement>('#stats-escalation-indicator')!;
-  function renderSegmented(container: HTMLElement, value: string): void {
-    container.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.value === value);
-    });
-  }
 
   function renderOverride(settings: Partial<UserSettings>): void {
     const override = settings.streamingOverride;
@@ -46,23 +31,6 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
     }
     overrideBtnEl.textContent = isActive ? 'Cancel Override' : 'Stream Override (2 hr)';
   }
-
-  // Wire intensity segmented control
-  intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const val = btn.dataset.value as UserSettings['frictionIntensity'];
-      setPendingField('frictionIntensity', val);
-      callbacks.onIntensityChange(val);
-      renderSegmented(intensityEl, val);
-    });
-  });
-
-  lockEl.addEventListener('change', () => {
-    setPendingField('intensityLocked', lockEl.checked);
-    const frictionLock = document.querySelector<HTMLInputElement>('#friction-intensity-lock');
-    if (frictionLock) frictionLock.checked = lockEl.checked;
-    callbacks.onLockChange?.();
-  });
 
   // Wire override button (immediate save — bypasses pending state)
   overrideBtnEl.addEventListener('click', async () => {
@@ -96,30 +64,9 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
       : '—';
   }
 
-  function showEscalation(base: FrictionIntensity, effective: FrictionIntensity): void {
-    const isEscalated = base !== effective;
-    escalationIndicatorEl.hidden = !isEscalated;
-    if (isEscalated) {
-      const textEl = escalationIndicatorEl.querySelector('.escalation-text')!;
-      textEl.textContent = `↑ Auto-escalated from ${base.charAt(0).toUpperCase() + base.slice(1)}`;
-      intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
-        btn.classList.remove('escalated', 'base-indicator');
-        btn.classList.toggle('active', btn.dataset.value === effective);
-        if (btn.dataset.value === base) btn.classList.add('base-indicator');
-        if (btn.dataset.value === effective) btn.classList.add('escalated');
-      });
-    } else {
-      intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
-        btn.classList.remove('escalated', 'base-indicator');
-      });
-    }
-  }
-
   function render(settings: UserSettings): void {
-    renderSegmented(intensityEl, settings.frictionIntensity);
     renderOverride(settings);
-    lockEl.checked = settings.intensityLocked ?? false;
   }
 
-  return { render, refreshStats, showEscalation };
+  return { render, refreshStats };
 }

@@ -55,8 +55,6 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
 
   lockEl.addEventListener('change', () => {
     setPendingField('intensityLocked', lockEl.checked);
-    const statsLock = document.querySelector<HTMLInputElement>('#stats-intensity-lock');
-    if (statsLock) statsLock.checked = lockEl.checked;
     callbacks.onLockChange?.();
   });
 

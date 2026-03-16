@@ -125,19 +125,35 @@ function showWizard(onComplete: () => void): void {
     form.setAttribute('hidden', '');
     skipLink.setAttribute('hidden', '');
     skipConfirm.removeAttribute('hidden');
-    // Auto-close after 3s fallback
-    const autoClose = setTimeout(() => closeWizard(), 3000);
+    // "Got it" button closes the wizard (no auto-close timer — let user read at their pace)
     gotItBtn.addEventListener('click', () => {
-      clearTimeout(autoClose);
       closeWizard();
     });
   });
 
-  // Customize link — close wizard and navigate to Comparisons section
+  // Customize link — confirm before exiting wizard
+  const customizeConfirm = document.getElementById('wizard-customize-confirm')!;
+  const customizeYes = document.getElementById('wizard-customize-yes')!;
+  const customizeCancel = document.getElementById('wizard-customize-cancel')!;
+
   customizeLink.addEventListener('click', (e) => {
     e.preventDefault();
+    customizeConfirm.removeAttribute('hidden');
+  });
+  customizeCancel.addEventListener('click', () => {
+    customizeConfirm.setAttribute('hidden', '');
+  });
+  customizeYes.addEventListener('click', async () => {
+    // Save wizard values before closing (prevents theme flip on reload)
+    const hourlyRate = parseFloat(hourlyInput.value) || 20;
+    const taxRate = parseFloat(taxInput.value) || 7;
+    const activeBtn = frictionSeg.querySelector<HTMLButtonElement>('.hc-wizard-seg-btn.active');
+    const frictionIntensity = (activeBtn?.dataset.value ?? 'low') as UserSettings['frictionIntensity'];
+    const result = await chrome.storage.sync.get('hcSettings');
+    const current = migrateSettings(result.hcSettings ?? {});
+    await chrome.storage.sync.set({ hcSettings: { ...current, hourlyRate, taxRate, frictionIntensity } });
+    await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
     closeWizard();
-    // Scroll to comparisons section
     setTimeout(() => {
       document.getElementById('section-comparisons')?.scrollIntoView({ behavior: 'smooth' });
     }, 50);
@@ -215,37 +231,21 @@ async function main(): Promise<void> {
       const s = getPending();
       const maxPercent = computeMaxCapPercent(s, tracker);
       const effective = computeEscalatedIntensity(s.frictionIntensity, maxPercent, s.intensityLocked);
-      stats.showEscalation(s.frictionIntensity, effective);
       friction.showEscalation(s.frictionIntensity, effective);
     } finally {
       escalationUpdatePending = false;
     }
   }
 
-  // Init section controllers with bidirectional sync callbacks
+  // Init section controllers
   const friction = initFriction(frictionEl, {
-    onIntensityChange: (v) => {
-      // Stats intensity mirror — re-render Stats intensity control
-      statsEl.querySelectorAll<HTMLButtonElement>('#stats-intensity .seg-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === v);
-      });
-      updateEscalation();
-    },
+    onIntensityChange: () => updateEscalation(),
     onLockChange: () => updateEscalation(),
   });
 
   const limits = initLimits(limitsEl, { onCapChange: () => updateEscalation() });
 
-  const stats = initStats(statsEl, {
-    onIntensityChange: (v) => {
-      // Friction intensity mirror — re-render Friction intensity control
-      frictionEl.querySelectorAll<HTMLButtonElement>('#friction-intensity .seg-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === v);
-      });
-      updateEscalation();
-    },
-    onLockChange: () => updateEscalation(),
-  });
+  const stats = initStats(statsEl);
 
   const comparisons = initComparisons(comparisonsEl);
   const channels = initChannels(channelsEl);

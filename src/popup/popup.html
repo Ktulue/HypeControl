@@ -73,7 +73,12 @@
           <div class="hc-wizard-chips" id="wizard-chips">
             <!-- Populated by popup.ts from PRESET_COMPARISON_ITEMS -->
           </div>
-          <p class="hc-wizard-hint">These are your default comparisons. <a href="#" id="wizard-customize-link">Customize in Settings →</a></p>
+          <p class="hc-wizard-hint">These are your default comparisons. <a href="#" id="wizard-customize-link"><strong>Customize in Settings →</strong></a></p>
+          <div id="wizard-customize-confirm" class="hc-wizard-skip-confirm" hidden>
+            <p class="hc-wizard-defaults-msg">Exit the tour and go to Comparisons? You can replay the tour anytime from the bottom of the page, under Credits.</p>
+            <button class="btn-primary btn-sm" id="wizard-customize-yes">Yes, customize now</button>
+            <button class="btn-sm" id="wizard-customize-cancel">Cancel</button>
+          </div>
         </div>
 
         <button class="btn-primary hc-wizard-continue" id="wizard-continue">Continue →</button>
@@ -115,27 +120,6 @@
           <span class="override-status" id="override-status">No active override</span>
           <button class="btn-secondary" id="btn-override">Stream Override (2 hr)</button>
         </div>
-        <div class="hc-row">
-          <fieldset class="hc-fieldset">
-            <legend class="hc-label">Intensity</legend>
-            <div class="segmented" id="stats-intensity" data-pending-field="frictionIntensity">
-              <button class="seg-btn" data-value="low">Low</button>
-              <button class="seg-btn" data-value="medium">Med</button>
-              <button class="seg-btn" data-value="high">High</button>
-              <button class="seg-btn" data-value="extreme">Extreme</button>
-            </div>
-            <label class="toggle-wrap toggle-wrap--lock" title="Lock intensity — prevents auto-escalation">
-              <input type="checkbox" id="stats-intensity-lock" />
-              <span class="toggle-track"></span>
-              <span class="lock-label">🔒</span>
-            </label>
-            <span class="escalation-info" tabindex="0" aria-describedby="tooltip-escalation">ⓘ</span>
-            <span class="stat-tooltip" id="tooltip-escalation" role="tooltip">Intensity auto-adjusts as you approach your spending limits. Lock to keep your chosen level.</span>
-          </fieldset>
-        </div>
-        <div class="escalation-indicator" id="stats-escalation-indicator" hidden>
-          <span class="escalation-text"></span>
-        </div>
       </section>
 
       <!-- Section 2: Friction -->
@@ -163,6 +147,9 @@
               <span class="toggle-track"></span>
               <span class="lock-label">🔒</span>
             </label>
+            <span class="escalation-info" tabindex="0" aria-describedby="tooltip-escalation">ⓘ
+              <span class="escalation-tooltip" id="tooltip-escalation" role="tooltip">Intensity auto-adjusts as you approach your spending limits. Lock to keep your chosen level.</span>
+            </span>
           </fieldset>
         </div>
         <div class="escalation-indicator" id="friction-escalation-indicator" hidden>
