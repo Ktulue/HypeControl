@@ -16,15 +16,20 @@
     <div id="hc-wizard" class="hc-wizard" hidden>
       <div class="hc-wizard-header">
         <img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="28" height="28" alt="">
-        <h2 class="hc-wizard-title">Welcome to Hype Control</h2>
+        <h2 class="hc-wizard-title">Hype Control Tutorial</h2>
       </div>
 
-      <a class="hc-wizard-skip" id="wizard-skip" href="#">Skip setup, I'll configure it myself →</a>
+      <div class="hc-wizard-skip-row">
+        <button class="btn-secondary btn-sm" id="wizard-skip">Good with defaults?</button>
+      </div>
 
       <!-- Skip confirmation (shown after skip click) -->
       <div id="wizard-skip-confirm" class="hc-wizard-skip-confirm" hidden>
-        <p class="hc-wizard-defaults-msg">You're all set with defaults: <strong>$20/hr wage · 7% sales tax · Low friction · Preset comparison items enabled.</strong> Update these in Settings anytime.</p>
-        <button class="btn-primary" id="wizard-got-it">Got it →</button>
+        <p class="hc-wizard-defaults-msg"><strong>$20/hr wage · 7% sales tax · Low friction · Preset comparison items.</strong> You can update these anytime.</p>
+        <div class="hc-wizard-skip-actions">
+          <button class="btn-sm" id="wizard-skip-back">No, take me back</button>
+          <button class="btn-primary btn-sm" id="wizard-skip-yes">Yes</button>
+        </div>
       </div>
 
       <!-- Main wizard form -->
@@ -40,7 +45,7 @@
           <div id="wizard-salary-calc" class="hc-wizard-salary-calc" hidden>
             <div class="hc-wizard-input-row">
               <span class="hc-wizard-prefix">$</span>
-              <input type="number" id="wizard-annual-salary" class="hc-wizard-input" placeholder="Annual salary" min="1">
+              <input type="text" inputmode="numeric" id="wizard-annual-salary" class="hc-wizard-input" placeholder="Annual salary">
             </div>
             <div class="hc-wizard-input-row">
               <input type="number" id="wizard-hours-per-week" class="hc-wizard-input" placeholder="Hours/week" value="40" min="1" max="168">
@@ -73,12 +78,7 @@
           <div class="hc-wizard-chips" id="wizard-chips">
             <!-- Populated by popup.ts from PRESET_COMPARISON_ITEMS -->
           </div>
-          <p class="hc-wizard-hint">These are your default comparisons. <a href="#" id="wizard-customize-link"><strong>Customize in Settings →</strong></a></p>
-          <div id="wizard-customize-confirm" class="hc-wizard-skip-confirm" hidden>
-            <p class="hc-wizard-defaults-msg">Exit the tour and go to Comparisons? You can replay the tour anytime from the bottom of the page, under Credits.</p>
-            <button class="btn-primary btn-sm" id="wizard-customize-yes">Yes, customize now</button>
-            <button class="btn-sm" id="wizard-customize-cancel">Cancel</button>
-          </div>
+          <p class="hc-wizard-hint">These are your default comparisons — customize them later in <strong>Comparisons</strong>.</p>
         </div>
 
         <button class="btn-primary hc-wizard-continue" id="wizard-continue">Continue →</button>
@@ -128,6 +128,17 @@
         <div class="hc-row">
           <label class="hc-label" for="friction-hourly-rate">Hourly rate ($/hr)</label>
           <input type="number" id="friction-hourly-rate" min="0.01" step="0.01" class="hc-input hc-input--sm" />
+          <a class="salary-calc-toggle" id="friction-calc-toggle" href="#">Calculate from salary →</a>
+        </div>
+        <div id="friction-salary-calc" class="salary-calc-panel" hidden>
+          <div class="hc-row">
+            <label class="hc-label" for="friction-annual-salary">Annual salary ($)</label>
+            <input type="text" inputmode="numeric" id="friction-annual-salary" class="hc-input hc-input--sm" placeholder="e.g. 52,000" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="friction-hours-per-week">Hours / week</label>
+            <input type="number" id="friction-hours-per-week" min="1" max="168" value="40" class="hc-input hc-input--sm" />
+          </div>
         </div>
         <div class="hc-row">
           <label class="hc-label" for="friction-tax-rate">Tax rate (%)</label>
@@ -148,7 +159,7 @@
               <span class="lock-label">🔒</span>
             </label>
             <span class="escalation-info" tabindex="0" aria-describedby="tooltip-escalation">ⓘ
-              <span class="escalation-tooltip" id="tooltip-escalation" role="tooltip">Intensity auto-adjusts as you approach your spending limits. Lock to keep your chosen level.</span>
+              <span class="info-tooltip-right" id="tooltip-escalation" role="tooltip">Intensity auto-adjusts as you approach your spending limits. Lock to keep your chosen level.</span>
             </span>
           </fieldset>
         </div>
@@ -280,7 +291,11 @@
             <span class="tracker-value" id="tracker-daily">—</span>
           </div>
           <div class="hc-row">
-            <span class="hc-label">Session total</span>
+            <span class="hc-label">Session total
+              <span class="escalation-info" tabindex="0">ⓘ
+                <span class="info-tooltip-right" role="tooltip">Spending on the current channel this browsing session. Resets when you switch channels.</span>
+              </span>
+            </span>
             <span class="tracker-value" id="tracker-session">—</span>
           </div>
           <div class="hc-row" id="tracker-weekly-row" hidden>

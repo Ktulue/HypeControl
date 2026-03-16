@@ -1,6 +1,15 @@
 import { UserSettings, FrictionIntensity, DelayTimerConfig, FrictionThresholds, DEFAULT_SETTINGS } from '../../shared/types';
 import { setPendingField, getPending } from '../pendingState';
 
+function parseLocaleNumber(str: string): number {
+  return parseFloat(str.replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+function formatLocaleSalary(value: number): string {
+  if (!value || value <= 0) return '';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
+}
+
 export interface FrictionCallbacks {
   onIntensityChange: (value: FrictionIntensity) => void;
   onLockChange?: () => void;
@@ -24,6 +33,10 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   const nudgeStepsEl = el.querySelector<HTMLInputElement>('#threshold-nudge-steps')!;
   const lockEl = el.querySelector<HTMLInputElement>('#friction-intensity-lock')!;
   const escalationIndicatorEl = el.querySelector<HTMLElement>('#friction-escalation-indicator')!;
+  const calcToggle = el.querySelector<HTMLAnchorElement>('#friction-calc-toggle')!;
+  const salaryCalcPanel = el.querySelector<HTMLElement>('#friction-salary-calc')!;
+  const annualSalaryEl = el.querySelector<HTMLInputElement>('#friction-annual-salary')!;
+  const hoursPerWeekEl = el.querySelector<HTMLInputElement>('#friction-hours-per-week')!;
 
   let currentSettings: UserSettings = { ...DEFAULT_SETTINGS };
 
@@ -37,6 +50,39 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   hourlyRateEl.addEventListener('input', () => {
     setPendingField('hourlyRate', parseFloat(hourlyRateEl.value) || DEFAULT_SETTINGS.hourlyRate);
   });
+
+  // Salary calculator toggle + auto-compute
+  calcToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isHidden = salaryCalcPanel.hasAttribute('hidden');
+    if (isHidden) {
+      salaryCalcPanel.removeAttribute('hidden');
+      calcToggle.textContent = 'Hide calculator ↑';
+    } else {
+      salaryCalcPanel.setAttribute('hidden', '');
+      calcToggle.textContent = 'Calculate from salary →';
+    }
+  });
+
+  function updateHourlyFromSalary(): void {
+    const salary = parseLocaleNumber(annualSalaryEl.value);
+    const hours = parseFloat(hoursPerWeekEl.value) || 40;
+    if (salary > 0 && hours > 0) {
+      const computed = Math.round(salary / 52 / hours * 100) / 100;
+      hourlyRateEl.value = String(computed);
+      setPendingField('hourlyRate', computed);
+    }
+  }
+  annualSalaryEl.addEventListener('input', updateHourlyFromSalary);
+  annualSalaryEl.addEventListener('blur', () => {
+    const val = parseLocaleNumber(annualSalaryEl.value);
+    if (val > 0) annualSalaryEl.value = formatLocaleSalary(val);
+  });
+  annualSalaryEl.addEventListener('focus', () => {
+    const val = parseLocaleNumber(annualSalaryEl.value);
+    if (val > 0) annualSalaryEl.value = String(val);
+  });
+  hoursPerWeekEl.addEventListener('input', updateHourlyFromSalary);
 
   // Tax rate
   taxRateEl.addEventListener('input', () => {

@@ -658,13 +658,15 @@ body {
   margin: 0;
 }
 
-.hc-wizard-skip {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-decoration: none;
-  align-self: flex-start;
+.hc-wizard-skip-row {
+  display: flex;
+  justify-content: flex-end;
 }
-.hc-wizard-skip:hover { color: var(--text-primary); text-decoration: underline; }
+.hc-wizard-skip-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
 
 .hc-wizard-skip-confirm {
   background: var(--bg-secondary);
@@ -821,6 +823,24 @@ body {
   width: 100%;
 }
 
+/* ─── Salary calculator (Friction section) ───────────────── */
+.salary-calc-toggle {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.salary-calc-toggle:hover { text-decoration: underline; }
+
+.salary-calc-panel {
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  margin-bottom: 4px;
+}
+.salary-calc-panel[hidden] { display: none; }
+
 /* ─── Lock toggle (compact, inline with segmented) ───────── */
 .toggle-wrap--lock {
   gap: 4px;
@@ -848,11 +868,13 @@ body {
   cursor: help;
   position: relative;
 }
-.escalation-tooltip {
+/* Right-facing tooltip used by escalation info + session total */
+.info-tooltip-right {
   display: none;
   position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
   width: 200px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -862,11 +884,12 @@ body {
   line-height: 1.4;
   padding: 6px 8px;
   z-index: 10;
-  text-align: center;
+  text-align: left;
   pointer-events: none;
+  white-space: normal;
 }
-.escalation-info:hover .escalation-tooltip,
-.escalation-info:focus .escalation-tooltip {
+.escalation-info:hover .info-tooltip-right,
+.escalation-info:focus .info-tooltip-right {
   display: block;
 }
 

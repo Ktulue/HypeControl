@@ -14,6 +14,30 @@ import { settingsLog, setVersion } from '../shared/logger';
 
 const SETTINGS_KEY = 'hcSettings';
 
+/** Parse a numeric string that may contain locale formatting (commas, periods) */
+function parseLocaleNumber(str: string): number {
+  return parseFloat(str.replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+/** Format a number with locale-aware grouping (e.g. 52000 → "52,000") */
+function formatLocaleSalary(value: number): string {
+  if (!value || value <= 0) return '';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
+}
+
+/** Wire locale formatting on a text input: format on blur, strip on focus */
+function wireLocaleSalaryInput(input: HTMLInputElement, onInput: () => void): void {
+  input.addEventListener('input', onInput);
+  input.addEventListener('blur', () => {
+    const val = parseLocaleNumber(input.value);
+    if (val > 0) input.value = formatLocaleSalary(val);
+  });
+  input.addEventListener('focus', () => {
+    const val = parseLocaleNumber(input.value);
+    if (val > 0) input.value = String(val);
+  });
+}
+
 let activeMql: MediaQueryList | null = null;
 let mqlHandler: (() => void) | null = null;
 
@@ -49,9 +73,10 @@ const FRICTION_DESCRIPTIONS: Record<string, string> = {
 function showWizard(onComplete: () => void): void {
   const wizard = document.getElementById('hc-wizard')!;
   const form = document.getElementById('wizard-form')!;
-  const skipLink = document.getElementById('wizard-skip')!;
+  const skipBtn = document.getElementById('wizard-skip')!;
   const skipConfirm = document.getElementById('wizard-skip-confirm')!;
-  const gotItBtn = document.getElementById('wizard-got-it')!;
+  const skipBack = document.getElementById('wizard-skip-back')!;
+  const skipYes = document.getElementById('wizard-skip-yes')!;
   const hourlyInput = document.getElementById('wizard-hourly-rate') as HTMLInputElement;
   const taxInput = document.getElementById('wizard-tax-rate') as HTMLInputElement;
   const calcToggle = document.getElementById('wizard-calc-toggle')!;
@@ -62,7 +87,6 @@ function showWizard(onComplete: () => void): void {
   const frictionDesc = document.getElementById('wizard-friction-desc')!;
   const chips = document.getElementById('wizard-chips')!;
   const continueBtn = document.getElementById('wizard-continue')!;
-  const customizeLink = document.getElementById('wizard-customize-link')!;
 
   // Show wizard, hide main content
   wizard.removeAttribute('hidden');
@@ -96,13 +120,13 @@ function showWizard(onComplete: () => void): void {
 
   // Salary calculator: auto-compute hourly rate
   function updateHourlyFromSalary(): void {
-    const salary = parseFloat(salaryInput.value);
+    const salary = parseLocaleNumber(salaryInput.value);
     const hours = parseFloat(hoursInput.value) || 40;
     if (salary > 0 && hours > 0) {
       hourlyInput.value = (salary / 52 / hours).toFixed(2);
     }
   }
-  salaryInput.addEventListener('input', updateHourlyFromSalary);
+  wireLocaleSalaryInput(salaryInput, updateHourlyFromSalary);
   hoursInput.addEventListener('input', updateHourlyFromSalary);
 
   // Friction segmented control
@@ -114,49 +138,21 @@ function showWizard(onComplete: () => void): void {
     frictionDesc.textContent = FRICTION_DESCRIPTIONS[btn.dataset.value ?? 'medium'] ?? '';
   });
 
-  // Skip path
-  skipLink.addEventListener('click', async (e) => {
-    e.preventDefault();
-    // Write defaults to storage
-    await chrome.storage.sync.set({ hcSettings: DEFAULT_SETTINGS });
-    // Clear wizard pending flag; leave phase2 pending
-    await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
-    // Show skip confirmation
+  // Skip path — "Good with defaults?" → confirmation
+  skipBtn.addEventListener('click', () => {
     form.setAttribute('hidden', '');
-    skipLink.setAttribute('hidden', '');
+    skipBtn.parentElement!.setAttribute('hidden', '');
     skipConfirm.removeAttribute('hidden');
-    // "Got it" button closes the wizard (no auto-close timer — let user read at their pace)
-    gotItBtn.addEventListener('click', () => {
-      closeWizard();
-    });
   });
-
-  // Customize link — confirm before exiting wizard
-  const customizeConfirm = document.getElementById('wizard-customize-confirm')!;
-  const customizeYes = document.getElementById('wizard-customize-yes')!;
-  const customizeCancel = document.getElementById('wizard-customize-cancel')!;
-
-  customizeLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    customizeConfirm.removeAttribute('hidden');
+  skipBack.addEventListener('click', () => {
+    skipConfirm.setAttribute('hidden', '');
+    form.removeAttribute('hidden');
+    skipBtn.parentElement!.removeAttribute('hidden');
   });
-  customizeCancel.addEventListener('click', () => {
-    customizeConfirm.setAttribute('hidden', '');
-  });
-  customizeYes.addEventListener('click', async () => {
-    // Save wizard values before closing (prevents theme flip on reload)
-    const hourlyRate = parseFloat(hourlyInput.value) || 20;
-    const taxRate = parseFloat(taxInput.value) || 7;
-    const activeBtn = frictionSeg.querySelector<HTMLButtonElement>('.hc-wizard-seg-btn.active');
-    const frictionIntensity = (activeBtn?.dataset.value ?? 'low') as UserSettings['frictionIntensity'];
-    const result = await chrome.storage.sync.get('hcSettings');
-    const current = migrateSettings(result.hcSettings ?? {});
-    await chrome.storage.sync.set({ hcSettings: { ...current, hourlyRate, taxRate, frictionIntensity } });
+  skipYes.addEventListener('click', async () => {
+    await chrome.storage.sync.set({ hcSettings: DEFAULT_SETTINGS });
     await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
     closeWizard();
-    setTimeout(() => {
-      document.getElementById('section-comparisons')?.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
   });
 
   // Continue button
