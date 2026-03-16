@@ -1,31 +1,20 @@
 import { computePopupStats } from '../../shared/interceptLogger';
 import { UserSettings } from '../../shared/types';
-import { setPendingField } from '../pendingState';
 
 const SETTINGS_KEY = 'hcSettings';
-
-export interface StatsCallbacks {
-  onIntensityChange: (value: UserSettings['frictionIntensity']) => void;
-}
 
 export interface StatsController {
   render(settings: UserSettings): void;
   refreshStats(): Promise<void>;
 }
 
-export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsController {
+export function initStats(el: HTMLElement): StatsController {
   const savedEl = el.querySelector<HTMLElement>('#stat-saved')!;
   const blockedEl = el.querySelector<HTMLElement>('#stat-blocked')!;
   const rateEl = el.querySelector<HTMLElement>('#stat-rate')!;
   const stepEl = el.querySelector<HTMLElement>('#stat-step')!;
   const overrideStatusEl = el.querySelector<HTMLElement>('#override-status')!;
   const overrideBtnEl = el.querySelector<HTMLButtonElement>('#btn-override')!;
-  const intensityEl = el.querySelector<HTMLElement>('#stats-intensity')!;
-  function renderSegmented(container: HTMLElement, value: string): void {
-    container.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.value === value);
-    });
-  }
 
   function renderOverride(settings: Partial<UserSettings>): void {
     const override = settings.streamingOverride;
@@ -42,16 +31,6 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
     }
     overrideBtnEl.textContent = isActive ? 'Cancel Override' : 'Stream Override (2 hr)';
   }
-
-  // Wire intensity segmented control
-  intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const val = btn.dataset.value as UserSettings['frictionIntensity'];
-      setPendingField('frictionIntensity', val);
-      callbacks.onIntensityChange(val);
-      renderSegmented(intensityEl, val);
-    });
-  });
 
   // Wire override button (immediate save — bypasses pending state)
   overrideBtnEl.addEventListener('click', async () => {
@@ -86,7 +65,6 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
   }
 
   function render(settings: UserSettings): void {
-    renderSegmented(intensityEl, settings.frictionIntensity);
     renderOverride(settings);
   }
 

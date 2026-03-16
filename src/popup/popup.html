@@ -16,15 +16,20 @@
     <div id="hc-wizard" class="hc-wizard" hidden>
       <div class="hc-wizard-header">
         <img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="28" height="28" alt="">
-        <h2 class="hc-wizard-title">Welcome to Hype Control</h2>
+        <h2 class="hc-wizard-title">Hype Control Tutorial</h2>
       </div>
 
-      <a class="hc-wizard-skip" id="wizard-skip" href="#">Skip setup, I'll configure it myself →</a>
+      <div class="hc-wizard-skip-row">
+        <button class="btn-secondary btn-sm" id="wizard-skip">Good with defaults?</button>
+      </div>
 
       <!-- Skip confirmation (shown after skip click) -->
       <div id="wizard-skip-confirm" class="hc-wizard-skip-confirm" hidden>
-        <p class="hc-wizard-defaults-msg">You're all set with defaults: <strong>$20/hr wage · 7% sales tax · Medium friction · Preset comparison items enabled.</strong> Update these in Settings anytime.</p>
-        <button class="btn-primary" id="wizard-got-it">Got it →</button>
+        <p class="hc-wizard-defaults-msg"><strong>$20/hr wage · 7% sales tax · Low friction · Preset comparison items.</strong> You can update these anytime.</p>
+        <div class="hc-wizard-skip-actions">
+          <button class="btn-sm" id="wizard-skip-back">No, take me back</button>
+          <button class="btn-primary btn-sm" id="wizard-skip-yes">Yes</button>
+        </div>
       </div>
 
       <!-- Main wizard form -->
@@ -40,7 +45,7 @@
           <div id="wizard-salary-calc" class="hc-wizard-salary-calc" hidden>
             <div class="hc-wizard-input-row">
               <span class="hc-wizard-prefix">$</span>
-              <input type="number" id="wizard-annual-salary" class="hc-wizard-input" placeholder="Annual salary" min="1">
+              <input type="text" inputmode="numeric" id="wizard-annual-salary" class="hc-wizard-input" placeholder="Annual salary">
             </div>
             <div class="hc-wizard-input-row">
               <input type="number" id="wizard-hours-per-week" class="hc-wizard-input" placeholder="Hours/week" value="40" min="1" max="168">
@@ -60,12 +65,12 @@
         <div class="hc-wizard-field">
           <span class="hc-wizard-label">Friction Level</span>
           <div class="hc-wizard-seg" id="wizard-friction-seg" role="group" aria-label="Friction level">
-            <button class="hc-wizard-seg-btn" data-value="low">Low</button>
-            <button class="hc-wizard-seg-btn active" data-value="medium">Medium</button>
+            <button class="hc-wizard-seg-btn active" data-value="low">Low</button>
+            <button class="hc-wizard-seg-btn" data-value="medium">Medium</button>
             <button class="hc-wizard-seg-btn" data-value="high">High</button>
             <button class="hc-wizard-seg-btn" data-value="extreme">Extreme</button>
           </div>
-          <p class="hc-wizard-friction-desc" id="wizard-friction-desc">Overlay + reason selection</p>
+          <p class="hc-wizard-friction-desc" id="wizard-friction-desc">Main overlay only — one click to cancel</p>
         </div>
 
         <div class="hc-wizard-field">
@@ -73,7 +78,7 @@
           <div class="hc-wizard-chips" id="wizard-chips">
             <!-- Populated by popup.ts from PRESET_COMPARISON_ITEMS -->
           </div>
-          <p class="hc-wizard-hint">These are your default comparisons. <a href="#" id="wizard-customize-link">Customize in Settings →</a></p>
+          <p class="hc-wizard-hint">These are your default comparisons — customize them later in <strong>Comparisons</strong>.</p>
         </div>
 
         <button class="btn-primary hc-wizard-continue" id="wizard-continue">Continue →</button>
@@ -115,17 +120,6 @@
           <span class="override-status" id="override-status">No active override</span>
           <button class="btn-secondary" id="btn-override">Stream Override (2 hr)</button>
         </div>
-        <div class="hc-row">
-          <fieldset class="hc-fieldset">
-            <legend class="hc-label">Intensity</legend>
-            <div class="segmented" id="stats-intensity" data-pending-field="frictionIntensity">
-              <button class="seg-btn" data-value="low">Low</button>
-              <button class="seg-btn" data-value="medium">Med</button>
-              <button class="seg-btn" data-value="high">High</button>
-              <button class="seg-btn" data-value="extreme">Extreme</button>
-            </div>
-          </fieldset>
-        </div>
       </section>
 
       <!-- Section 2: Friction -->
@@ -134,6 +128,17 @@
         <div class="hc-row">
           <label class="hc-label" for="friction-hourly-rate">Hourly rate ($/hr)</label>
           <input type="number" id="friction-hourly-rate" min="0.01" step="0.01" class="hc-input hc-input--sm" />
+          <a class="salary-calc-toggle" id="friction-calc-toggle" href="#">Calculate from salary →</a>
+        </div>
+        <div id="friction-salary-calc" class="salary-calc-panel" hidden>
+          <div class="hc-row">
+            <label class="hc-label" for="friction-annual-salary">Annual salary ($)</label>
+            <input type="text" inputmode="numeric" id="friction-annual-salary" class="hc-input hc-input--sm" placeholder="e.g. 52,000" />
+          </div>
+          <div class="hc-row">
+            <label class="hc-label" for="friction-hours-per-week">Hours / week</label>
+            <input type="number" id="friction-hours-per-week" min="1" max="168" value="40" class="hc-input hc-input--sm" />
+          </div>
         </div>
         <div class="hc-row">
           <label class="hc-label" for="friction-tax-rate">Tax rate (%)</label>
@@ -148,7 +153,18 @@
               <button class="seg-btn" data-value="high">High</button>
               <button class="seg-btn" data-value="extreme">Extreme</button>
             </div>
+            <label class="toggle-wrap toggle-wrap--lock" title="Lock intensity — prevents auto-escalation">
+              <input type="checkbox" id="friction-intensity-lock" />
+              <span class="toggle-track"></span>
+              <span class="lock-label">🔒</span>
+            </label>
+            <span class="escalation-info" tabindex="0" aria-describedby="tooltip-escalation">ⓘ
+              <span class="info-tooltip-right" id="tooltip-escalation" role="tooltip">Intensity auto-adjusts as you approach your spending limits. Lock to keep your chosen level.</span>
+            </span>
           </fieldset>
+        </div>
+        <div class="escalation-indicator" id="friction-escalation-indicator" hidden>
+          <span class="escalation-text"></span>
         </div>
         <div class="hc-row">
           <label class="hc-label" for="delay-enabled">Delay timer</label>
@@ -242,6 +258,13 @@
           </label>
           <input type="number" id="weekly-cap-amount" min="0" step="0.01" class="hc-input hc-input--sm" hidden />
         </div>
+        <div class="hc-row" id="weekly-reset-day-row" hidden>
+          <label class="hc-label">Week starts</label>
+          <div class="segmented" id="weekly-reset-day" data-pending-field="weeklyResetDay">
+            <button class="seg-btn" data-value="monday">Mon</button>
+            <button class="seg-btn" data-value="sunday">Sun</button>
+          </div>
+        </div>
         <div class="hc-row">
           <label class="hc-label" for="monthly-cap-enabled">Monthly cap</label>
           <label class="toggle-wrap">
@@ -268,7 +291,11 @@
             <span class="tracker-value" id="tracker-daily">—</span>
           </div>
           <div class="hc-row">
-            <span class="hc-label">Session total</span>
+            <span class="hc-label">Session total
+              <span class="escalation-info" tabindex="0">ⓘ
+                <span class="info-tooltip-right" role="tooltip">Spending on the current channel this browsing session. Resets when you switch channels.</span>
+              </span>
+            </span>
             <span class="tracker-value" id="tracker-session">—</span>
           </div>
           <div class="hc-row" id="tracker-weekly-row" hidden>
@@ -353,9 +380,6 @@
         <div class="hc-row">
           <button class="btn-secondary" id="btn-view-logs">View Activity Logs</button>
         </div>
-        <div class="hc-row hc-row--replay">
-          <button class="btn-secondary btn-replay-tour" id="btn-replay-tour">↺ Replay setup tour</button>
-        </div>
       </section>
 
       <!-- Section 7: Credits -->
@@ -371,6 +395,8 @@
         </div>
         <p class="credits-byline">Created by <a class="credits-link" href="http://www.ktulue.com/" target="_blank" rel="noopener">Ktulue</a> | The Water Father 🌊</p>
       </section>
+
+    <button class="btn-secondary btn-replay-bottom" id="btn-replay-bottom">↺ Replay Setup Tour</button>
 
     </div><!-- /.hc-content -->
 
@@ -390,7 +416,6 @@
     <div class="footer-links">
       <a class="footer-link" href="https://github.com/Ktulue/HypeControl/issues/new" target="_blank" rel="noopener noreferrer">🐛 Bug</a>
       <a class="footer-link" href="https://github.com/Ktulue/HypeControl/discussions/new?category=ideas" target="_blank" rel="noopener noreferrer">💡 Ideas</a>
-      <a class="footer-link" href="#" id="footer-replay-tour">↺ Tour</a>
     </div>
     <button class="btn-save" id="btn-save">💾 Save Settings</button>
     <span class="footer-version" id="footer-version"></span>

@@ -1,12 +1,23 @@
 import { UserSettings, FrictionIntensity, DelayTimerConfig, FrictionThresholds, DEFAULT_SETTINGS } from '../../shared/types';
 import { setPendingField, getPending } from '../pendingState';
 
+function parseLocaleNumber(str: string): number {
+  return parseFloat(str.replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+function formatLocaleSalary(value: number): string {
+  if (!value || value <= 0) return '';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
+}
+
 export interface FrictionCallbacks {
   onIntensityChange: (value: FrictionIntensity) => void;
+  onLockChange?: () => void;
 }
 
 export interface FrictionController {
   render(settings: UserSettings): void;
+  showEscalation(base: FrictionIntensity, effective: FrictionIntensity): void;
 }
 
 export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): FrictionController {
@@ -20,6 +31,12 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   const floorEl = el.querySelector<HTMLInputElement>('#threshold-floor')!;
   const ceilingEl = el.querySelector<HTMLInputElement>('#threshold-ceiling')!;
   const nudgeStepsEl = el.querySelector<HTMLInputElement>('#threshold-nudge-steps')!;
+  const lockEl = el.querySelector<HTMLInputElement>('#friction-intensity-lock')!;
+  const escalationIndicatorEl = el.querySelector<HTMLElement>('#friction-escalation-indicator')!;
+  const calcToggle = el.querySelector<HTMLAnchorElement>('#friction-calc-toggle')!;
+  const salaryCalcPanel = el.querySelector<HTMLElement>('#friction-salary-calc')!;
+  const annualSalaryEl = el.querySelector<HTMLInputElement>('#friction-annual-salary')!;
+  const hoursPerWeekEl = el.querySelector<HTMLInputElement>('#friction-hours-per-week')!;
 
   let currentSettings: UserSettings = { ...DEFAULT_SETTINGS };
 
@@ -34,6 +51,39 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     setPendingField('hourlyRate', parseFloat(hourlyRateEl.value) || DEFAULT_SETTINGS.hourlyRate);
   });
 
+  // Salary calculator toggle + auto-compute
+  calcToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isHidden = salaryCalcPanel.hasAttribute('hidden');
+    if (isHidden) {
+      salaryCalcPanel.removeAttribute('hidden');
+      calcToggle.textContent = 'Hide calculator ↑';
+    } else {
+      salaryCalcPanel.setAttribute('hidden', '');
+      calcToggle.textContent = 'Calculate from salary →';
+    }
+  });
+
+  function updateHourlyFromSalary(): void {
+    const salary = parseLocaleNumber(annualSalaryEl.value);
+    const hours = parseFloat(hoursPerWeekEl.value) || 40;
+    if (salary > 0 && hours > 0) {
+      const computed = Math.round(salary / 52 / hours * 100) / 100;
+      hourlyRateEl.value = String(computed);
+      setPendingField('hourlyRate', computed);
+    }
+  }
+  annualSalaryEl.addEventListener('input', updateHourlyFromSalary);
+  annualSalaryEl.addEventListener('blur', () => {
+    const val = parseLocaleNumber(annualSalaryEl.value);
+    if (val > 0) annualSalaryEl.value = formatLocaleSalary(val);
+  });
+  annualSalaryEl.addEventListener('focus', () => {
+    const val = parseLocaleNumber(annualSalaryEl.value);
+    if (val > 0) annualSalaryEl.value = String(val);
+  });
+  hoursPerWeekEl.addEventListener('input', updateHourlyFromSalary);
+
   // Tax rate
   taxRateEl.addEventListener('input', () => {
     setPendingField('taxRate', parseFloat(taxRateEl.value) || 0);
@@ -47,6 +97,11 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
       callbacks.onIntensityChange(val);
       renderSegmented(intensityEl, val);
     });
+  });
+
+  lockEl.addEventListener('change', () => {
+    setPendingField('intensityLocked', lockEl.checked);
+    callbacks.onLockChange?.();
   });
 
   // Delay timer toggle
@@ -86,6 +141,25 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   ceilingEl.addEventListener('input', updateThresholds);
   nudgeStepsEl.addEventListener('input', updateThresholds);
 
+  function showEscalation(base: FrictionIntensity, effective: FrictionIntensity): void {
+    const isEscalated = base !== effective;
+    escalationIndicatorEl.hidden = !isEscalated;
+    if (isEscalated) {
+      const textEl = escalationIndicatorEl.querySelector('.escalation-text')!;
+      textEl.textContent = `↑ Auto-escalated from ${base.charAt(0).toUpperCase() + base.slice(1)}`;
+      intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+        btn.classList.remove('escalated', 'base-indicator');
+        btn.classList.toggle('active', btn.dataset.value === effective);
+        if (btn.dataset.value === base) btn.classList.add('base-indicator');
+        if (btn.dataset.value === effective) btn.classList.add('escalated');
+      });
+    } else {
+      intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+        btn.classList.remove('escalated', 'base-indicator');
+      });
+    }
+  }
+
   function render(settings: UserSettings): void {
     currentSettings = settings;
     nudgeStepsEl.max = String(settings.comparisonItems.length);
@@ -100,7 +174,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     floorEl.value = String(settings.frictionThresholds.thresholdFloor);
     ceilingEl.value = String(settings.frictionThresholds.thresholdCeiling);
     nudgeStepsEl.value = String(settings.frictionThresholds.softNudgeSteps);
+    lockEl.checked = settings.intensityLocked ?? false;
   }
 
-  return { render };
+  return { render, showEscalation };
 }

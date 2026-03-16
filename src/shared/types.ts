@@ -114,6 +114,8 @@ export interface UserSettings {
   toastDurationSeconds: number;
   whitelistedChannels: WhitelistEntry[];
   theme: ThemePreference;
+  weeklyResetDay: 'monday' | 'sunday';
+  intensityLocked: boolean;
   streamingOverride?: { expiresAt: number };
 }
 
@@ -178,7 +180,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     thresholdCeiling: 25,
     softNudgeSteps: 1,
   },
-  frictionIntensity: 'medium',
+  frictionIntensity: 'low',
   delayTimer: {
     enabled: false,
     seconds: 10,
@@ -192,6 +194,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   toastDurationSeconds: 15,
   whitelistedChannels: [],
   theme: 'auto',
+  weeklyResetDay: 'monday',
+  intensityLocked: false,
 };
 
 /** Transient spending data — stored in chrome.storage.local */
@@ -202,7 +206,7 @@ export interface SpendingTracker {
   sessionTotal: number;
   sessionChannel: string;
   weeklyTotal: number;
-  weeklyStartDate: string;   // ISO date of the Monday that starts the current week (YYYY-MM-DD)
+  weeklyStartDate: string;   // ISO date of the day that starts the current week (Monday or Sunday, YYYY-MM-DD)
   monthlyTotal: number;
   monthlyMonth: string;      // YYYY-MM format
 }
@@ -311,6 +315,8 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
       behavior: (e.behavior as string) === 'track-only' ? 'full' as WhitelistBehavior : e.behavior,
     })),
     theme: saved.theme ?? DEFAULT_SETTINGS.theme,
+    weeklyResetDay: saved.weeklyResetDay ?? DEFAULT_SETTINGS.weeklyResetDay,
+    intensityLocked: saved.intensityLocked ?? DEFAULT_SETTINGS.intensityLocked,
   };
 }
 

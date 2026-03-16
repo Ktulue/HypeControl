@@ -14,6 +14,7 @@ import { shouldBypassFriction } from './streamingMode';
 import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
 import { writeInterceptEvent } from '../shared/interceptLogger';
+import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 
 /** Result returned by runFrictionFlow */
 interface FrictionResult {
@@ -41,14 +42,20 @@ function formatLocalDate(d: Date): string {
 }
 
 /**
- * Get the Monday that starts the current ISO week as YYYY-MM-DD.
- * ISO weeks start on Monday (day 1) and end on Sunday (day 7).
+ * Get the start of the current week as YYYY-MM-DD.
+ * Supports Monday-start (ISO default) or Sunday-start weeks.
  */
-function getCurrentWeekStart(date: Date = new Date()): string {
+function getCurrentWeekStart(date: Date = new Date(), resetDay: 'monday' | 'sunday' = 'monday'): string {
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  d.setDate(d.getDate() + mondayOffset);
+  if (resetDay === 'sunday') {
+    // Sunday = 0, so offset is just -dayOfWeek
+    d.setDate(d.getDate() - dayOfWeek);
+  } else {
+    // Monday start (ISO): Sunday needs -6, others need 1-dayOfWeek
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    d.setDate(d.getDate() + mondayOffset);
+  }
   return formatLocalDate(d);
 }
 
@@ -73,7 +80,7 @@ async function loadSettings(): Promise<UserSettings> {
   }
 }
 
-async function loadSpendingTracker(): Promise<SpendingTracker> {
+async function loadSpendingTracker(settings: UserSettings): Promise<SpendingTracker> {
   try {
     const result = await chrome.storage.local.get(SPENDING_KEY);
     const tracker: SpendingTracker = result[SPENDING_KEY] || { ...DEFAULT_SPENDING_TRACKER };
@@ -90,8 +97,8 @@ async function loadSpendingTracker(): Promise<SpendingTracker> {
       tracker.dailyDate = today;
     }
 
-    // Weekly reset: calendar-aligned to Monday
-    const currentWeekStart = getCurrentWeekStart();
+    // Weekly reset: calendar-aligned to Monday or Sunday per user preference
+    const currentWeekStart = getCurrentWeekStart(new Date(), settings.weeklyResetDay ?? 'monday');
     if (tracker.weeklyStartDate !== currentWeekStart) {
       tracker.weeklyTotal = 0;
       tracker.weeklyStartDate = currentWeekStart;
@@ -1699,7 +1706,12 @@ async function runFrictionFlow(
   // The subsequent steps (cooldown, type-to-confirm, math) expect the overlay to
   // already be in the DOM (they only set innerHTML and apply theme).
   // So after reason selection proceeds we must re-append before the next step.
-  const intensity = settings.frictionIntensity ?? 'low';
+  const maxPercent = computeMaxCapPercent(settings, tracker);
+  const intensity = computeEscalatedIntensity(
+    settings.frictionIntensity ?? 'low',
+    maxPercent,
+    settings.intensityLocked ?? false,
+  );
 
   if (intensity === 'medium' || intensity === 'high' || intensity === 'extreme') {
     // Create the shared overlay element for intensity steps
@@ -1893,7 +1905,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
     return;
   }
 
-  const tracker = await loadSpendingTracker();
+  const tracker = await loadSpendingTracker(settings);
 
   // Update session channel
   if (tracker.sessionChannel !== attempt.channel) {

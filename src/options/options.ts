@@ -982,6 +982,9 @@ async function getFormSettings(): Promise<UserSettings> {
     // Weekly/monthly caps are managed in popup, preserve current values
     weeklyCap: cachedSettings?.weeklyCap ?? DEFAULT_SETTINGS.weeklyCap,
     monthlyCap: cachedSettings?.monthlyCap ?? DEFAULT_SETTINGS.monthlyCap,
+    // Popup-managed fields — preserve current values
+    weeklyResetDay: cachedSettings?.weeklyResetDay ?? DEFAULT_SETTINGS.weeklyResetDay,
+    intensityLocked: cachedSettings?.intensityLocked ?? DEFAULT_SETTINGS.intensityLocked,
   };
 }
 

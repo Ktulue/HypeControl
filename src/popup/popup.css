@@ -216,7 +216,7 @@ body {
 }
 .hc-label {
   flex: 0 0 auto;
-  min-width: 110px;
+  min-width: 140px;
   color: var(--text-secondary);
   font-size: 12px;
 }
@@ -658,13 +658,15 @@ body {
   margin: 0;
 }
 
-.hc-wizard-skip {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-decoration: none;
-  align-self: flex-start;
+.hc-wizard-skip-row {
+  display: flex;
+  justify-content: flex-end;
 }
-.hc-wizard-skip:hover { color: var(--text-primary); text-decoration: underline; }
+.hc-wizard-skip-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
 
 .hc-wizard-skip-confirm {
   background: var(--bg-secondary);
@@ -723,7 +725,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   padding: 5px 8px;
-  width: 100%;
+  width: 120px;
   min-width: 0;
 }
 .hc-wizard-input:focus {
@@ -743,7 +745,8 @@ body {
 .hc-wizard-hint a:hover { text-decoration: underline; }
 
 .hc-wizard-calc-toggle {
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--accent);
   text-decoration: none;
   align-self: flex-start;
@@ -820,15 +823,101 @@ body {
   width: 100%;
 }
 
-/* Replay button in settings section */
-.hc-row--replay {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color);
+/* ─── Salary calculator (Friction section) ───────────────── */
+.salary-calc-toggle {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.salary-calc-toggle:hover { text-decoration: underline; }
+
+.salary-calc-panel {
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  margin-bottom: 4px;
+}
+.salary-calc-panel[hidden] { display: none; }
+
+/* ─── Lock toggle (compact, inline with segmented) ───────── */
+.toggle-wrap--lock {
+  gap: 4px;
+  margin-left: 4px;
+}
+.lock-label {
+  font-size: 11px;
 }
 
-.btn-replay-tour {
+/* ─── Escalation indicator ──────────────────────────────── */
+.escalation-indicator {
+  padding: 2px 0 2px 140px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.escalation-indicator .escalation-text {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+/* ─── Escalation info icon ────────────────────────────────── */
+.escalation-info {
   font-size: 12px;
+  color: var(--text-muted);
+  cursor: help;
+  position: relative;
+}
+/* Right-facing tooltip used by escalation info + session total */
+.info-tooltip-right {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  width: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  z-index: 10;
+  text-align: left;
+  pointer-events: none;
+  white-space: normal;
+}
+.escalation-info:hover .info-tooltip-right,
+.escalation-info:focus .info-tooltip-right {
+  display: block;
+}
+
+/* Escalated segmented button highlight */
+.seg-btn.escalated {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  font-weight: 600;
+}
+.seg-btn.base-indicator::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin: 2px auto 0;
+}
+
+/* Replay tour button — lives below Credits at the very bottom */
+.btn-replay-bottom {
+  display: block;
+  margin: 24px auto 16px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+.btn-replay-bottom:hover {
+  opacity: 1;
 }
 
 /* NOTE: .hc-demo-badge is intentionally NOT defined here.

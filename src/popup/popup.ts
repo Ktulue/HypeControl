@@ -1,6 +1,7 @@
 // src/popup/popup.ts
 import './popup.css';
-import { migrateSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings } from '../shared/types';
+import { migrateSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings, SpendingTracker, DEFAULT_SPENDING_TRACKER } from '../shared/types';
+import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { initPending, getPending, setPendingField } from './pendingState';
 import { initScrollSpy, ScrollSpyItem } from './scrollSpy';
 import { initStats } from './sections/stats';
@@ -12,6 +13,30 @@ import { initSettingsSection } from './sections/settings-section';
 import { settingsLog, setVersion } from '../shared/logger';
 
 const SETTINGS_KEY = 'hcSettings';
+
+/** Parse a numeric string that may contain locale formatting (commas, periods) */
+function parseLocaleNumber(str: string): number {
+  return parseFloat(str.replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+/** Format a number with locale-aware grouping (e.g. 52000 → "52,000") */
+function formatLocaleSalary(value: number): string {
+  if (!value || value <= 0) return '';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
+}
+
+/** Wire locale formatting on a text input: format on blur, strip on focus */
+function wireLocaleSalaryInput(input: HTMLInputElement, onInput: () => void): void {
+  input.addEventListener('input', onInput);
+  input.addEventListener('blur', () => {
+    const val = parseLocaleNumber(input.value);
+    if (val > 0) input.value = formatLocaleSalary(val);
+  });
+  input.addEventListener('focus', () => {
+    const val = parseLocaleNumber(input.value);
+    if (val > 0) input.value = String(val);
+  });
+}
 
 let activeMql: MediaQueryList | null = null;
 let mqlHandler: (() => void) | null = null;
@@ -48,9 +73,10 @@ const FRICTION_DESCRIPTIONS: Record<string, string> = {
 function showWizard(onComplete: () => void): void {
   const wizard = document.getElementById('hc-wizard')!;
   const form = document.getElementById('wizard-form')!;
-  const skipLink = document.getElementById('wizard-skip')!;
+  const skipBtn = document.getElementById('wizard-skip')!;
   const skipConfirm = document.getElementById('wizard-skip-confirm')!;
-  const gotItBtn = document.getElementById('wizard-got-it')!;
+  const skipBack = document.getElementById('wizard-skip-back')!;
+  const skipYes = document.getElementById('wizard-skip-yes')!;
   const hourlyInput = document.getElementById('wizard-hourly-rate') as HTMLInputElement;
   const taxInput = document.getElementById('wizard-tax-rate') as HTMLInputElement;
   const calcToggle = document.getElementById('wizard-calc-toggle')!;
@@ -61,7 +87,6 @@ function showWizard(onComplete: () => void): void {
   const frictionDesc = document.getElementById('wizard-friction-desc')!;
   const chips = document.getElementById('wizard-chips')!;
   const continueBtn = document.getElementById('wizard-continue')!;
-  const customizeLink = document.getElementById('wizard-customize-link')!;
 
   // Show wizard, hide main content
   wizard.removeAttribute('hidden');
@@ -95,13 +120,13 @@ function showWizard(onComplete: () => void): void {
 
   // Salary calculator: auto-compute hourly rate
   function updateHourlyFromSalary(): void {
-    const salary = parseFloat(salaryInput.value);
+    const salary = parseLocaleNumber(salaryInput.value);
     const hours = parseFloat(hoursInput.value) || 40;
     if (salary > 0 && hours > 0) {
       hourlyInput.value = (salary / 52 / hours).toFixed(2);
     }
   }
-  salaryInput.addEventListener('input', updateHourlyFromSalary);
+  wireLocaleSalaryInput(salaryInput, updateHourlyFromSalary);
   hoursInput.addEventListener('input', updateHourlyFromSalary);
 
   // Friction segmented control
@@ -113,33 +138,21 @@ function showWizard(onComplete: () => void): void {
     frictionDesc.textContent = FRICTION_DESCRIPTIONS[btn.dataset.value ?? 'medium'] ?? '';
   });
 
-  // Skip path
-  skipLink.addEventListener('click', async (e) => {
-    e.preventDefault();
-    // Write defaults to storage
-    await chrome.storage.sync.set({ hcSettings: DEFAULT_SETTINGS });
-    // Clear wizard pending flag; leave phase2 pending
-    await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
-    // Show skip confirmation
+  // Skip path — "Good with defaults?" → confirmation
+  skipBtn.addEventListener('click', () => {
     form.setAttribute('hidden', '');
-    skipLink.setAttribute('hidden', '');
+    skipBtn.parentElement!.setAttribute('hidden', '');
     skipConfirm.removeAttribute('hidden');
-    // Auto-close after 3s fallback
-    const autoClose = setTimeout(() => closeWizard(), 3000);
-    gotItBtn.addEventListener('click', () => {
-      clearTimeout(autoClose);
-      closeWizard();
-    });
   });
-
-  // Customize link — close wizard and navigate to Comparisons section
-  customizeLink.addEventListener('click', (e) => {
-    e.preventDefault();
+  skipBack.addEventListener('click', () => {
+    skipConfirm.setAttribute('hidden', '');
+    form.removeAttribute('hidden');
+    skipBtn.parentElement!.removeAttribute('hidden');
+  });
+  skipYes.addEventListener('click', async () => {
+    await chrome.storage.sync.set({ hcSettings: DEFAULT_SETTINGS });
+    await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
     closeWizard();
-    // Scroll to comparisons section
-    setTimeout(() => {
-      document.getElementById('section-comparisons')?.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
   });
 
   // Continue button
@@ -147,7 +160,7 @@ function showWizard(onComplete: () => void): void {
     const hourlyRate = parseFloat(hourlyInput.value) || 20;
     const taxRate = parseFloat(taxInput.value) || 7;
     const activeBtn = frictionSeg.querySelector<HTMLButtonElement>('.hc-wizard-seg-btn.active');
-    const frictionIntensity = (activeBtn?.dataset.value ?? 'medium') as UserSettings['frictionIntensity'];
+    const frictionIntensity = (activeBtn?.dataset.value ?? 'low') as UserSettings['frictionIntensity'];
 
     // Load current settings (handles reinstall case — prefills from existing)
     const result = await chrome.storage.sync.get('hcSettings');
@@ -203,26 +216,32 @@ async function main(): Promise<void> {
   const channelsEl = document.getElementById('section-channels')!;
   const settingsEl = document.getElementById('section-settings')!;
 
-  // Init section controllers with bidirectional sync callbacks
+  // Escalation state — updated on load and when relevant settings change
+  let escalationUpdatePending = false;
+  async function updateEscalation(): Promise<void> {
+    if (escalationUpdatePending) return;
+    escalationUpdatePending = true;
+    try {
+      const trackerResult = await chrome.storage.local.get('hcSpending');
+      const tracker: SpendingTracker = { ...DEFAULT_SPENDING_TRACKER, ...trackerResult['hcSpending'] };
+      const s = getPending();
+      const maxPercent = computeMaxCapPercent(s, tracker);
+      const effective = computeEscalatedIntensity(s.frictionIntensity, maxPercent, s.intensityLocked);
+      friction.showEscalation(s.frictionIntensity, effective);
+    } finally {
+      escalationUpdatePending = false;
+    }
+  }
+
+  // Init section controllers
   const friction = initFriction(frictionEl, {
-    onIntensityChange: (v) => {
-      // Stats intensity mirror — re-render Stats intensity control
-      statsEl.querySelectorAll<HTMLButtonElement>('#stats-intensity .seg-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === v);
-      });
-    },
+    onIntensityChange: () => updateEscalation(),
+    onLockChange: () => updateEscalation(),
   });
 
-  const limits = initLimits(limitsEl);
+  const limits = initLimits(limitsEl, { onCapChange: () => updateEscalation() });
 
-  const stats = initStats(statsEl, {
-    onIntensityChange: (v) => {
-      // Friction intensity mirror — re-render Friction intensity control
-      frictionEl.querySelectorAll<HTMLButtonElement>('#friction-intensity .seg-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === v);
-      });
-    },
-  });
+  const stats = initStats(statsEl);
 
   const comparisons = initComparisons(comparisonsEl);
   const channels = initChannels(channelsEl);
@@ -246,6 +265,9 @@ async function main(): Promise<void> {
   // Async data that doesn't come from pending state
   stats.refreshStats();
   limits.refreshTracker();
+
+  // Initial escalation computation
+  await updateEscalation();
 
   // Scroll-spy
   const contentEl = document.getElementById('hc-content')!;
@@ -289,12 +311,8 @@ async function main(): Promise<void> {
     }
   });
 
-  // Replay tour triggers
-  document.getElementById('footer-replay-tour')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await triggerReplay();
-  });
-  document.getElementById('btn-replay-tour')?.addEventListener('click', async () => {
+  // Replay tour trigger
+  document.getElementById('btn-replay-bottom')?.addEventListener('click', async () => {
     await triggerReplay();
   });
 }

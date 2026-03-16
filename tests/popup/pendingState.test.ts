@@ -15,7 +15,7 @@ describe('pendingState', () => {
   test('getPending returns a copy of initialized settings', () => {
     mod.initPending({ ...DEFAULT_SETTINGS });
     const p = mod.getPending();
-    expect(p.frictionIntensity).toBe('medium');
+    expect(p.frictionIntensity).toBe('low');
   });
 
   test('setPendingField updates the pending copy', () => {
@@ -35,7 +35,7 @@ describe('pendingState', () => {
     mod.initPending({ ...DEFAULT_SETTINGS });
     mod.setPendingField('frictionIntensity', 'extreme');
     mod.resetPending({ ...DEFAULT_SETTINGS });
-    expect(mod.getPending().frictionIntensity).toBe('medium');
+    expect(mod.getPending().frictionIntensity).toBe('low');
   });
 
   test('isDirty returns false when nothing changed', () => {
