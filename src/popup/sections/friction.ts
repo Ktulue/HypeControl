@@ -3,6 +3,7 @@ import { setPendingField, getPending } from '../pendingState';
 
 export interface FrictionCallbacks {
   onIntensityChange: (value: FrictionIntensity) => void;
+  onLockChange?: () => void;
 }
 
 export interface FrictionController {
@@ -56,6 +57,7 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     setPendingField('intensityLocked', lockEl.checked);
     const statsLock = document.querySelector<HTMLInputElement>('#stats-intensity-lock');
     if (statsLock) statsLock.checked = lockEl.checked;
+    callbacks.onLockChange?.();
   });
 
   // Delay timer toggle

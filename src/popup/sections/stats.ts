@@ -6,6 +6,7 @@ const SETTINGS_KEY = 'hcSettings';
 
 export interface StatsCallbacks {
   onIntensityChange: (value: UserSettings['frictionIntensity']) => void;
+  onLockChange?: () => void;
 }
 
 export interface StatsController {
@@ -60,6 +61,7 @@ export function initStats(el: HTMLElement, callbacks: StatsCallbacks): StatsCont
     setPendingField('intensityLocked', lockEl.checked);
     const frictionLock = document.querySelector<HTMLInputElement>('#friction-intensity-lock');
     if (frictionLock) frictionLock.checked = lockEl.checked;
+    callbacks.onLockChange?.();
   });
 
   // Wire override button (immediate save — bypasses pending state)

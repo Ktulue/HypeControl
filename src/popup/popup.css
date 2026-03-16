@@ -840,12 +840,20 @@ body {
   font-weight: 500;
 }
 
-/* ─── Escalation info icon (reuses stat-tooltip pattern) ── */
+/* ─── Escalation info icon ────────────────────────────────── */
 .escalation-info {
   font-size: 12px;
   color: var(--text-muted);
   cursor: help;
   position: relative;
+}
+.escalation-info:hover + .stat-tooltip,
+.escalation-info:focus + .stat-tooltip {
+  display: block;
+  left: auto;
+  right: 0;
+  transform: none;
+  width: 200px;
 }
 
 /* Escalated segmented button highlight */

@@ -8,7 +8,11 @@ export interface LimitsController {
   refreshTracker(): Promise<void>;
 }
 
-export function initLimits(el: HTMLElement): LimitsController {
+export interface LimitsCallbacks {
+  onCapChange?: () => void;
+}
+
+export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): LimitsController {
   const dailyCapEnabledEl = el.querySelector<HTMLInputElement>('#daily-cap-enabled')!;
   const dailyCapAmountEl = el.querySelector<HTMLInputElement>('#daily-cap-amount')!;
   const cooldownEnabledEl = el.querySelector<HTMLInputElement>('#cooldown-enabled')!;
@@ -35,12 +39,14 @@ export function initLimits(el: HTMLElement): LimitsController {
     const enabled = dailyCapEnabledEl.checked;
     dailyCapAmountEl.hidden = !enabled;
     setPendingField('dailyCap', { ...getPending().dailyCap, enabled });
+    callbacks.onCapChange?.();
   });
   dailyCapAmountEl.addEventListener('input', () => {
     setPendingField('dailyCap', {
       ...getPending().dailyCap,
       amount: parseFloat(dailyCapAmountEl.value) || 0,
     });
+    callbacks.onCapChange?.();
   });
 
   // Weekly cap
@@ -49,12 +55,14 @@ export function initLimits(el: HTMLElement): LimitsController {
     weeklyCapAmountEl.hidden = !enabled;
     weeklyResetDayRowEl.hidden = !enabled;
     setPendingField('weeklyCap', { ...getPending().weeklyCap, enabled });
+    callbacks.onCapChange?.();
   });
   weeklyCapAmountEl.addEventListener('input', () => {
     setPendingField('weeklyCap', {
       ...getPending().weeklyCap,
       amount: parseFloat(weeklyCapAmountEl.value) || 0,
     });
+    callbacks.onCapChange?.();
   });
 
   // Weekly reset day
@@ -73,12 +81,14 @@ export function initLimits(el: HTMLElement): LimitsController {
     const enabled = monthlyCapEnabledEl.checked;
     monthlyCapAmountEl.hidden = !enabled;
     setPendingField('monthlyCap', { ...getPending().monthlyCap, enabled });
+    callbacks.onCapChange?.();
   });
   monthlyCapAmountEl.addEventListener('input', () => {
     setPendingField('monthlyCap', {
       ...getPending().monthlyCap,
       amount: parseFloat(monthlyCapAmountEl.value) || 0,
     });
+    callbacks.onCapChange?.();
   });
 
   // Cooldown

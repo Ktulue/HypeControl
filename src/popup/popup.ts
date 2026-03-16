@@ -204,6 +204,24 @@ async function main(): Promise<void> {
   const channelsEl = document.getElementById('section-channels')!;
   const settingsEl = document.getElementById('section-settings')!;
 
+  // Escalation state — updated on load and when relevant settings change
+  let escalationUpdatePending = false;
+  async function updateEscalation(): Promise<void> {
+    if (escalationUpdatePending) return;
+    escalationUpdatePending = true;
+    try {
+      const trackerResult = await chrome.storage.local.get('hcSpending');
+      const tracker: SpendingTracker = { ...DEFAULT_SPENDING_TRACKER, ...trackerResult['hcSpending'] };
+      const s = getPending();
+      const maxPercent = computeMaxCapPercent(s, tracker);
+      const effective = computeEscalatedIntensity(s.frictionIntensity, maxPercent, s.intensityLocked);
+      stats.showEscalation(s.frictionIntensity, effective);
+      friction.showEscalation(s.frictionIntensity, effective);
+    } finally {
+      escalationUpdatePending = false;
+    }
+  }
+
   // Init section controllers with bidirectional sync callbacks
   const friction = initFriction(frictionEl, {
     onIntensityChange: (v) => {
@@ -211,10 +229,12 @@ async function main(): Promise<void> {
       statsEl.querySelectorAll<HTMLButtonElement>('#stats-intensity .seg-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.value === v);
       });
+      updateEscalation();
     },
+    onLockChange: () => updateEscalation(),
   });
 
-  const limits = initLimits(limitsEl);
+  const limits = initLimits(limitsEl, { onCapChange: () => updateEscalation() });
 
   const stats = initStats(statsEl, {
     onIntensityChange: (v) => {
@@ -222,7 +242,9 @@ async function main(): Promise<void> {
       frictionEl.querySelectorAll<HTMLButtonElement>('#friction-intensity .seg-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.value === v);
       });
+      updateEscalation();
     },
+    onLockChange: () => updateEscalation(),
   });
 
   const comparisons = initComparisons(comparisonsEl);
@@ -248,16 +270,7 @@ async function main(): Promise<void> {
   stats.refreshStats();
   limits.refreshTracker();
 
-  // Compute escalation state from tracker + settings
-  async function updateEscalation(): Promise<void> {
-    const trackerResult = await chrome.storage.local.get('hcSpending');
-    const tracker: SpendingTracker = { ...DEFAULT_SPENDING_TRACKER, ...trackerResult['hcSpending'] };
-    const s = getPending();
-    const maxPercent = computeMaxCapPercent(s, tracker);
-    const effective = computeEscalatedIntensity(s.frictionIntensity, maxPercent, s.intensityLocked);
-    stats.showEscalation(s.frictionIntensity, effective);
-    friction.showEscalation(s.frictionIntensity, effective);
-  }
+  // Initial escalation computation
   await updateEscalation();
 
   // Scroll-spy
