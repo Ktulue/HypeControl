@@ -326,6 +326,47 @@ function formatComparisonDisplay(item: ComparisonItem, purchaseAmount: number, t
 }
 
 /**
+ * Determine the color tier for a cap progress bar.
+ * Green < 60%, Yellow 60–79%, Orange 80–99%, Red 100%+
+ */
+function getCapColorClass(percentage: number): string {
+  if (percentage >= 100) return 'hc-cap-red';
+  if (percentage >= 80) return 'hc-cap-orange';
+  if (percentage >= 60) return 'hc-cap-yellow';
+  return 'hc-cap-green';
+}
+
+/**
+ * Build a single cap progress bar HTML string.
+ * Label is constrained to known static values — never user-controlled.
+ * Numeric values are computed internally. innerHTML is safe here.
+ */
+function buildCapProgressBar(
+  label: 'Daily' | 'Weekly' | 'Monthly',
+  currentTotal: number,
+  purchaseAmount: number,
+  capAmount: number,
+): string {
+  const newTotal = Math.round((currentTotal + purchaseAmount) * 100) / 100;
+  const percentage = Math.round((newTotal / capAmount) * 100);
+  const barWidth = Math.min(percentage, 100);
+  const colorClass = getCapColorClass(percentage);
+  const overBudget = newTotal > capAmount;
+
+  return `
+    <div class="hc-cap-bar ${colorClass}">
+      <div class="hc-cap-bar__header">
+        <span class="hc-cap-bar__label">${label}</span>
+        <span class="hc-cap-bar__value">$${newTotal.toFixed(2)} / $${capAmount.toFixed(2)}${overBudget ? ' — OVER BUDGET' : ` (${percentage}%)`}</span>
+      </div>
+      <div class="hc-cap-bar__track">
+        <div class="hc-cap-bar__fill" style="width: ${barWidth}%"></div>
+      </div>
+    </div>
+  `;
+}
+
+/**
  * Build the cost breakdown HTML (without comparison lines — those are separate steps now)
  */
 function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker: SpendingTracker): string {
@@ -337,19 +378,17 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
       </p>`
     : '';
 
-  let dailyInfo = '';
+  let capBars = '';
   if (settings.dailyCap.enabled) {
-    const newTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
-    const percentage = Math.round((newTotal / settings.dailyCap.amount) * 100);
-    const overBudget = newTotal > settings.dailyCap.amount;
-    const dailyClass = overBudget ? 'hc-daily-over' : (percentage >= 80 ? 'hc-daily-warning' : '');
-    dailyInfo = `
-      <p class="hc-daily-tracker ${dailyClass}">
-        Daily: $${newTotal.toFixed(2)} / $${settings.dailyCap.amount.toFixed(2)}
-        ${overBudget ? ' \u2014 OVER BUDGET' : ` (${percentage}%)`}
-      </p>
-    `;
+    capBars += buildCapProgressBar('Daily', tracker.dailyTotal, priceWithTax, settings.dailyCap.amount);
   }
+  if (settings.weeklyCap.enabled) {
+    capBars += buildCapProgressBar('Weekly', tracker.weeklyTotal, priceWithTax, settings.weeklyCap.amount);
+  }
+  if (settings.monthlyCap.enabled) {
+    capBars += buildCapProgressBar('Monthly', tracker.monthlyTotal, priceWithTax, settings.monthlyCap.amount);
+  }
+  const capSection = capBars ? `<div class="hc-cap-bars">${capBars}</div>` : '';
 
   let sessionInfo = '';
   if (tracker.sessionTotal > 0) {
@@ -363,7 +402,7 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
         <span class="hc-cost-value">$${priceWithTax.toFixed(2)}</span>
       </p>
       ${hoursLine}
-      ${dailyInfo}
+      ${capSection}
       ${sessionInfo}
     </div>
   `;
@@ -1553,13 +1592,33 @@ function showStreamingModeToast(channel: string, durationMs: number): void {
   }, durationMs);
 }
 
-function showDailyBudgetToast(remaining: number, capAmount: number, durationMs: number): void {
+function showBudgetToast(
+  settings: UserSettings,
+  tracker: SpendingTracker,
+  priceWithTax: number,
+  durationMs: number,
+): void {
   document.getElementById('hc-budget-toast')?.remove();
+
+  const lines: string[] = [];
+
+  if (settings.dailyCap.enabled) {
+    const remaining = Math.max(0, Math.round((settings.dailyCap.amount - (tracker.dailyTotal + priceWithTax)) * 100) / 100);
+    lines.push(`Daily: $${remaining.toFixed(2)} left`);
+  }
+  if (settings.weeklyCap.enabled) {
+    const remaining = Math.max(0, Math.round((settings.weeklyCap.amount - (tracker.weeklyTotal + priceWithTax)) * 100) / 100);
+    lines.push(`Weekly: $${remaining.toFixed(2)} left`);
+  }
+  if (settings.monthlyCap.enabled) {
+    const remaining = Math.max(0, Math.round((settings.monthlyCap.amount - (tracker.monthlyTotal + priceWithTax)) * 100) / 100);
+    lines.push(`Monthly: $${remaining.toFixed(2)} left`);
+  }
 
   const toast = document.createElement('div');
   toast.id = 'hc-budget-toast';
   toast.className = 'hc-budget-toast';
-  toast.textContent = `✅ $${remaining.toFixed(2)} remaining of $${capAmount.toFixed(2)} daily budget`;
+  toast.textContent = `\u2705 ${lines.join(' \u00B7 ')}`;
   document.body.appendChild(toast);
 
   setTimeout(() => {
