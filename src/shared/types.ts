@@ -60,6 +60,18 @@ export interface DailyCapConfig {
   amount: number;
 }
 
+/** Weekly spending cap configuration */
+export interface WeeklyCapConfig {
+  enabled: boolean;
+  amount: number;
+}
+
+/** Monthly spending cap configuration */
+export interface MonthlyCapConfig {
+  enabled: boolean;
+  amount: number;
+}
+
 /** Standalone delay timer shown as the final step before purchase fires */
 export interface DelayTimerConfig {
   enabled: boolean;
@@ -93,6 +105,8 @@ export interface UserSettings {
   comparisonItems: ComparisonItem[];
   cooldown: CooldownConfig;
   dailyCap: DailyCapConfig;
+  weeklyCap: WeeklyCapConfig;
+  monthlyCap: MonthlyCapConfig;
   frictionThresholds: FrictionThresholds;
   frictionIntensity: FrictionIntensity;
   delayTimer: DelayTimerConfig;
@@ -150,6 +164,14 @@ export const DEFAULT_SETTINGS: UserSettings = {
     enabled: false,
     amount: 50,
   },
+  weeklyCap: {
+    enabled: false,
+    amount: 200,
+  },
+  monthlyCap: {
+    enabled: false,
+    amount: 800,
+  },
   frictionThresholds: {
     enabled: false,
     thresholdFloor: 5,
@@ -179,6 +201,10 @@ export interface SpendingTracker {
   dailyDate: string;
   sessionTotal: number;
   sessionChannel: string;
+  weeklyTotal: number;
+  weeklyStartDate: string;   // ISO date of the Monday that starts the current week (YYYY-MM-DD)
+  monthlyTotal: number;
+  monthlyMonth: string;      // YYYY-MM format
 }
 
 export const DEFAULT_SPENDING_TRACKER: SpendingTracker = {
@@ -187,6 +213,10 @@ export const DEFAULT_SPENDING_TRACKER: SpendingTracker = {
   dailyDate: '',
   sessionTotal: 0,
   sessionChannel: '',
+  weeklyTotal: 0,
+  weeklyStartDate: '',
+  monthlyTotal: 0,
+  monthlyMonth: '',
 };
 
 /** A single structured intercept event — stored in chrome.storage.local */
@@ -247,6 +277,14 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
     dailyCap: {
       ...DEFAULT_SETTINGS.dailyCap,
       ...(saved.dailyCap || {}),
+    },
+    weeklyCap: {
+      ...DEFAULT_SETTINGS.weeklyCap,
+      ...(saved.weeklyCap || {}),
+    },
+    monthlyCap: {
+      ...DEFAULT_SETTINGS.monthlyCap,
+      ...(saved.monthlyCap || {}),
     },
     frictionThresholds: (() => {
       const s = (saved.frictionThresholds || {}) as any;

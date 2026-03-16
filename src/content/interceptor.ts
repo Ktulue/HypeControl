@@ -26,6 +26,41 @@ interface FrictionResult {
 const SETTINGS_KEY = 'hcSettings';
 const SPENDING_KEY = 'hcSpending';
 
+// ── Date Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Format a local Date as YYYY-MM-DD without UTC conversion.
+ * Using toISOString() would shift dates for users in non-UTC timezones
+ * (e.g., 11:30 PM EDT March 31 → April 1 in UTC).
+ */
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Get the Monday that starts the current ISO week as YYYY-MM-DD.
+ * ISO weeks start on Monday (day 1) and end on Sunday (day 7).
+ */
+function getCurrentWeekStart(date: Date = new Date()): string {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  d.setDate(d.getDate() + mondayOffset);
+  return formatLocalDate(d);
+}
+
+/**
+ * Get the current month as YYYY-MM string using local time.
+ */
+function getCurrentMonth(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
 // ── Settings & Tracker ──────────────────────────────────────────────────
 
 async function loadSettings(): Promise<UserSettings> {
@@ -42,11 +77,33 @@ async function loadSpendingTracker(): Promise<SpendingTracker> {
   try {
     const result = await chrome.storage.local.get(SPENDING_KEY);
     const tracker: SpendingTracker = result[SPENDING_KEY] || { ...DEFAULT_SPENDING_TRACKER };
-    const today = new Date().toISOString().split('T')[0];
+
+    // Backfill new fields for existing installs
+    if (tracker.weeklyTotal === undefined) tracker.weeklyTotal = 0;
+    if (!tracker.weeklyStartDate) tracker.weeklyStartDate = '';
+    if (tracker.monthlyTotal === undefined) tracker.monthlyTotal = 0;
+    if (!tracker.monthlyMonth) tracker.monthlyMonth = '';
+
+    const today = formatLocalDate(new Date());
     if (tracker.dailyDate !== today) {
       tracker.dailyTotal = 0;
       tracker.dailyDate = today;
     }
+
+    // Weekly reset: calendar-aligned to Monday
+    const currentWeekStart = getCurrentWeekStart();
+    if (tracker.weeklyStartDate !== currentWeekStart) {
+      tracker.weeklyTotal = 0;
+      tracker.weeklyStartDate = currentWeekStart;
+    }
+
+    // Monthly reset: calendar-aligned to 1st of month
+    const currentMonth = getCurrentMonth();
+    if (tracker.monthlyMonth !== currentMonth) {
+      tracker.monthlyTotal = 0;
+      tracker.monthlyMonth = currentMonth;
+    }
+
     return tracker;
   } catch (e) {
     debug('Failed to load spending tracker:', e);
@@ -68,8 +125,10 @@ async function recordPurchase(priceValue: number | null, settings: UserSettings,
     const before = tracker.dailyTotal;
     tracker.dailyTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
     tracker.sessionTotal = Math.round((tracker.sessionTotal + priceWithTax) * 100) / 100;
-    tracker.dailyDate = new Date().toISOString().split('T')[0];
-    log(`recordPurchase: +$${priceWithTax.toFixed(2)} (raw=$${priceValue.toFixed(2)}, tax=${settings.taxRate}%) — daily $${before.toFixed(2)} → $${tracker.dailyTotal.toFixed(2)}`);
+    tracker.weeklyTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
+    tracker.monthlyTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
+    tracker.dailyDate = formatLocalDate(new Date());
+    log(`recordPurchase: +$${priceWithTax.toFixed(2)} (raw=$${priceValue.toFixed(2)}, tax=${settings.taxRate}%) — daily $${before.toFixed(2)} → $${tracker.dailyTotal.toFixed(2)}, weekly $${tracker.weeklyTotal.toFixed(2)}, monthly $${tracker.monthlyTotal.toFixed(2)}`);
   }
   tracker.lastProceedTimestamp = Date.now();
   await saveSpendingTracker(tracker);
@@ -107,21 +166,80 @@ function showWhitelistReducedToast(channel: string, priceDisplay: string, durati
   }, durationMs);
 }
 
+/**
+ * Check which caps (if any) would be exceeded by this purchase.
+ * Returns an object indicating which caps are exceeded — used for escalated friction.
+ */
+function checkCapExceedance(
+  priceValue: number | null,
+  settings: UserSettings,
+  tracker: SpendingTracker,
+): { dailyExceeded: boolean; weeklyExceeded: boolean; monthlyExceeded: boolean } {
+  const result = { dailyExceeded: false, weeklyExceeded: false, monthlyExceeded: false };
+  if (priceValue === null || priceValue <= 0) return result;
+
+  const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
+
+  if (settings.dailyCap.enabled) {
+    const newTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
+    result.dailyExceeded = newTotal >= settings.dailyCap.amount;
+  }
+  if (settings.weeklyCap.enabled) {
+    const newTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
+    result.weeklyExceeded = newTotal >= settings.weeklyCap.amount;
+  }
+  if (settings.monthlyCap.enabled) {
+    const newTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
+    result.monthlyExceeded = newTotal >= settings.monthlyCap.amount;
+  }
+
+  return result;
+}
+
 function determineFrictionLevel(
   priceValue: number | null,
   settings: UserSettings,
   tracker: SpendingTracker,
 ): FrictionLevel {
-  // Daily cap check FIRST — acts as a bypass floor (pre-approved spending allowance).
-  // Only applies when price is known; unknown price falls through to full friction.
-  if (settings.dailyCap.enabled && priceValue !== null && priceValue > 0) {
+  // Cap checks — daily, weekly, monthly. If ANY cap is exceeded → full friction.
+  // If ALL active caps are under limit → cap-bypass (silent pass).
+  // Only applies when price is known.
+  const hasAnyCap = settings.dailyCap.enabled || settings.weeklyCap.enabled || settings.monthlyCap.enabled;
+  if (hasAnyCap && priceValue !== null && priceValue > 0) {
     const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
-    const newTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
-    if (newTotal >= settings.dailyCap.amount) {
-      log(`Daily cap check: $${priceWithTax.toFixed(2)} would bring daily total to $${newTotal.toFixed(2)}, meeting/exceeding $${settings.dailyCap.amount.toFixed(2)} cap — full modal triggered`);
+    let anyCapExceeded = false;
+    const capDetails: string[] = [];
+
+    if (settings.dailyCap.enabled) {
+      const newDailyTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
+      if (newDailyTotal >= settings.dailyCap.amount) {
+        anyCapExceeded = true;
+        capDetails.push(`daily $${newDailyTotal.toFixed(2)} >= $${settings.dailyCap.amount.toFixed(2)}`);
+      }
+    }
+
+    if (settings.weeklyCap.enabled) {
+      const newWeeklyTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
+      if (newWeeklyTotal >= settings.weeklyCap.amount) {
+        anyCapExceeded = true;
+        capDetails.push(`weekly $${newWeeklyTotal.toFixed(2)} >= $${settings.weeklyCap.amount.toFixed(2)}`);
+      }
+    }
+
+    if (settings.monthlyCap.enabled) {
+      const newMonthlyTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
+      if (newMonthlyTotal >= settings.monthlyCap.amount) {
+        anyCapExceeded = true;
+        capDetails.push(`monthly $${newMonthlyTotal.toFixed(2)} >= $${settings.monthlyCap.amount.toFixed(2)}`);
+      }
+    }
+
+    if (anyCapExceeded) {
+      log(`Cap exceeded: ${capDetails.join(', ')} — full modal triggered`);
       return 'full';
     }
-    log(`Daily cap bypass: $${priceWithTax.toFixed(2)} keeps daily total at $${newTotal.toFixed(2)}, under $${settings.dailyCap.amount.toFixed(2)} cap — bypassing friction`);
+
+    log(`All caps under limit (+$${priceWithTax.toFixed(2)}) — bypassing friction`);
     return 'cap-bypass';
   }
 
@@ -238,6 +356,47 @@ function formatComparisonDisplay(item: ComparisonItem, purchaseAmount: number, t
 }
 
 /**
+ * Determine the color tier for a cap progress bar.
+ * Green < 60%, Yellow 60–79%, Orange 80–99%, Red 100%+
+ */
+function getCapColorClass(percentage: number): string {
+  if (percentage >= 100) return 'hc-cap-red';
+  if (percentage >= 80) return 'hc-cap-orange';
+  if (percentage >= 60) return 'hc-cap-yellow';
+  return 'hc-cap-green';
+}
+
+/**
+ * Build a single cap progress bar HTML string.
+ * Label is constrained to known static values — never user-controlled.
+ * Numeric values are computed internally. innerHTML is safe here.
+ */
+function buildCapProgressBar(
+  label: 'Daily' | 'Weekly' | 'Monthly',
+  currentTotal: number,
+  purchaseAmount: number,
+  capAmount: number,
+): string {
+  const newTotal = Math.round((currentTotal + purchaseAmount) * 100) / 100;
+  const percentage = Math.round((newTotal / capAmount) * 100);
+  const barWidth = Math.min(percentage, 100);
+  const colorClass = getCapColorClass(percentage);
+  const overBudget = newTotal > capAmount;
+
+  return `
+    <div class="hc-cap-bar ${colorClass}">
+      <div class="hc-cap-bar__header">
+        <span class="hc-cap-bar__label">${label}</span>
+        <span class="hc-cap-bar__value">$${newTotal.toFixed(2)} / $${capAmount.toFixed(2)}${overBudget ? ' — OVER BUDGET' : ` (${percentage}%)`}</span>
+      </div>
+      <div class="hc-cap-bar__track">
+        <div class="hc-cap-bar__fill" style="width: ${barWidth}%"></div>
+      </div>
+    </div>
+  `;
+}
+
+/**
  * Build the cost breakdown HTML (without comparison lines — those are separate steps now)
  */
 function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker: SpendingTracker): string {
@@ -249,19 +408,17 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
       </p>`
     : '';
 
-  let dailyInfo = '';
+  let capBars = '';
   if (settings.dailyCap.enabled) {
-    const newTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
-    const percentage = Math.round((newTotal / settings.dailyCap.amount) * 100);
-    const overBudget = newTotal > settings.dailyCap.amount;
-    const dailyClass = overBudget ? 'hc-daily-over' : (percentage >= 80 ? 'hc-daily-warning' : '');
-    dailyInfo = `
-      <p class="hc-daily-tracker ${dailyClass}">
-        Daily: $${newTotal.toFixed(2)} / $${settings.dailyCap.amount.toFixed(2)}
-        ${overBudget ? ' \u2014 OVER BUDGET' : ` (${percentage}%)`}
-      </p>
-    `;
+    capBars += buildCapProgressBar('Daily', tracker.dailyTotal, priceWithTax, settings.dailyCap.amount);
   }
+  if (settings.weeklyCap.enabled) {
+    capBars += buildCapProgressBar('Weekly', tracker.weeklyTotal, priceWithTax, settings.weeklyCap.amount);
+  }
+  if (settings.monthlyCap.enabled) {
+    capBars += buildCapProgressBar('Monthly', tracker.monthlyTotal, priceWithTax, settings.monthlyCap.amount);
+  }
+  const capSection = capBars ? `<div class="hc-cap-bars">${capBars}</div>` : '';
 
   let sessionInfo = '';
   if (tracker.sessionTotal > 0) {
@@ -275,7 +432,7 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
         <span class="hc-cost-value">$${priceWithTax.toFixed(2)}</span>
       </p>
       ${hoursLine}
-      ${dailyInfo}
+      ${capSection}
       ${sessionInfo}
     </div>
   `;
@@ -1264,6 +1421,187 @@ async function showMathChallengeStep(
   });
 }
 
+// ── Overlay: Cap Exceedance Escalated Friction ──────────────────────────
+
+/**
+ * Show escalated friction step when weekly/monthly cap is exceeded.
+ * Doubles the delay timer and requires an acknowledgment checkbox.
+ * Uses DOM construction (not innerHTML) per project XSS prevention rules.
+ */
+function showCapExceedanceStep(
+  exceedance: { weeklyExceeded: boolean; monthlyExceeded: boolean },
+  settings: UserSettings,
+  tracker: SpendingTracker,
+): Promise<OverlayDecision> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.id = 'hc-overlay';
+    overlay.className = 'hc-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+
+    const exceededPeriods: string[] = [];
+    if (exceedance.weeklyExceeded) exceededPeriods.push('weekly');
+    if (exceedance.monthlyExceeded) exceededPeriods.push('monthly');
+    const periodText = exceededPeriods.join(' and ');
+
+    // Double the delay timer (default 10s if no delay timer configured)
+    const baseDelay = settings.delayTimer?.enabled ? settings.delayTimer.seconds : 10;
+    const escalatedDelay = baseDelay * 2;
+
+    const modal = document.createElement('div');
+    modal.className = 'hc-modal';
+
+    // Header (matches existing overlay pattern)
+    const header = document.createElement('div');
+    header.className = 'hc-header';
+    const headerIcon = document.createElement('img');
+    headerIcon.className = 'hc-icon';
+    headerIcon.src = chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png');
+    headerIcon.width = 32;
+    headerIcon.height = 32;
+    headerIcon.alt = 'Hype Control';
+    const headerTitle = document.createElement('h2');
+    headerTitle.className = 'hc-title';
+    headerTitle.textContent = 'Hype Control';
+    header.appendChild(headerIcon);
+    header.appendChild(headerTitle);
+    modal.appendChild(header);
+
+    // Content wrapper
+    const content = document.createElement('div');
+    content.className = 'hc-content';
+
+    // Heading
+    const heading = document.createElement('p');
+    heading.className = 'hc-label';
+    heading.style.color = 'var(--hc-danger)';
+    heading.style.fontWeight = '600';
+    heading.style.fontSize = '15px';
+    heading.textContent = `You're exceeding your ${periodText} budget`;
+    content.appendChild(heading);
+
+    // Subtext
+    const subtext = document.createElement('p');
+    subtext.className = 'hc-message';
+    subtext.textContent = 'You set this limit for a reason. Still going?';
+    content.appendChild(subtext);
+
+    // Cap info
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'hc-cap-exceedance-info';
+    if (exceedance.weeklyExceeded) {
+      const p = document.createElement('p');
+      p.textContent = `Weekly: $${tracker.weeklyTotal.toFixed(2)} / $${settings.weeklyCap.amount.toFixed(2)}`;
+      infoDiv.appendChild(p);
+    }
+    if (exceedance.monthlyExceeded) {
+      const p = document.createElement('p');
+      p.textContent = `Monthly: $${tracker.monthlyTotal.toFixed(2)} / $${settings.monthlyCap.amount.toFixed(2)}`;
+      infoDiv.appendChild(p);
+    }
+    content.appendChild(infoDiv);
+
+    // Progress bar (use existing hc-progress-wrap class from the codebase)
+    const progressWrap = document.createElement('div');
+    progressWrap.className = 'hc-progress-wrap';
+    progressWrap.style.margin = '16px 0';
+    const progressBar = document.createElement('div');
+    progressBar.className = 'hc-progress-bar';
+    progressWrap.appendChild(progressBar);
+    content.appendChild(progressWrap);
+
+    // Countdown
+    const countdown = document.createElement('p');
+    countdown.className = 'hc-countdown';
+    countdown.textContent = `${escalatedDelay}s`;
+    content.appendChild(countdown);
+
+    // Acknowledgment checkbox
+    const ackLabel = document.createElement('label');
+    ackLabel.className = 'hc-cap-acknowledge';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    const ackSpan = document.createElement('span');
+    ackSpan.textContent = `I'm exceeding my ${periodText} budget`;
+    ackLabel.appendChild(checkbox);
+    ackLabel.appendChild(ackSpan);
+    content.appendChild(ackLabel);
+
+    modal.appendChild(content);
+
+    // Action buttons
+    const actions = document.createElement('div');
+    actions.className = 'hc-actions';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'hc-btn hc-btn-cancel';
+    cancelBtn.dataset.action = 'cancel';
+    cancelBtn.textContent = 'Cancel Purchase';
+    const proceedBtn = document.createElement('button');
+    proceedBtn.className = 'hc-btn hc-btn-proceed';
+    proceedBtn.dataset.action = 'proceed';
+    proceedBtn.disabled = true;
+    proceedBtn.textContent = 'Proceed Anyway';
+    actions.appendChild(cancelBtn);
+    actions.appendChild(proceedBtn);
+    modal.appendChild(actions);
+
+    overlay.appendChild(modal);
+    applyThemeToOverlay(overlay);
+    document.body.appendChild(overlay);
+    overlayVisible = true;
+
+    let timerDone = false;
+    let ackChecked = false;
+    const escalatedDelayMs = escalatedDelay * 1000;
+    const startTime = Date.now();
+
+    const updateProceedState = () => {
+      proceedBtn.disabled = !(timerDone && ackChecked);
+    };
+
+    checkbox.addEventListener('change', () => {
+      ackChecked = checkbox.checked;
+      updateProceedState();
+    });
+
+    const intervalId = setInterval(() => {
+      const elapsedMs = Date.now() - startTime;
+      const pct = Math.min(elapsedMs / escalatedDelayMs, 1);
+      progressBar.style.transform = `scaleX(${pct})`;
+      const remainingSec = Math.max(0, Math.ceil((escalatedDelayMs - elapsedMs) / 1000));
+      countdown.textContent = `${remainingSec}s`;
+
+      if (elapsedMs >= escalatedDelayMs) {
+        clearInterval(intervalId);
+        progressBar.style.transform = 'scaleX(1)';
+        timerDone = true;
+        updateProceedState();
+      }
+    }, 100);
+
+    let resolved = false;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') finish('cancel');
+    };
+    const finish = (decision: OverlayDecision) => {
+      if (resolved) return;
+      resolved = true;
+      clearInterval(intervalId);
+      document.removeEventListener('keydown', handleKeydown);
+      removeOverlay(overlay);
+      resolve(decision);
+    };
+
+    cancelBtn.addEventListener('click', () => finish('cancel'));
+    proceedBtn.addEventListener('click', () => finish('proceed'));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish('cancel');
+    });
+    document.addEventListener('keydown', handleKeydown);
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**
@@ -1465,13 +1803,35 @@ function showStreamingModeToast(channel: string, durationMs: number): void {
   }, durationMs);
 }
 
-function showDailyBudgetToast(remaining: number, capAmount: number, durationMs: number): void {
+function showBudgetToast(
+  settings: UserSettings,
+  tracker: SpendingTracker,
+  priceWithTax: number,
+  durationMs: number,
+): void {
   document.getElementById('hc-budget-toast')?.remove();
+
+  const lines: string[] = [];
+
+  if (settings.dailyCap.enabled) {
+    const remaining = Math.max(0, Math.round((settings.dailyCap.amount - (tracker.dailyTotal + priceWithTax)) * 100) / 100);
+    lines.push(`Daily: $${remaining.toFixed(2)} left`);
+  }
+  if (settings.weeklyCap.enabled) {
+    const remaining = Math.max(0, Math.round((settings.weeklyCap.amount - (tracker.weeklyTotal + priceWithTax)) * 100) / 100);
+    lines.push(`Weekly: $${remaining.toFixed(2)} left`);
+  }
+  if (settings.monthlyCap.enabled) {
+    const remaining = Math.max(0, Math.round((settings.monthlyCap.amount - (tracker.monthlyTotal + priceWithTax)) * 100) / 100);
+    lines.push(`Monthly: $${remaining.toFixed(2)} left`);
+  }
+
+  if (lines.length === 0) return;
 
   const toast = document.createElement('div');
   toast.id = 'hc-budget-toast';
   toast.className = 'hc-budget-toast';
-  toast.textContent = `✅ $${remaining.toFixed(2)} remaining of $${capAmount.toFixed(2)} daily budget`;
+  toast.textContent = `\u2705 ${lines.join(' \u00B7 ')}`;
   document.body.appendChild(toast);
 
   setTimeout(() => {
@@ -1578,13 +1938,12 @@ async function handleClick(event: MouseEvent): Promise<void> {
   // Friction level
   const frictionLevel = determineFrictionLevel(attempt.priceValue, settings, tracker);
 
-  // Daily cap bypass: under the pre-approved budget — record silently and show remaining toast
+  // Cap bypass: under the pre-approved budget — show remaining toast then record silently
   if (frictionLevel === 'cap-bypass') {
     const priceWithTax = Math.round((attempt.priceValue ?? 0) * (1 + settings.taxRate / 100) * 100) / 100;
-    const remaining = Math.round((settings.dailyCap.amount - (tracker.dailyTotal + priceWithTax)) * 100) / 100;
-    log(`Daily cap bypass — proceeding silently, $${remaining.toFixed(2)} remaining of $${settings.dailyCap.amount.toFixed(2)} budget`);
+    log(`Cap bypass — proceeding silently`);
+    showBudgetToast(settings, tracker, priceWithTax, settings.toastDurationSeconds * 1000);
     await recordPurchase(attempt.priceValue, settings, tracker);
-    showDailyBudgetToast(remaining, settings.dailyCap.amount, settings.toastDurationSeconds * 1000);
     allowNextClick(actualButton);
     return;
   }
@@ -1625,6 +1984,27 @@ async function handleClick(event: MouseEvent): Promise<void> {
     : null;
 
   if (frictionResult.decision === 'proceed' && pendingPurchase) {
+    // Check if weekly/monthly caps are exceeded — escalated friction
+    const capExceedance = checkCapExceedance(attempt.priceValue, settings, tracker);
+    if (capExceedance.weeklyExceeded || capExceedance.monthlyExceeded) {
+      log(`Cap exceedance detected (weekly=${capExceedance.weeklyExceeded}, monthly=${capExceedance.monthlyExceeded}) — showing escalated friction`);
+      const escalatedDecision = await showCapExceedanceStep(capExceedance, settings, tracker);
+      if (escalatedDecision === 'cancel') {
+        log('User cancelled at cap exceedance step');
+        await writeInterceptEvent({
+          channel: attempt.channel,
+          purchaseType: attempt.type,
+          rawPrice: attempt.rawPrice,
+          priceWithTax,
+          outcome: 'cancelled',
+          savedAmount: priceWithTax ?? 0,
+          purchaseReason: frictionResult.purchaseReason,
+        });
+        pendingPurchase = null;
+        return;
+      }
+    }
+
     log('User completed all friction steps — proceeding with purchase');
     await recordPurchase(attempt.priceValue, settings, tracker);
     allowNextClick(pendingPurchase.attempt.element);

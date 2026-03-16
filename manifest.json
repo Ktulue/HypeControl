@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hype Control",
-  "version": "0.4.21",
+  "version": "0.4.22",
   "description": "Create intentional friction before Twitch purchases to encourage mindful spending",
   "icons": {
     "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
