@@ -109,7 +109,10 @@ body {
   text-align: center;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 4px;
+  min-height: 80px;
 }
 
 .metric-value {
@@ -129,6 +132,18 @@ body {
 
 #metric-saved .metric-value {
   color: var(--success);
+}
+
+#metric-spent .metric-value {
+  color: var(--danger);
+}
+
+#metric-cancel-rate .metric-value {
+  color: #f59e0b;
+}
+
+#metric-top-step .metric-value {
+  color: var(--accent);
 }
 
 /* ─── Filter Bar ─────────────────────────────────────────── */
