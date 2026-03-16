@@ -26,6 +26,41 @@ interface FrictionResult {
 const SETTINGS_KEY = 'hcSettings';
 const SPENDING_KEY = 'hcSpending';
 
+// ── Date Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Format a local Date as YYYY-MM-DD without UTC conversion.
+ * Using toISOString() would shift dates for users in non-UTC timezones
+ * (e.g., 11:30 PM EDT March 31 → April 1 in UTC).
+ */
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Get the Monday that starts the current ISO week as YYYY-MM-DD.
+ * ISO weeks start on Monday (day 1) and end on Sunday (day 7).
+ */
+function getCurrentWeekStart(date: Date = new Date()): string {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  d.setDate(d.getDate() + mondayOffset);
+  return formatLocalDate(d);
+}
+
+/**
+ * Get the current month as YYYY-MM string using local time.
+ */
+function getCurrentMonth(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
 // ── Settings & Tracker ──────────────────────────────────────────────────
 
 async function loadSettings(): Promise<UserSettings> {
@@ -42,11 +77,33 @@ async function loadSpendingTracker(): Promise<SpendingTracker> {
   try {
     const result = await chrome.storage.local.get(SPENDING_KEY);
     const tracker: SpendingTracker = result[SPENDING_KEY] || { ...DEFAULT_SPENDING_TRACKER };
-    const today = new Date().toISOString().split('T')[0];
+
+    // Backfill new fields for existing installs
+    if (tracker.weeklyTotal === undefined) tracker.weeklyTotal = 0;
+    if (!tracker.weeklyStartDate) tracker.weeklyStartDate = '';
+    if (tracker.monthlyTotal === undefined) tracker.monthlyTotal = 0;
+    if (!tracker.monthlyMonth) tracker.monthlyMonth = '';
+
+    const today = formatLocalDate(new Date());
     if (tracker.dailyDate !== today) {
       tracker.dailyTotal = 0;
       tracker.dailyDate = today;
     }
+
+    // Weekly reset: calendar-aligned to Monday
+    const currentWeekStart = getCurrentWeekStart();
+    if (tracker.weeklyStartDate !== currentWeekStart) {
+      tracker.weeklyTotal = 0;
+      tracker.weeklyStartDate = currentWeekStart;
+    }
+
+    // Monthly reset: calendar-aligned to 1st of month
+    const currentMonth = getCurrentMonth();
+    if (tracker.monthlyMonth !== currentMonth) {
+      tracker.monthlyTotal = 0;
+      tracker.monthlyMonth = currentMonth;
+    }
+
     return tracker;
   } catch (e) {
     debug('Failed to load spending tracker:', e);
@@ -68,8 +125,10 @@ async function recordPurchase(priceValue: number | null, settings: UserSettings,
     const before = tracker.dailyTotal;
     tracker.dailyTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
     tracker.sessionTotal = Math.round((tracker.sessionTotal + priceWithTax) * 100) / 100;
-    tracker.dailyDate = new Date().toISOString().split('T')[0];
-    log(`recordPurchase: +$${priceWithTax.toFixed(2)} (raw=$${priceValue.toFixed(2)}, tax=${settings.taxRate}%) — daily $${before.toFixed(2)} → $${tracker.dailyTotal.toFixed(2)}`);
+    tracker.weeklyTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
+    tracker.monthlyTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
+    tracker.dailyDate = formatLocalDate(new Date());
+    log(`recordPurchase: +$${priceWithTax.toFixed(2)} (raw=$${priceValue.toFixed(2)}, tax=${settings.taxRate}%) — daily $${before.toFixed(2)} → $${tracker.dailyTotal.toFixed(2)}, weekly $${tracker.weeklyTotal.toFixed(2)}, monthly $${tracker.monthlyTotal.toFixed(2)}`);
   }
   tracker.lastProceedTimestamp = Date.now();
   await saveSpendingTracker(tracker);
