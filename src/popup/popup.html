@@ -124,7 +124,17 @@
               <button class="seg-btn" data-value="high">High</button>
               <button class="seg-btn" data-value="extreme">Extreme</button>
             </div>
+            <label class="toggle-wrap toggle-wrap--lock" title="Lock intensity — prevents auto-escalation">
+              <input type="checkbox" id="stats-intensity-lock" />
+              <span class="toggle-track"></span>
+              <span class="lock-label">🔒</span>
+            </label>
+            <span class="escalation-info" tabindex="0" aria-describedby="tooltip-escalation">ⓘ</span>
+            <span class="stat-tooltip" id="tooltip-escalation" role="tooltip">Intensity auto-adjusts as you approach your spending limits. Lock to keep your chosen level.</span>
           </fieldset>
+        </div>
+        <div class="escalation-indicator" id="stats-escalation-indicator" hidden>
+          <span class="escalation-text"></span>
         </div>
       </section>
 
@@ -148,7 +158,15 @@
               <button class="seg-btn" data-value="high">High</button>
               <button class="seg-btn" data-value="extreme">Extreme</button>
             </div>
+            <label class="toggle-wrap toggle-wrap--lock" title="Lock intensity — prevents auto-escalation">
+              <input type="checkbox" id="friction-intensity-lock" />
+              <span class="toggle-track"></span>
+              <span class="lock-label">🔒</span>
+            </label>
           </fieldset>
+        </div>
+        <div class="escalation-indicator" id="friction-escalation-indicator" hidden>
+          <span class="escalation-text"></span>
         </div>
         <div class="hc-row">
           <label class="hc-label" for="delay-enabled">Delay timer</label>

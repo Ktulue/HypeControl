@@ -7,6 +7,7 @@ export interface FrictionCallbacks {
 
 export interface FrictionController {
   render(settings: UserSettings): void;
+  showEscalation(base: FrictionIntensity, effective: FrictionIntensity): void;
 }
 
 export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): FrictionController {
@@ -20,6 +21,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   const floorEl = el.querySelector<HTMLInputElement>('#threshold-floor')!;
   const ceilingEl = el.querySelector<HTMLInputElement>('#threshold-ceiling')!;
   const nudgeStepsEl = el.querySelector<HTMLInputElement>('#threshold-nudge-steps')!;
+  const lockEl = el.querySelector<HTMLInputElement>('#friction-intensity-lock')!;
+  const escalationIndicatorEl = el.querySelector<HTMLElement>('#friction-escalation-indicator')!;
 
   let currentSettings: UserSettings = { ...DEFAULT_SETTINGS };
 
@@ -47,6 +50,12 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
       callbacks.onIntensityChange(val);
       renderSegmented(intensityEl, val);
     });
+  });
+
+  lockEl.addEventListener('change', () => {
+    setPendingField('intensityLocked', lockEl.checked);
+    const statsLock = document.querySelector<HTMLInputElement>('#stats-intensity-lock');
+    if (statsLock) statsLock.checked = lockEl.checked;
   });
 
   // Delay timer toggle
@@ -86,6 +95,25 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   ceilingEl.addEventListener('input', updateThresholds);
   nudgeStepsEl.addEventListener('input', updateThresholds);
 
+  function showEscalation(base: FrictionIntensity, effective: FrictionIntensity): void {
+    const isEscalated = base !== effective;
+    escalationIndicatorEl.hidden = !isEscalated;
+    if (isEscalated) {
+      const textEl = escalationIndicatorEl.querySelector('.escalation-text')!;
+      textEl.textContent = `↑ Auto-escalated from ${base.charAt(0).toUpperCase() + base.slice(1)}`;
+      intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+        btn.classList.remove('escalated', 'base-indicator');
+        btn.classList.toggle('active', btn.dataset.value === effective);
+        if (btn.dataset.value === base) btn.classList.add('base-indicator');
+        if (btn.dataset.value === effective) btn.classList.add('escalated');
+      });
+    } else {
+      intensityEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+        btn.classList.remove('escalated', 'base-indicator');
+      });
+    }
+  }
+
   function render(settings: UserSettings): void {
     currentSettings = settings;
     nudgeStepsEl.max = String(settings.comparisonItems.length);
@@ -100,7 +128,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     floorEl.value = String(settings.frictionThresholds.thresholdFloor);
     ceilingEl.value = String(settings.frictionThresholds.thresholdCeiling);
     nudgeStepsEl.value = String(settings.frictionThresholds.softNudgeSteps);
+    lockEl.checked = settings.intensityLocked ?? false;
   }
 
-  return { render };
+  return { render, showEscalation };
 }

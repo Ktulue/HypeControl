@@ -1,6 +1,7 @@
 // src/popup/popup.ts
 import './popup.css';
-import { migrateSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings } from '../shared/types';
+import { migrateSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings, SpendingTracker, DEFAULT_SPENDING_TRACKER } from '../shared/types';
+import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { initPending, getPending, setPendingField } from './pendingState';
 import { initScrollSpy, ScrollSpyItem } from './scrollSpy';
 import { initStats } from './sections/stats';
@@ -246,6 +247,18 @@ async function main(): Promise<void> {
   // Async data that doesn't come from pending state
   stats.refreshStats();
   limits.refreshTracker();
+
+  // Compute escalation state from tracker + settings
+  async function updateEscalation(): Promise<void> {
+    const trackerResult = await chrome.storage.local.get('hcSpending');
+    const tracker: SpendingTracker = { ...DEFAULT_SPENDING_TRACKER, ...trackerResult['hcSpending'] };
+    const s = getPending();
+    const maxPercent = computeMaxCapPercent(s, tracker);
+    const effective = computeEscalatedIntensity(s.frictionIntensity, maxPercent, s.intensityLocked);
+    stats.showEscalation(s.frictionIntensity, effective);
+    friction.showEscalation(s.frictionIntensity, effective);
+  }
+  await updateEscalation();
 
   // Scroll-spy
   const contentEl = document.getElementById('hc-content')!;

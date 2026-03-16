@@ -820,6 +820,50 @@ body {
   width: 100%;
 }
 
+/* ─── Lock toggle (compact, inline with segmented) ───────── */
+.toggle-wrap--lock {
+  gap: 4px;
+  margin-left: 4px;
+}
+.lock-label {
+  font-size: 11px;
+}
+
+/* ─── Escalation indicator ──────────────────────────────── */
+.escalation-indicator {
+  padding: 2px 0 2px 140px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.escalation-indicator .escalation-text {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+/* ─── Escalation info icon (reuses stat-tooltip pattern) ── */
+.escalation-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: help;
+  position: relative;
+}
+
+/* Escalated segmented button highlight */
+.seg-btn.escalated {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  font-weight: 600;
+}
+.seg-btn.base-indicator::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin: 2px auto 0;
+}
+
 /* Replay tour button — lives below Credits at the very bottom */
 .btn-replay-bottom {
   display: block;
