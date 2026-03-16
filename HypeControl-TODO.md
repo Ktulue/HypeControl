@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-14
-**Current Version:** 0.4.21
+**Updated:** 2026-03-16
+**Current Version:** 0.4.22
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -21,7 +21,7 @@
 | Add-on 1 — Delay Timer                   | ✅ Complete       |
 | Add-on 4 — Custom Comparison Items       | ✅ Complete       |
 | Add-on 2 — Spending History View         | 🔲 Not Started    |
-| Add-on 3 — Weekly/Monthly Limits         | 🔲 Not Started    |
+| Add-on 3 — Weekly/Monthly Limits         | ✅ Complete       |
 | Interactive Onboarding Tour              | ✅ Complete        |
 | Firefox AMO Port                         | 🔲 Not Started    |
 | Add-ons 6–12 — Future Enhancements       | ⏸️ Deferred       |
@@ -221,8 +221,8 @@ Guided first-install walkthrough that overlays the Twitch page and highlights ea
 - [ ] **Add-on 2 — Spending Tracker (History View)** ⭐⭐
       Full-page view of all logged intercept events. Filter by date range, channel, outcome (cancelled/proceeded). Sort controls. Totals row (total spent, total blocked, total "saved").
 
-- [ ] **Add-on 3 — Weekly/Monthly Spending Limits** ⭐⭐
-      The daily cap exists but weekly and monthly limits are still needed. Progress bar in overlay: "You've spent $X of $Y this week." Warning at 80%, hard block at 100% with override option (extra friction).
+- [x] **Add-on 3 — Weekly/Monthly Spending Limits** ⭐⭐
+      Weekly and monthly caps with independent toggles, 4-tier color progress bars in overlay (green < 60%, yellow 60–79%, orange 80–99%, red 100%+), escalated friction at 100% (doubled delay + acknowledgment checkbox), calendar-aligned resets (Monday/1st), unified budget toast.
 
 ### Deferred (Future Enhancements)
 
@@ -241,8 +241,8 @@ Guided first-install walkthrough that overlays the Twitch page and highlights ea
 ### Next Up (In Order)
 
 1. **Add-on 2 — Spending History View** — Full-page view of all logged intercept events. Filter by date range, channel, outcome. Sort controls. Totals row.
-2. **Add-on 3 — Weekly/Monthly Spending Limits** — Weekly and monthly caps with progress bar in overlay. Warning at 80%, hard block at 100% with override option.
-3. **Interactive Onboarding Tour** — Guided first-install walkthrough. Highlights interceptable Twitch elements, slide-out explainer panel, beginner/advanced toggle.
+2. ~~**Add-on 3 — Weekly/Monthly Spending Limits**~~ ✅ Complete (v0.4.22)
+3. ~~**Interactive Onboarding Tour**~~ ✅ Complete (v0.4.21)
 4. **Firefox AMO Port** — Adapt extension for Firefox. Requires `browser_specific_settings` in manifest, MV3 background script adjustment, `browser.*` API compatibility review, and AMO submission assets.
 
 ### Deferred to Future Enhancements
@@ -293,4 +293,4 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-14 against the v0.4.21 codebase. Interactive onboarding tour complete — Phase 1 popup wizard and Phase 2 Twitch-side live demo panel._
+_Last updated 2026-03-16 against the v0.4.22 codebase. Weekly/monthly spending limits complete — independent caps with 4-tier progress bars, escalated friction, calendar-aligned resets._

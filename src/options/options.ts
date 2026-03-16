@@ -979,6 +979,9 @@ async function getFormSettings(): Promise<UserSettings> {
     theme: ((document.getElementById('theme-preference') as HTMLSelectElement)?.value as ThemePreference) || DEFAULT_SETTINGS.theme,
     // Delay timer is managed independently (wired via wireDelayTimerControls)
     delayTimer: cachedSettings?.delayTimer ?? DEFAULT_SETTINGS.delayTimer,
+    // Weekly/monthly caps are managed in popup, preserve current values
+    weeklyCap: cachedSettings?.weeklyCap ?? DEFAULT_SETTINGS.weeklyCap,
+    monthlyCap: cachedSettings?.monthlyCap ?? DEFAULT_SETTINGS.monthlyCap,
   };
 }
 
