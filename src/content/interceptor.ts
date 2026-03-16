@@ -166,6 +166,36 @@ function showWhitelistReducedToast(channel: string, priceDisplay: string, durati
   }, durationMs);
 }
 
+/**
+ * Check which caps (if any) would be exceeded by this purchase.
+ * Returns an object indicating which caps are exceeded — used for escalated friction.
+ */
+function checkCapExceedance(
+  priceValue: number | null,
+  settings: UserSettings,
+  tracker: SpendingTracker,
+): { dailyExceeded: boolean; weeklyExceeded: boolean; monthlyExceeded: boolean } {
+  const result = { dailyExceeded: false, weeklyExceeded: false, monthlyExceeded: false };
+  if (priceValue === null || priceValue <= 0) return result;
+
+  const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
+
+  if (settings.dailyCap.enabled) {
+    const newTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
+    result.dailyExceeded = newTotal >= settings.dailyCap.amount;
+  }
+  if (settings.weeklyCap.enabled) {
+    const newTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
+    result.weeklyExceeded = newTotal >= settings.weeklyCap.amount;
+  }
+  if (settings.monthlyCap.enabled) {
+    const newTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
+    result.monthlyExceeded = newTotal >= settings.monthlyCap.amount;
+  }
+
+  return result;
+}
+
 function determineFrictionLevel(
   priceValue: number | null,
   settings: UserSettings,
@@ -1725,13 +1755,12 @@ async function handleClick(event: MouseEvent): Promise<void> {
   // Friction level
   const frictionLevel = determineFrictionLevel(attempt.priceValue, settings, tracker);
 
-  // Daily cap bypass: under the pre-approved budget — record silently and show remaining toast
+  // Cap bypass: under the pre-approved budget — show remaining toast then record silently
   if (frictionLevel === 'cap-bypass') {
     const priceWithTax = Math.round((attempt.priceValue ?? 0) * (1 + settings.taxRate / 100) * 100) / 100;
-    const remaining = Math.round((settings.dailyCap.amount - (tracker.dailyTotal + priceWithTax)) * 100) / 100;
-    log(`Daily cap bypass — proceeding silently, $${remaining.toFixed(2)} remaining of $${settings.dailyCap.amount.toFixed(2)} budget`);
+    log(`Cap bypass — proceeding silently`);
+    showBudgetToast(settings, tracker, priceWithTax, settings.toastDurationSeconds * 1000);
     await recordPurchase(attempt.priceValue, settings, tracker);
-    showDailyBudgetToast(remaining, settings.dailyCap.amount, settings.toastDurationSeconds * 1000);
     allowNextClick(actualButton);
     return;
   }
