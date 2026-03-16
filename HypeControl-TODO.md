@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-16
-**Current Version:** 0.4.22
+**Current Version:** 0.4.23
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -20,7 +20,7 @@
 | Add-on 5 — Streamer Whitelist             | ✅ Complete       |
 | Add-on 1 — Delay Timer                   | ✅ Complete       |
 | Add-on 4 — Custom Comparison Items       | ✅ Complete       |
-| Add-on 2 — Spending History View         | 🔲 Not Started    |
+| Add-on 2 — Spending History View         | ✅ Complete       |
 | Add-on 3 — Weekly/Monthly Limits         | ✅ Complete       |
 | Interactive Onboarding Tour              | ✅ Complete        |
 | Firefox AMO Port                         | 🔲 Not Started    |
@@ -218,8 +218,8 @@ Guided first-install walkthrough that overlays the Twitch page and highlights ea
 
 ### In-Scope (Still To Build)
 
-- [ ] **Add-on 2 — Spending Tracker (History View)** ⭐⭐
-      Full-page view of all logged intercept events. Filter by date range, channel, outcome (cancelled/proceeded). Sort controls. Totals row (total spent, total blocked, total "saved").
+- [x] **Add-on 2 — Spending Tracker (History View)** ⭐⭐
+      Full-page view of all logged intercept events with 6-metric summary bar, filterable by date range, channel, and outcome. Sortable table with expandable row detail. Accessed via popup button.
 
 - [x] **Add-on 3 — Weekly/Monthly Spending Limits** ⭐⭐
       Weekly and monthly caps with independent toggles, 4-tier color progress bars in overlay (green < 60%, yellow 60–79%, orange 80–99%, red 100%+), escalated friction at 100% (doubled delay + acknowledgment checkbox), calendar-aligned resets (Monday/1st), unified budget toast.
@@ -293,4 +293,4 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-16 against the v0.4.22 codebase. Weekly/monthly spending limits complete — independent caps with 4-tier progress bars, escalated friction, calendar-aligned resets._
+_Last updated 2026-03-16 against the v0.4.23 codebase. Spending History View complete — full-tab page with 6-metric summary bar, filterable/sortable table, expandable row detail, popup access button._
