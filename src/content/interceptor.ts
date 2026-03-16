@@ -14,6 +14,7 @@ import { shouldBypassFriction } from './streamingMode';
 import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
 import { writeInterceptEvent } from '../shared/interceptLogger';
+import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 
 /** Result returned by runFrictionFlow */
 interface FrictionResult {
@@ -1705,7 +1706,12 @@ async function runFrictionFlow(
   // The subsequent steps (cooldown, type-to-confirm, math) expect the overlay to
   // already be in the DOM (they only set innerHTML and apply theme).
   // So after reason selection proceeds we must re-append before the next step.
-  const intensity = settings.frictionIntensity ?? 'low';
+  const maxPercent = computeMaxCapPercent(settings, tracker);
+  const intensity = computeEscalatedIntensity(
+    settings.frictionIntensity ?? 'low',
+    maxPercent,
+    settings.intensityLocked ?? false,
+  );
 
   if (intensity === 'medium' || intensity === 'high' || intensity === 'extreme') {
     // Create the shared overlay element for intensity steps
