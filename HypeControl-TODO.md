@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-16
-**Current Version:** 0.4.23
+**Current Version:** 0.4.24
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -293,4 +293,21 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ---
 
-_Last updated 2026-03-16 against the v0.4.23 codebase. Spending History View complete — full-tab page with 6-metric summary bar, filterable/sortable table, expandable row detail, popup access button._
+## MAINTENANCE PASS — v0.4.24 (2026-03-16)
+
+All items in the maintenance pass are complete:
+
+- [x] **Toggle vertical alignment** — `.toggle-wrap` flex items now align via `align-items: center`
+- [x] **History summary bar true-center** — `.hc-history-summary` uses `justify-content: center` with `flex-wrap: wrap`
+- [x] **History metric color parity** — Positive/negative/neutral metric values use green/red/default tokens consistently
+- [x] **Replay tour button relocation** — "Replay Setup Tour" button moved to bottom of `.hc-content` (above nav), out of Settings section
+- [x] **New settings fields + migration** — `weeklyResetDay` (monday/sunday), `intensityLocked` (bool), `dynamicIntensity` (bool) added to `UserSettings` with defaults and migration
+- [x] **Escalation logic module** — `src/shared/escalation.ts` computes escalated intensity from cap percentage thresholds
+- [x] **Weekly reset day preference** — Popup Limits section shows Mon/Sun segmented control when weekly cap is enabled; `getWeekStart()` respects the setting
+- [x] **Escalation wired into content script** — `interceptor.ts` reads tracker + settings, computes effective intensity via `computeEscalatedIntensity`, uses it for overlay
+- [x] **Escalation UI in popup** — Stats and Friction sections show escalation indicator banner + lock toggle; bidirectional intensity mirrors updated
+- [x] **Wizard default changed to Low** — Wizard friction segmented control, skip-confirmation text, friction-desc, and fallback all updated to Low intensity
+
+---
+
+_Last updated 2026-03-16 against the v0.4.24 codebase. Maintenance pass complete — toggle alignment, tour button relocation, weekly reset day, history centering + colors, dynamic intensity escalation, wizard default Low._

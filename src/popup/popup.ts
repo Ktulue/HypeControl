@@ -148,7 +148,7 @@ function showWizard(onComplete: () => void): void {
     const hourlyRate = parseFloat(hourlyInput.value) || 20;
     const taxRate = parseFloat(taxInput.value) || 7;
     const activeBtn = frictionSeg.querySelector<HTMLButtonElement>('.hc-wizard-seg-btn.active');
-    const frictionIntensity = (activeBtn?.dataset.value ?? 'medium') as UserSettings['frictionIntensity'];
+    const frictionIntensity = (activeBtn?.dataset.value ?? 'low') as UserSettings['frictionIntensity'];
 
     // Load current settings (handles reinstall case — prefills from existing)
     const result = await chrome.storage.sync.get('hcSettings');
