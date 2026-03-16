@@ -1421,6 +1421,165 @@ async function showMathChallengeStep(
   });
 }
 
+// ── Overlay: Cap Exceedance Escalated Friction ──────────────────────────
+
+/**
+ * Show escalated friction step when weekly/monthly cap is exceeded.
+ * Doubles the delay timer and requires an acknowledgment checkbox.
+ * Uses DOM construction (not innerHTML) per project XSS prevention rules.
+ */
+function showCapExceedanceStep(
+  exceedance: { weeklyExceeded: boolean; monthlyExceeded: boolean },
+  settings: UserSettings,
+  tracker: SpendingTracker,
+): Promise<OverlayDecision> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.id = 'hc-overlay';
+    overlay.className = 'hc-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+
+    const exceededPeriods: string[] = [];
+    if (exceedance.weeklyExceeded) exceededPeriods.push('weekly');
+    if (exceedance.monthlyExceeded) exceededPeriods.push('monthly');
+    const periodText = exceededPeriods.join(' and ');
+
+    // Double the delay timer (default 10s if no delay timer configured)
+    const baseDelay = settings.delayTimer?.enabled ? settings.delayTimer.seconds : 10;
+    const escalatedDelay = baseDelay * 2;
+
+    const card = document.createElement('div');
+    card.className = 'hc-card';
+
+    // Heading
+    const heading = document.createElement('h2');
+    heading.className = 'hc-heading';
+    heading.style.color = 'var(--hc-danger)';
+    heading.textContent = `You're exceeding your ${periodText} budget`;
+    card.appendChild(heading);
+
+    // Subtext
+    const subtext = document.createElement('p');
+    subtext.className = 'hc-subtext';
+    subtext.textContent = 'You set this limit for a reason. Still going?';
+    card.appendChild(subtext);
+
+    // Cap info
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'hc-cap-exceedance-info';
+    if (exceedance.weeklyExceeded) {
+      const p = document.createElement('p');
+      p.textContent = `Weekly: $${tracker.weeklyTotal.toFixed(2)} / $${settings.weeklyCap.amount.toFixed(2)}`;
+      infoDiv.appendChild(p);
+    }
+    if (exceedance.monthlyExceeded) {
+      const p = document.createElement('p');
+      p.textContent = `Monthly: $${tracker.monthlyTotal.toFixed(2)} / $${settings.monthlyCap.amount.toFixed(2)}`;
+      infoDiv.appendChild(p);
+    }
+    card.appendChild(infoDiv);
+
+    // Progress bar (use existing hc-progress-wrap class from the codebase)
+    const progressWrap = document.createElement('div');
+    progressWrap.className = 'hc-progress-wrap';
+    progressWrap.style.margin = '16px 0';
+    const progressBar = document.createElement('div');
+    progressBar.className = 'hc-progress-bar';
+    progressBar.id = 'hc-escalated-progress';
+    progressWrap.appendChild(progressBar);
+    card.appendChild(progressWrap);
+
+    // Countdown
+    const countdown = document.createElement('p');
+    countdown.className = 'hc-countdown';
+    countdown.id = 'hc-escalated-countdown';
+    countdown.textContent = `${escalatedDelay}s`;
+    card.appendChild(countdown);
+
+    // Acknowledgment checkbox
+    const ackLabel = document.createElement('label');
+    ackLabel.className = 'hc-cap-acknowledge';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'hc-cap-ack-checkbox';
+    const ackSpan = document.createElement('span');
+    ackSpan.textContent = `I'm exceeding my ${periodText} budget`;
+    ackLabel.appendChild(checkbox);
+    ackLabel.appendChild(ackSpan);
+    card.appendChild(ackLabel);
+
+    // Action buttons
+    const actions = document.createElement('div');
+    actions.className = 'hc-actions';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'hc-btn hc-btn-cancel';
+    cancelBtn.dataset.action = 'cancel';
+    cancelBtn.textContent = 'Cancel Purchase';
+    const proceedBtn = document.createElement('button');
+    proceedBtn.className = 'hc-btn hc-btn-proceed';
+    proceedBtn.dataset.action = 'proceed';
+    proceedBtn.disabled = true;
+    proceedBtn.textContent = 'Proceed Anyway';
+    actions.appendChild(cancelBtn);
+    actions.appendChild(proceedBtn);
+    card.appendChild(actions);
+
+    overlay.appendChild(card);
+    applyThemeToOverlay(overlay);
+    document.body.appendChild(overlay);
+    overlayVisible = true;
+
+    let timerDone = false;
+    let ackChecked = false;
+    let elapsed = 0;
+
+    const updateProceedState = () => {
+      proceedBtn.disabled = !(timerDone && ackChecked);
+    };
+
+    checkbox.addEventListener('change', () => {
+      ackChecked = checkbox.checked;
+      updateProceedState();
+    });
+
+    const intervalId = setInterval(() => {
+      elapsed++;
+      const pct = Math.min((elapsed / escalatedDelay) * 100, 100);
+      progressBar.style.width = `${pct}%`;
+      const remaining = escalatedDelay - elapsed;
+      countdown.textContent = `${Math.max(remaining, 0)}s`;
+
+      if (elapsed >= escalatedDelay) {
+        clearInterval(intervalId);
+        timerDone = true;
+        updateProceedState();
+      }
+    }, 1000);
+
+    let resolved = false;
+    const finish = (decision: OverlayDecision) => {
+      if (resolved) return;
+      resolved = true;
+      clearInterval(intervalId);
+      removeOverlay(overlay);
+      resolve(decision);
+    };
+
+    cancelBtn.addEventListener('click', () => finish('cancel'));
+    proceedBtn.addEventListener('click', () => finish('proceed'));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish('cancel');
+    });
+    document.addEventListener('keydown', function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', handleEsc);
+        finish('cancel');
+      }
+    });
+  });
+}
+
 // ── Multi-Step Friction Flow ────────────────────────────────────────────
 
 /**
@@ -1801,6 +1960,27 @@ async function handleClick(event: MouseEvent): Promise<void> {
     : null;
 
   if (frictionResult.decision === 'proceed' && pendingPurchase) {
+    // Check if weekly/monthly caps are exceeded — escalated friction
+    const capExceedance = checkCapExceedance(attempt.priceValue, settings, tracker);
+    if (capExceedance.weeklyExceeded || capExceedance.monthlyExceeded) {
+      log(`Cap exceedance detected (weekly=${capExceedance.weeklyExceeded}, monthly=${capExceedance.monthlyExceeded}) — showing escalated friction`);
+      const escalatedDecision = await showCapExceedanceStep(capExceedance, settings, tracker);
+      if (escalatedDecision === 'cancel') {
+        log('User cancelled at cap exceedance step');
+        await writeInterceptEvent({
+          channel: attempt.channel,
+          purchaseType: attempt.type,
+          rawPrice: attempt.rawPrice,
+          priceWithTax,
+          outcome: 'cancelled',
+          savedAmount: priceWithTax ?? 0,
+          purchaseReason: frictionResult.purchaseReason,
+        });
+        pendingPurchase = null;
+        return;
+      }
+    }
+
     log('User completed all friction steps — proceeding with purchase');
     await recordPurchase(attempt.priceValue, settings, tracker);
     allowNextClick(pendingPurchase.attempt.element);

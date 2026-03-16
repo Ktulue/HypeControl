@@ -969,6 +969,44 @@
   white-space: nowrap;
 }
 
+/* Cap exceedance escalated friction */
+.hc-cap-exceedance-info {
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: rgba(var(--hc-danger-rgb), 0.1);
+  border: 1px solid rgba(var(--hc-danger-rgb), 0.2);
+  border-radius: 4px;
+  color: var(--hc-danger);
+  font-size: 13px;
+  font-family: var(--hc-font);
+}
+
+.hc-cap-exceedance-info p {
+  margin: 2px 0;
+}
+
+.hc-cap-acknowledge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 10px 12px;
+  background: rgba(var(--hc-danger-rgb), 0.05);
+  border: 1px solid rgba(var(--hc-danger-rgb), 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--hc-font);
+  color: var(--hc-text);
+}
+
+.hc-cap-acknowledge input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--hc-danger);
+  cursor: pointer;
+}
+
 /* ── Demo mode badge (shown in friction overlay during demo) ────────── */
 
 .hc-demo-badge {
