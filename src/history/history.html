@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spending History — Hype Control</title>
+  <link rel="stylesheet" href="history.css">
+</head>
+<body>
+  <div class="history-wrapper">
+    <h1 class="history-title">
+      <img src="assets/icons/ChromeWebStore/HC_icon_48px.png" width="40" height="40" alt="Hype Control">
+      Spending History
+    </h1>
+
+    <!-- Summary Bar -->
+    <div class="summary-bar" id="summary-bar">
+      <div class="summary-metric" id="metric-spent">
+        <span class="metric-value">$0.00</span>
+        <span class="metric-label">Total Spent</span>
+      </div>
+      <div class="summary-metric" id="metric-saved">
+        <span class="metric-value">$0.00</span>
+        <span class="metric-label">Total Saved</span>
+      </div>
+      <div class="summary-metric" id="metric-cancel-rate">
+        <span class="metric-value">0.0%</span>
+        <span class="metric-label">Cancel Rate</span>
+      </div>
+      <div class="summary-metric" id="metric-count">
+        <span class="metric-value">0</span>
+        <span class="metric-label">Events</span>
+      </div>
+      <div class="summary-metric" id="metric-top-step">
+        <span class="metric-value">—</span>
+        <span class="metric-label">Top Cancel Step</span>
+      </div>
+      <div class="summary-metric" id="metric-top-reason">
+        <span class="metric-value">—</span>
+        <span class="metric-label">Top Reason</span>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label" for="filter-start">From</label>
+        <input type="date" id="filter-start" class="filter-input">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-end">To</label>
+        <input type="date" id="filter-end" class="filter-input">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-channel">Channel</label>
+        <select id="filter-channel" class="filter-select">
+          <option value="">All Channels</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Outcome</label>
+        <div class="outcome-toggle" id="outcome-toggle" role="group" aria-label="Outcome filter">
+          <button class="outcome-btn active" data-value="all">All</button>
+          <button class="outcome-btn" data-value="cancelled">Cancelled</button>
+          <button class="outcome-btn" data-value="proceeded">Proceeded</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table class="history-table" id="history-table">
+        <thead>
+          <tr>
+            <th class="sortable active" data-sort="timestamp">Date/Time <span class="sort-arrow">▼</span></th>
+            <th class="sortable" data-sort="channel">Channel <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="amount">Amount <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="outcome">Outcome <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="saved">Saved <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty states -->
+    <div class="empty-state" id="empty-no-data" hidden>
+      No spending activity recorded yet. HypeControl will log purchases as you browse Twitch.
+    </div>
+    <div class="empty-state" id="empty-no-match" hidden>
+      No events match your filters. Try adjusting the date range or clearing filters.
+    </div>
+  </div>
+
+  <script src="history.js"></script>
+</body>
+</html>
