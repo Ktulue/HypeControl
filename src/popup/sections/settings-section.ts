@@ -13,6 +13,7 @@ export interface SettingsSectionController {
 export function initSettingsSection(el: HTMLElement, callbacks: SettingsSectionCallbacks = {}): SettingsSectionController {
   const themeEl = el.querySelector<HTMLSelectElement>('#theme-select')!;
   const toastEl = el.querySelector<HTMLInputElement>('#toast-duration')!;
+  const historyBtn = el.querySelector<HTMLButtonElement>('#btn-view-history')!;
   const logsBtn = el.querySelector<HTMLButtonElement>('#btn-view-logs')!;
 
   themeEl.addEventListener('change', () => {
@@ -23,6 +24,10 @@ export function initSettingsSection(el: HTMLElement, callbacks: SettingsSectionC
 
   toastEl.addEventListener('input', () => {
     setPendingField('toastDurationSeconds', parseInt(toastEl.value, 10) || 15);
+  });
+
+  historyBtn.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('history.html') });
   });
 
   logsBtn.addEventListener('click', () => {
