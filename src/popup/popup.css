@@ -820,15 +820,15 @@ body {
   width: 100%;
 }
 
-/* Replay button in settings section */
-.hc-row--replay {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color);
-}
-
-.btn-replay-tour {
+/* Replay tour button — lives below Credits at the very bottom */
+.btn-replay-bottom {
+  display: block;
+  margin: 24px auto 16px;
   font-size: 12px;
+  opacity: 0.7;
+}
+.btn-replay-bottom:hover {
+  opacity: 1;
 }
 
 /* NOTE: .hc-demo-badge is intentionally NOT defined here.

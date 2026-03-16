@@ -289,12 +289,8 @@ async function main(): Promise<void> {
     }
   });
 
-  // Replay tour triggers
-  document.getElementById('footer-replay-tour')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await triggerReplay();
-  });
-  document.getElementById('btn-replay-tour')?.addEventListener('click', async () => {
+  // Replay tour trigger
+  document.getElementById('btn-replay-bottom')?.addEventListener('click', async () => {
     await triggerReplay();
   });
 }
