@@ -66,7 +66,7 @@ function updateChannelDropdown(channelEl: HTMLSelectElement): void {
   }
 
   const previousValue = channelEl.value;
-  channelEl.innerHTML = '';
+  channelEl.replaceChildren();
 
   const allOption = document.createElement('option');
   allOption.value = '';
@@ -316,7 +316,7 @@ function toggleDetail(event: InterceptEvent, tr: HTMLTableRowElement): void {
 
 function renderTable(): void {
   const tbody = document.getElementById('history-tbody')!;
-  tbody.innerHTML = '';
+  tbody.replaceChildren();
 
   for (const event of filteredEvents) {
     const tr = document.createElement('tr');
