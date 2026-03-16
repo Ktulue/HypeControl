@@ -171,16 +171,45 @@ function determineFrictionLevel(
   settings: UserSettings,
   tracker: SpendingTracker,
 ): FrictionLevel {
-  // Daily cap check FIRST — acts as a bypass floor (pre-approved spending allowance).
-  // Only applies when price is known; unknown price falls through to full friction.
-  if (settings.dailyCap.enabled && priceValue !== null && priceValue > 0) {
+  // Cap checks — daily, weekly, monthly. If ANY cap is exceeded → full friction.
+  // If ALL active caps are under limit → cap-bypass (silent pass).
+  // Only applies when price is known.
+  const hasAnyCap = settings.dailyCap.enabled || settings.weeklyCap.enabled || settings.monthlyCap.enabled;
+  if (hasAnyCap && priceValue !== null && priceValue > 0) {
     const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
-    const newTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
-    if (newTotal >= settings.dailyCap.amount) {
-      log(`Daily cap check: $${priceWithTax.toFixed(2)} would bring daily total to $${newTotal.toFixed(2)}, meeting/exceeding $${settings.dailyCap.amount.toFixed(2)} cap — full modal triggered`);
+    let anyCapExceeded = false;
+    const capDetails: string[] = [];
+
+    if (settings.dailyCap.enabled) {
+      const newDailyTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
+      if (newDailyTotal >= settings.dailyCap.amount) {
+        anyCapExceeded = true;
+        capDetails.push(`daily $${newDailyTotal.toFixed(2)} >= $${settings.dailyCap.amount.toFixed(2)}`);
+      }
+    }
+
+    if (settings.weeklyCap.enabled) {
+      const newWeeklyTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
+      if (newWeeklyTotal >= settings.weeklyCap.amount) {
+        anyCapExceeded = true;
+        capDetails.push(`weekly $${newWeeklyTotal.toFixed(2)} >= $${settings.weeklyCap.amount.toFixed(2)}`);
+      }
+    }
+
+    if (settings.monthlyCap.enabled) {
+      const newMonthlyTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
+      if (newMonthlyTotal >= settings.monthlyCap.amount) {
+        anyCapExceeded = true;
+        capDetails.push(`monthly $${newMonthlyTotal.toFixed(2)} >= $${settings.monthlyCap.amount.toFixed(2)}`);
+      }
+    }
+
+    if (anyCapExceeded) {
+      log(`Cap exceeded: ${capDetails.join(', ')} — full modal triggered`);
       return 'full';
     }
-    log(`Daily cap bypass: $${priceWithTax.toFixed(2)} keeps daily total at $${newTotal.toFixed(2)}, under $${settings.dailyCap.amount.toFixed(2)} cap — bypassing friction`);
+
+    log(`All caps under limit (+$${priceWithTax.toFixed(2)}) — bypassing friction`);
     return 'cap-bypass';
   }
 
