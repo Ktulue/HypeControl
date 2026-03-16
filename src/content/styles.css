@@ -52,6 +52,8 @@
   --hc-success-rgb: 34, 197, 94;
   --hc-warning: #F97316;
   --hc-warning-rgb: 249, 115, 22;
+  --hc-caution: #EAB308;
+  --hc-caution-rgb: 234, 179, 8;
   --hc-primary-light: rgba(145, 71, 255, 0.12);
   --hc-progress-bg: #2a2a2e;
   --hc-primary-text: #bf94ff;
@@ -71,6 +73,8 @@
   --hc-primary-dark: #6d28d9;
   --hc-success: #16A34A;
   --hc-warning: #EA580C;
+  --hc-caution: #CA8A04;
+  --hc-caution-rgb: 202, 138, 4;
   --hc-primary-light: rgba(124, 58, 237, 0.12);
   --hc-primary-text: #7c3aed;
 }
@@ -306,12 +310,12 @@
 }
 
 .hc-cap-yellow {
-  background: rgba(234, 179, 8, 0.1);
-  border-color: rgba(234, 179, 8, 0.2);
-  color: #EAB308;
+  background: rgba(var(--hc-caution-rgb), 0.1);
+  border-color: rgba(var(--hc-caution-rgb), 0.2);
+  color: var(--hc-caution);
 }
 .hc-cap-yellow .hc-cap-bar__fill {
-  background: #EAB308;
+  background: var(--hc-caution);
 }
 
 .hc-cap-orange {
