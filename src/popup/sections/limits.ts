@@ -21,6 +21,8 @@ export function initLimits(el: HTMLElement): LimitsController {
   const resetCancelBtnEl = el.querySelector<HTMLButtonElement>('#btn-reset-cancel')!;
   const weeklyCapEnabledEl = el.querySelector<HTMLInputElement>('#weekly-cap-enabled')!;
   const weeklyCapAmountEl = el.querySelector<HTMLInputElement>('#weekly-cap-amount')!;
+  const weeklyResetDayRowEl = el.querySelector<HTMLElement>('#weekly-reset-day-row')!;
+  const weeklyResetDayEl = el.querySelector<HTMLElement>('#weekly-reset-day')!;
   const monthlyCapEnabledEl = el.querySelector<HTMLInputElement>('#monthly-cap-enabled')!;
   const monthlyCapAmountEl = el.querySelector<HTMLInputElement>('#monthly-cap-amount')!;
   const trackerWeeklyEl = el.querySelector<HTMLElement>('#tracker-weekly')!;
@@ -45,12 +47,24 @@ export function initLimits(el: HTMLElement): LimitsController {
   weeklyCapEnabledEl.addEventListener('change', () => {
     const enabled = weeklyCapEnabledEl.checked;
     weeklyCapAmountEl.hidden = !enabled;
+    weeklyResetDayRowEl.hidden = !enabled;
     setPendingField('weeklyCap', { ...getPending().weeklyCap, enabled });
   });
   weeklyCapAmountEl.addEventListener('input', () => {
     setPendingField('weeklyCap', {
       ...getPending().weeklyCap,
       amount: parseFloat(weeklyCapAmountEl.value) || 0,
+    });
+  });
+
+  // Weekly reset day
+  weeklyResetDayEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.value as 'monday' | 'sunday';
+      setPendingField('weeklyResetDay', val);
+      weeklyResetDayEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.value === val);
+      });
     });
   });
 
@@ -132,6 +146,10 @@ export function initLimits(el: HTMLElement): LimitsController {
     weeklyCapEnabledEl.checked = settings.weeklyCap.enabled;
     weeklyCapAmountEl.hidden = !settings.weeklyCap.enabled;
     weeklyCapAmountEl.value = String(settings.weeklyCap.amount);
+    weeklyResetDayRowEl.hidden = !settings.weeklyCap.enabled;
+    weeklyResetDayEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === settings.weeklyResetDay);
+    });
     monthlyCapEnabledEl.checked = settings.monthlyCap.enabled;
     monthlyCapAmountEl.hidden = !settings.monthlyCap.enabled;
     monthlyCapAmountEl.value = String(settings.monthlyCap.amount);

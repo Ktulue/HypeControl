@@ -242,6 +242,13 @@
           </label>
           <input type="number" id="weekly-cap-amount" min="0" step="0.01" class="hc-input hc-input--sm" hidden />
         </div>
+        <div class="hc-row" id="weekly-reset-day-row" hidden>
+          <label class="hc-label">Week starts</label>
+          <div class="segmented" id="weekly-reset-day" data-pending-field="weeklyResetDay">
+            <button class="seg-btn" data-value="monday">Mon</button>
+            <button class="seg-btn" data-value="sunday">Sun</button>
+          </div>
+        </div>
         <div class="hc-row">
           <label class="hc-label" for="monthly-cap-enabled">Monthly cap</label>
           <label class="toggle-wrap">
