@@ -1,5 +1,5 @@
 import { computePopupStats } from '../../shared/interceptLogger';
-import { UserSettings } from '../../shared/types';
+import { UserSettings, migrateSettings, sanitizeSettings } from '../../shared/types';
 
 const SETTINGS_KEY = 'hcSettings';
 
@@ -35,15 +35,15 @@ export function initStats(el: HTMLElement): StatsController {
   // Wire override button (immediate save — bypasses pending state)
   overrideBtnEl.addEventListener('click', async () => {
     const result = await chrome.storage.sync.get(SETTINGS_KEY);
-    const current: Partial<UserSettings> = result[SETTINGS_KEY] ?? {};
+    const current = migrateSettings(result[SETTINGS_KEY] ?? {});
     const isActive = !!(current.streamingOverride && current.streamingOverride.expiresAt > Date.now());
     if (isActive) {
       const updated = { ...current };
       delete updated.streamingOverride;
-      await chrome.storage.sync.set({ [SETTINGS_KEY]: updated });
+      await chrome.storage.sync.set({ [SETTINGS_KEY]: sanitizeSettings(updated) });
     } else {
       await chrome.storage.sync.set({
-        [SETTINGS_KEY]: { ...current, streamingOverride: { expiresAt: Date.now() + 2 * 60 * 60 * 1000 } },
+        [SETTINGS_KEY]: sanitizeSettings({ ...current, streamingOverride: { expiresAt: Date.now() + 2 * 60 * 60 * 1000 } }),
       });
     }
     const fresh = await chrome.storage.sync.get(SETTINGS_KEY);

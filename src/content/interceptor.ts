@@ -6,7 +6,7 @@
 
 import {
   PurchaseAttempt, OverlayDecision, OverlayCallback, UserSettings, DEFAULT_SETTINGS,
-  FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings,
+  FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings, sanitizeSettings, sanitizeTracker,
   WhitelistEntry, WhitelistBehavior,
 } from '../shared/types';
 import { isPurchaseButton, createPurchaseAttempt, getCurrentChannel } from './detector';
@@ -83,7 +83,7 @@ async function loadSettings(): Promise<UserSettings> {
 async function loadSpendingTracker(settings: UserSettings): Promise<SpendingTracker> {
   try {
     const result = await chrome.storage.local.get(SPENDING_KEY);
-    const tracker: SpendingTracker = result[SPENDING_KEY] || { ...DEFAULT_SPENDING_TRACKER };
+    const tracker: SpendingTracker = sanitizeTracker(result[SPENDING_KEY] || { ...DEFAULT_SPENDING_TRACKER });
 
     // Backfill new fields for existing installs
     if (tracker.weeklyTotal === undefined) tracker.weeklyTotal = 0;
@@ -120,7 +120,7 @@ async function loadSpendingTracker(settings: UserSettings): Promise<SpendingTrac
 
 async function saveSpendingTracker(tracker: SpendingTracker): Promise<void> {
   try {
-    await chrome.storage.local.set({ [SPENDING_KEY]: tracker });
+    await chrome.storage.local.set({ [SPENDING_KEY]: sanitizeTracker(tracker) });
   } catch (e) {
     debug('Failed to save spending tracker:', e);
   }
@@ -1985,7 +1985,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
     } else {
       settings.whitelistedChannels.push(newEntry);
     }
-    await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+    await chrome.storage.sync.set({ [SETTINGS_KEY]: sanitizeSettings(settings) });
     log(`Whitelist quick-add saved: ${normalized} → ${behavior}`);
   };
 

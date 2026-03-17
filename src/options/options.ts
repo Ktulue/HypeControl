@@ -4,7 +4,7 @@
 
 import {
   UserSettings, DEFAULT_SETTINGS, ComparisonItem,
-  PRESET_COMPARISON_ITEMS, migrateSettings,
+  PRESET_COMPARISON_ITEMS, migrateSettings, sanitizeSettings,
   WhitelistEntry, WhitelistBehavior, ThemePreference,
 } from '../shared/types';
 import { settingsLog, loadLogs, setVersion } from '../shared/logger';
@@ -35,7 +35,7 @@ async function loadSettings(): Promise<UserSettings> {
  * Save settings to Chrome storage
  */
 async function saveSettings(settings: UserSettings): Promise<void> {
-  await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+  await chrome.storage.sync.set({ [SETTINGS_KEY]: sanitizeSettings(settings) });
 }
 
 /**
@@ -190,36 +190,72 @@ function renderComparisonItems(items: ComparisonItem[]): void {
     row.draggable = true;
     row.dataset.itemId = item.id;
 
-    const customControls = item.isPreset ? '' : `
-      <span class="custom-badge">custom</span>
-      <button class="btn-icon" data-edit-id="${item.id}" title="Edit">&#9998;</button>
-      <button class="btn-icon danger" data-delete-id="${item.id}" title="Delete">&#10005;</button>
-    `;
+    // Build static skeleton — no user data interpolated
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'drag-handle';
+    dragHandle.title = 'Drag to reorder';
+    dragHandle.innerHTML = '&#x2261;';
 
-    const scopeGroup = item.enabled ? `
-      <div class="scope-group" data-scope-group="${item.id}" role="radiogroup" aria-label="Friction scope for ${item.name}">
-        <button class="scope-btn" data-scope="nudge" aria-pressed="${item.frictionScope === 'nudge' ? 'true' : 'false'}">Nudge</button>
-        <button class="scope-btn" data-scope="full"  aria-pressed="${item.frictionScope === 'full'  ? 'true' : 'false'}">Full</button>
-        <button class="scope-btn" data-scope="both"  aria-pressed="${item.frictionScope === 'both'  ? 'true' : 'false'}">Both</button>
-      </div>
-    ` : '';
+    const toggleWrap = document.createElement('div');
+    toggleWrap.className = 'item-toggle-wrap';
 
-    row.innerHTML = `
-      <span class="drag-handle" title="Drag to reorder">&#x2261;</span>
-      <div class="item-toggle-wrap">
-        <label class="toggle-switch">
-          <input type="checkbox" data-item-id="${item.id}" ${item.enabled ? 'checked' : ''}>
-          <span class="toggle-slider"></span>
-        </label>
-        ${scopeGroup}
-      </div>
-      <span class="comparison-item-info">
-        <span>${item.emoji}</span>
-        <span>${item.name}</span>
-        <span class="toggle-price">${priceText}</span>
-      </span>
-      ${customControls}
-    `;
+    const toggleLabel = document.createElement('label');
+    toggleLabel.className = 'toggle-switch';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.dataset.itemId = item.id;
+    if (item.enabled) checkbox.checked = true;
+    const slider = document.createElement('span');
+    slider.className = 'toggle-slider';
+    toggleLabel.append(checkbox, slider);
+    toggleWrap.appendChild(toggleLabel);
+
+    if (item.enabled) {
+      const scopeGroupEl = document.createElement('div');
+      scopeGroupEl.className = 'scope-group';
+      scopeGroupEl.dataset.scopeGroup = item.id;
+      scopeGroupEl.setAttribute('role', 'radiogroup');
+      scopeGroupEl.setAttribute('aria-label', `Friction scope for ${item.name}`);
+      for (const scope of ['nudge', 'full', 'both'] as const) {
+        const btn = document.createElement('button');
+        btn.className = 'scope-btn';
+        btn.dataset.scope = scope;
+        btn.setAttribute('aria-pressed', item.frictionScope === scope ? 'true' : 'false');
+        btn.textContent = scope.charAt(0).toUpperCase() + scope.slice(1);
+        scopeGroupEl.appendChild(btn);
+      }
+      toggleWrap.appendChild(scopeGroupEl);
+    }
+
+    const infoSpan = document.createElement('span');
+    infoSpan.className = 'comparison-item-info';
+    const emojiSpan = document.createElement('span');
+    emojiSpan.textContent = item.emoji;
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = item.name;
+    const priceSpan = document.createElement('span');
+    priceSpan.className = 'toggle-price';
+    priceSpan.textContent = priceText;
+    infoSpan.append(emojiSpan, nameSpan, priceSpan);
+
+    row.append(dragHandle, toggleWrap, infoSpan);
+
+    if (!item.isPreset) {
+      const badge = document.createElement('span');
+      badge.className = 'custom-badge';
+      badge.textContent = 'custom';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-icon';
+      editBtn.dataset.editId = item.id;
+      editBtn.title = 'Edit';
+      editBtn.innerHTML = '&#9998;';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-icon danger';
+      deleteBtn.dataset.deleteId = item.id;
+      deleteBtn.title = 'Delete';
+      deleteBtn.innerHTML = '&#10005;';
+      row.append(badge, editBtn, deleteBtn);
+    }
     container.appendChild(row);
   }
 

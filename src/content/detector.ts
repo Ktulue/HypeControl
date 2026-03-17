@@ -198,8 +198,9 @@ const PRICE_REGEX = /\$([\d,]+(?:\.\d{2})?)/;
  * Parse a price string (with potential commas) to a number
  * "$3,890.00" -> 3890.00
  */
-function parsePrice(priceStr: string): number {
-  return parseFloat(priceStr.replace(/,/g, ''));
+function parsePrice(priceStr: string): number | null {
+  const val = parseFloat(priceStr.replace(/,/g, ''));
+  return Number.isFinite(val) ? val : null;
 }
 
 /**
@@ -232,9 +233,10 @@ function extractPrice(element: HTMLElement): { raw: string | null; value: number
   const bitsMatch = ariaLabel.match(/([\d,]+)\s*bits/i);
   if (bitsMatch) {
     const bitsCount = bitsMatch[1].replace(/,/g, '');
+    const parsed = parseInt(bitsCount, 10);
     return {
       raw: `${bitsMatch[1]} Bits`,
-      value: parseInt(bitsCount, 10),
+      value: Number.isFinite(parsed) ? parsed : null,
     };
   }
 
