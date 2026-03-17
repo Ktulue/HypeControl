@@ -408,8 +408,12 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
   const theme = validEnum(s.theme, ['auto', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme);
   const weeklyResetDay = validEnum(s.weeklyResetDay, ['monday', 'sunday'] as const, DEFAULT_SETTINGS.weeklyResetDay);
 
+  // Defensive array normalization for corrupted/partial storage
+  const rawItems = Array.isArray(s.comparisonItems) ? s.comparisonItems : [];
+  const rawChannels = Array.isArray(s.whitelistedChannels) ? s.whitelistedChannels : [];
+
   const seenIds = new Set<string>();
-  const comparisonItems = s.comparisonItems
+  const comparisonItems = rawItems
     .map(item => sanitizeComparisonItem(item))
     .filter((item): item is ComparisonItem => {
       if (item === null) return false;
@@ -418,7 +422,7 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
       return true;
     });
 
-  const whitelistedChannels = s.whitelistedChannels
+  const whitelistedChannels = rawChannels
     .filter(e => /^[a-z0-9_]{1,25}$/.test(e.username))
     .map(e => ({
       username: e.username,
