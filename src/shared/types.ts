@@ -270,7 +270,7 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
     frictionScope: i.frictionScope ?? 'both',
   }));
 
-  return {
+  return sanitizeSettings({
     hourlyRate: saved.hourlyRate ?? DEFAULT_SETTINGS.hourlyRate,
     taxRate: saved.taxRate ?? DEFAULT_SETTINGS.taxRate,
     comparisonItems: items,
@@ -317,7 +317,7 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
     theme: saved.theme ?? DEFAULT_SETTINGS.theme,
     weeklyResetDay: saved.weeklyResetDay ?? DEFAULT_SETTINGS.weeklyResetDay,
     intensityLocked: saved.intensityLocked ?? DEFAULT_SETTINGS.intensityLocked,
-  };
+  });
 }
 
 /** Storage keys for onboarding state — all stored in chrome.storage.local */
