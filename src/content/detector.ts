@@ -233,9 +233,10 @@ function extractPrice(element: HTMLElement): { raw: string | null; value: number
   const bitsMatch = ariaLabel.match(/([\d,]+)\s*bits/i);
   if (bitsMatch) {
     const bitsCount = bitsMatch[1].replace(/,/g, '');
+    const parsed = parseInt(bitsCount, 10);
     return {
       raw: `${bitsMatch[1]} Bits`,
-      value: parseInt(bitsCount, 10),
+      value: Number.isFinite(parsed) ? parsed : null,
     };
   }
 
