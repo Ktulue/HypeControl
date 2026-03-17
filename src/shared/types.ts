@@ -326,3 +326,163 @@ export const ONBOARDING_KEYS = {
   phase2Pending: 'hcOnboardingPhase2Pending',
   complete: 'hcOnboardingComplete',
 } as const;
+
+// ─── Input Sanitizers ────────────────────────────────────────────────────────
+
+/** Clamp a number to [min, max], replacing NaN/Infinity with fallback */
+function clampNum(val: unknown, min: number, max: number, fallback: number): number {
+  const n = typeof val === 'number' ? val : fallback;
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
+/** Round to 2 decimal places (currency) */
+function round2(val: number): number {
+  return Math.round(val * 100) / 100;
+}
+
+/** Force a value to strict boolean (=== true) */
+function strictBool(val: unknown, fallback: boolean = false): boolean {
+  return val === true ? true : fallback;
+}
+
+/** Validate a value is one of the allowed options */
+function validEnum<T>(val: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(val as T) ? (val as T) : fallback;
+}
+
+/** Strip HTML tags from a string */
+function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, '');
+}
+
+/** Sanitize a single comparison item. Returns null if the item is invalid and should be removed. */
+function sanitizeComparisonItem(item: ComparisonItem): ComparisonItem | null {
+  if (typeof item.id !== 'string' || item.id.trim() === '') return null;
+
+  const name = stripHtml((typeof item.name === 'string' ? item.name : '').trim()).slice(0, 50);
+  if (name === '') return null;
+
+  const price = round2(clampNum(item.price, 0.01, 100000, 0));
+  if (price <= 0) return null;
+
+  const pluralLabel = stripHtml((typeof item.pluralLabel === 'string' ? item.pluralLabel : '').trim()).slice(0, 50);
+
+  const emojiStr = typeof item.emoji === 'string' ? item.emoji : '';
+  const emoji = [...emojiStr].slice(0, 2).join('');
+
+  return {
+    id: item.id,
+    emoji,
+    name,
+    price,
+    pluralLabel: pluralLabel || name,
+    enabled: strictBool(item.enabled),
+    isPreset: strictBool(item.isPreset),
+    frictionScope: validEnum(item.frictionScope, ['nudge', 'full', 'both'] as const, 'both'),
+  };
+}
+
+/** Sanitize a UserSettings object — clamps numerics, validates enums/booleans, filters arrays */
+export function sanitizeSettings(s: UserSettings): UserSettings {
+  const hourlyRate = round2(clampNum(s.hourlyRate, 0.01, 1000, DEFAULT_SETTINGS.hourlyRate));
+  const taxRate = round2(clampNum(s.taxRate, 0, 25, DEFAULT_SETTINGS.taxRate));
+
+  let thresholdFloor = round2(clampNum(s.frictionThresholds.thresholdFloor, 0, 999.99, DEFAULT_SETTINGS.frictionThresholds.thresholdFloor));
+  let thresholdCeiling = round2(clampNum(s.frictionThresholds.thresholdCeiling, 0.01, 1000, DEFAULT_SETTINGS.frictionThresholds.thresholdCeiling));
+  if (thresholdCeiling <= thresholdFloor) {
+    thresholdCeiling = round2(thresholdFloor + 0.01);
+  }
+
+  const dailyCapAmount = round2(clampNum(s.dailyCap.amount, 0, 100000, DEFAULT_SETTINGS.dailyCap.amount));
+  const weeklyCapAmount = round2(clampNum(s.weeklyCap.amount, 0, 100000, DEFAULT_SETTINGS.weeklyCap.amount));
+  const monthlyCapAmount = round2(clampNum(s.monthlyCap.amount, 0, 100000, DEFAULT_SETTINGS.monthlyCap.amount));
+
+  const cooldownMinutes = clampNum(s.cooldown.minutes, 0, 1440, DEFAULT_SETTINGS.cooldown.minutes);
+  const gracePeriodMinutes = clampNum(s.streamingMode.gracePeriodMinutes, 0, 60, DEFAULT_SETTINGS.streamingMode.gracePeriodMinutes);
+  const toastDurationSeconds = clampNum(s.toastDurationSeconds, 1, 30, DEFAULT_SETTINGS.toastDurationSeconds);
+  const softNudgeSteps = clampNum(s.frictionThresholds.softNudgeSteps, 1, 10, DEFAULT_SETTINGS.frictionThresholds.softNudgeSteps);
+
+  const frictionIntensity = validEnum(s.frictionIntensity, ['low', 'medium', 'high', 'extreme'] as const, DEFAULT_SETTINGS.frictionIntensity);
+  const delaySeconds = validEnum(s.delayTimer.seconds, [5, 10, 30, 60] as const, DEFAULT_SETTINGS.delayTimer.seconds);
+  const theme = validEnum(s.theme, ['auto', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme);
+  const weeklyResetDay = validEnum(s.weeklyResetDay, ['monday', 'sunday'] as const, DEFAULT_SETTINGS.weeklyResetDay);
+
+  const seenIds = new Set<string>();
+  const comparisonItems = s.comparisonItems
+    .map(item => sanitizeComparisonItem(item))
+    .filter((item): item is ComparisonItem => {
+      if (item === null) return false;
+      if (seenIds.has(item.id)) return false;
+      seenIds.add(item.id);
+      return true;
+    });
+
+  const whitelistedChannels = s.whitelistedChannels
+    .filter(e => /^[a-z0-9_]{1,25}$/.test(e.username))
+    .map(e => ({
+      username: e.username,
+      behavior: validEnum(e.behavior, ['skip', 'reduced', 'full'] as const, 'full' as WhitelistBehavior),
+    }));
+
+  const twitchUsername = /^[a-z0-9_]{0,25}$/.test(s.streamingMode.twitchUsername)
+    ? s.streamingMode.twitchUsername
+    : '';
+
+  const streamingOverride = s.streamingOverride
+    && typeof s.streamingOverride.expiresAt === 'number'
+    && Number.isFinite(s.streamingOverride.expiresAt)
+    && s.streamingOverride.expiresAt > 0
+    ? { expiresAt: s.streamingOverride.expiresAt }
+    : undefined;
+
+  const result: UserSettings = {
+    hourlyRate,
+    taxRate,
+    comparisonItems,
+    cooldown: {
+      enabled: strictBool(s.cooldown.enabled),
+      minutes: cooldownMinutes,
+    },
+    dailyCap: {
+      enabled: strictBool(s.dailyCap.enabled),
+      amount: dailyCapAmount,
+    },
+    weeklyCap: {
+      enabled: strictBool(s.weeklyCap.enabled),
+      amount: weeklyCapAmount,
+    },
+    monthlyCap: {
+      enabled: strictBool(s.monthlyCap.enabled),
+      amount: monthlyCapAmount,
+    },
+    frictionThresholds: {
+      enabled: strictBool(s.frictionThresholds.enabled),
+      thresholdFloor,
+      thresholdCeiling,
+      softNudgeSteps,
+    },
+    frictionIntensity,
+    delayTimer: {
+      enabled: strictBool(s.delayTimer.enabled),
+      seconds: delaySeconds,
+    },
+    streamingMode: {
+      enabled: strictBool(s.streamingMode.enabled),
+      twitchUsername,
+      gracePeriodMinutes,
+      logBypassed: strictBool(s.streamingMode.logBypassed, true),
+    },
+    toastDurationSeconds,
+    whitelistedChannels,
+    theme,
+    weeklyResetDay,
+    intensityLocked: strictBool(s.intensityLocked),
+  };
+
+  if (streamingOverride) {
+    result.streamingOverride = streamingOverride;
+  }
+
+  return result;
+}
