@@ -1,6 +1,6 @@
 // src/popup/popup.ts
 import './popup.css';
-import { migrateSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings, SpendingTracker, DEFAULT_SPENDING_TRACKER } from '../shared/types';
+import { migrateSettings, sanitizeSettings, ThemePreference, ONBOARDING_KEYS, PRESET_COMPARISON_ITEMS, DEFAULT_SETTINGS, UserSettings, SpendingTracker, DEFAULT_SPENDING_TRACKER } from '../shared/types';
 import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { initPending, getPending, setPendingField } from './pendingState';
 import { initScrollSpy, ScrollSpyItem } from './scrollSpy';
@@ -166,7 +166,7 @@ function showWizard(onComplete: () => void): void {
     const result = await chrome.storage.sync.get('hcSettings');
     const current = migrateSettings(result.hcSettings ?? {});
     const updated = { ...current, hourlyRate, taxRate, frictionIntensity };
-    await chrome.storage.sync.set({ hcSettings: updated });
+    await chrome.storage.sync.set({ hcSettings: sanitizeSettings(updated) });
     await chrome.storage.local.set({ [ONBOARDING_KEYS.wizardPending]: false });
     closeWizard();
   });
@@ -298,7 +298,7 @@ async function main(): Promise<void> {
     saveBtnEl.disabled = true;
     saveBtnEl.textContent = 'Saving…';
     try {
-      await chrome.storage.sync.set({ [SETTINGS_KEY]: getPending() });
+      await chrome.storage.sync.set({ [SETTINGS_KEY]: sanitizeSettings(getPending()) });
       settingsLog('Settings saved via popup', { snapshot: getPending() });
       saveBtnEl.textContent = '✓ Saved';
       setTimeout(() => {
