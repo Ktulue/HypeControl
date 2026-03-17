@@ -486,3 +486,36 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
 
   return result;
 }
+
+/** Sanitize a SpendingTracker object — clamps totals, validates dates and timestamps */
+export function sanitizeTracker(t: SpendingTracker): SpendingTracker {
+  const sanitizeTotal = (val: unknown): number => {
+    const n = typeof val === 'number' ? val : 0;
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return Math.round(n * 100) / 100;
+  };
+
+  const validDate = (val: unknown, pattern: RegExp): string => {
+    if (typeof val !== 'string') return '';
+    return pattern.test(val) ? val : '';
+  };
+
+  let lastProceedTimestamp: number | null = null;
+  if (typeof t.lastProceedTimestamp === 'number'
+    && Number.isFinite(t.lastProceedTimestamp)
+    && t.lastProceedTimestamp > 0) {
+    lastProceedTimestamp = t.lastProceedTimestamp;
+  }
+
+  return {
+    lastProceedTimestamp,
+    dailyTotal: sanitizeTotal(t.dailyTotal),
+    dailyDate: validDate(t.dailyDate, /^\d{4}-\d{2}-\d{2}$/),
+    sessionTotal: sanitizeTotal(t.sessionTotal),
+    sessionChannel: typeof t.sessionChannel === 'string' ? t.sessionChannel : '',
+    weeklyTotal: sanitizeTotal(t.weeklyTotal),
+    weeklyStartDate: validDate(t.weeklyStartDate, /^\d{4}-\d{2}-\d{2}$/),
+    monthlyTotal: sanitizeTotal(t.monthlyTotal),
+    monthlyMonth: validDate(t.monthlyMonth, /^\d{4}-\d{2}$/),
+  };
+}
