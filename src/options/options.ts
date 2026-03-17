@@ -4,7 +4,7 @@
 
 import {
   UserSettings, DEFAULT_SETTINGS, ComparisonItem,
-  PRESET_COMPARISON_ITEMS, migrateSettings,
+  PRESET_COMPARISON_ITEMS, migrateSettings, sanitizeSettings,
   WhitelistEntry, WhitelistBehavior, ThemePreference,
 } from '../shared/types';
 import { settingsLog, loadLogs, setVersion } from '../shared/logger';
@@ -35,7 +35,7 @@ async function loadSettings(): Promise<UserSettings> {
  * Save settings to Chrome storage
  */
 async function saveSettings(settings: UserSettings): Promise<void> {
-  await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+  await chrome.storage.sync.set({ [SETTINGS_KEY]: sanitizeSettings(settings) });
 }
 
 /**
