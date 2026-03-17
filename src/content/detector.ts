@@ -198,8 +198,9 @@ const PRICE_REGEX = /\$([\d,]+(?:\.\d{2})?)/;
  * Parse a price string (with potential commas) to a number
  * "$3,890.00" -> 3890.00
  */
-function parsePrice(priceStr: string): number {
-  return parseFloat(priceStr.replace(/,/g, ''));
+function parsePrice(priceStr: string): number | null {
+  const val = parseFloat(priceStr.replace(/,/g, ''));
+  return Number.isFinite(val) ? val : null;
 }
 
 /**
