@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-16
-**Current Version:** 0.4.24
+**Current Version:** 0.4.25
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -310,4 +310,18 @@ All items in the maintenance pass are complete:
 
 ---
 
-_Last updated 2026-03-16 against the v0.4.24 codebase. Maintenance pass complete — toggle alignment, tour button relocation, weekly reset day, history centering + colors, dynamic intensity escalation, wizard default Low._
+## INPUT VALIDATION HARDENING — v0.4.25 (2026-03-16)
+
+All items in the input validation hardening pass are complete:
+
+- [x] **sanitizeSettings()** — Shared validation function for UserSettings: clamps numerics, validates enums/booleans, sanitizes strings, filters invalid comparison items and whitelist entries
+- [x] **sanitizeTracker()** — Validation function for SpendingTracker: clamps totals, validates date formats, sanitizes timestamps
+- [x] **Read-side gate** — migrateSettings() pipes its return through sanitizeSettings()
+- [x] **Write-side gates** — All chrome.storage.sync.set calls for UserSettings wrapped with sanitizeSettings() (popup.ts, options.ts, interceptor.ts, stats.ts)
+- [x] **SpendingTracker gates** — loadSpendingTracker() and saveSpendingTracker() wrapped with sanitizeTracker()
+- [x] **XSS fix** — options.ts comparison item rendering replaced innerHTML template with DOM construction (textContent/setAttribute)
+- [x] **Detector hardening** — parsePrice() returns null on NaN/Infinity instead of propagating bad values
+
+---
+
+_Last updated 2026-03-16 against the v0.4.25 codebase. Input validation hardening complete — defense-in-depth sanitizers on all storage read/write paths, XSS fix, detector hardening._
