@@ -6,7 +6,7 @@
 
 import {
   PurchaseAttempt, OverlayDecision, OverlayCallback, UserSettings, DEFAULT_SETTINGS,
-  FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings,
+  FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings, sanitizeSettings,
   WhitelistEntry, WhitelistBehavior,
 } from '../shared/types';
 import { isPurchaseButton, createPurchaseAttempt, getCurrentChannel } from './detector';
@@ -1985,7 +1985,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
     } else {
       settings.whitelistedChannels.push(newEntry);
     }
-    await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+    await chrome.storage.sync.set({ [SETTINGS_KEY]: sanitizeSettings(settings) });
     log(`Whitelist quick-add saved: ${normalized} → ${behavior}`);
   };
 
