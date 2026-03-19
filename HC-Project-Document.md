@@ -1546,6 +1546,17 @@ Enhancement 8: All 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step) now sho
 1. **Spending history bypass-recording fix** — Purchases that bypassed friction (cap-bypass, no-friction, whitelist-skip, whitelist-reduced) were not calling `writeInterceptEvent()`, so they never appeared in spending history. All bypass paths now correctly record intercept events.
 2. **Logs — Copy All button** — Added a "Copy All" button to the logs page that copies all visible log entries to the clipboard for easy sharing and debugging.
 
+### v0.4.27 — Savings Calendar Feature (2026-03-19)
+
+1. **Savings calendar in Limits section** — Interactive calendar widget in popup that visualizes spending patterns over 90 days with a toggle calendar icon for easy access/dismissal.
+2. **Three-tier day classification** — Days displayed in three states: zero-spend (green), within-limits (blue), over-limits (red) for at-a-glance spending status.
+3. **90 rotating motivational messages** — 30 unique messages per tier (zero/within/over) provide personalized encouragement based on daily performance.
+4. **Date-seeded deterministic selection** — Each day receives the same motivational message on repeat visits using a date-based seed algorithm.
+5. **Keyboard navigation support** — Arrow keys navigate dates, Enter/Space selects, Escape closes; full keyboard accessibility for power users.
+6. **Session/Daily tracker reorder** — Reordered tracker rows in popup for improved information hierarchy and UX flow.
+7. **90-day rolling window** — Calendar displays the last 90 days of data with automatic pruning of older entries.
+8. **Empty state handling** — New users see helpful messaging when insufficient data exists for calendar display.
+
 ## Links & Resources
 
 - **Chrome Extension Docs:** https://developer.chrome.com/docs/extensions/
@@ -1555,6 +1566,6 @@ Enhancement 8: All 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step) now sho
 
 ---
 
-**Document Version:** 1.3
+**Document Version:** 1.4
 **Last Updated:** 2026-03-19
 **Ready for:** Software Saturdays Stream Series

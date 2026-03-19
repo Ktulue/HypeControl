@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-03-19
-**Current Version:** 0.4.26
+**Current Version:** 0.4.27
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -329,6 +329,18 @@ All items in the input validation hardening pass are complete:
 - [x] **Spending history bypass-recording fix** — Purchases that bypassed friction (cap-bypass, no-friction, whitelist-skip, whitelist-reduced) were not being recorded in spending history via `writeInterceptEvent()`. Now all bypass paths correctly write intercept events so spending history is complete.
 - [x] **Logs Copy All button** — Added a "Copy All" button to the logs page that copies all visible log entries to the clipboard.
 
+## SAVINGS CALENDAR — v0.4.27 (2026-03-19)
+
+- [x] **Savings calendar UI component** — Interactive calendar in popup Limits section with calendar icon toggle
+- [x] **Three-tier day classification** — Days marked as zero-spend, within-limits, or over-limits with color coding
+- [x] **90 rotating motivational messages** — 30 messages per tier (zero/within/over), randomly selected based on day seed for determinism
+- [x] **Date-seeded message selection** — Each day gets the same message on revisit (deterministic per date)
+- [x] **Tracker row reorder** — Session/Daily tracker rows reordered for better UX flow
+- [x] **Keyboard navigation** — Arrow keys (left/right/up/down) navigate dates, Enter/Space to select, Escape to close
+- [x] **Click-outside-to-close** — Clicking outside the calendar dismisses it
+- [x] **90-day rolling window** — Calendar shows 90 days of data history, auto-pruning older entries
+- [x] **Empty state for new users** — Helpful messaging when user has insufficient data
+
 ---
 
-_Last updated 2026-03-19 against the v0.4.26 codebase. Bypass-recording bug fix ensures all purchase paths write to spending history; Copy All button added to logs page._
+_Last updated 2026-03-19 against the v0.4.27 codebase. Savings calendar feature complete with motivational messaging, keyboard navigation, and 90-day rolling window._

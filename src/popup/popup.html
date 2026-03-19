@@ -287,16 +287,16 @@
         </div>
         <div class="hc-group">
           <div class="hc-row">
-            <span class="hc-label">Daily total</span>
-            <span class="tracker-value" id="tracker-daily">—</span>
-          </div>
-          <div class="hc-row">
             <span class="hc-label">Session total
               <span class="escalation-info" tabindex="0">ⓘ
                 <span class="info-tooltip-right" role="tooltip">Spending on the current channel this browsing session. Resets when you switch channels.</span>
               </span>
             </span>
             <span class="tracker-value" id="tracker-session">—</span>
+          </div>
+          <div class="hc-row">
+            <span class="hc-label">Daily total</span>
+            <span class="tracker-value" id="tracker-daily">—</span>
           </div>
           <div class="hc-row" id="tracker-weekly-row" hidden>
             <span class="hc-label">Weekly total</span>
@@ -306,6 +306,13 @@
             <span class="hc-label">Monthly total</span>
             <span class="tracker-value" id="tracker-monthly">—</span>
           </div>
+          <div class="hc-row">
+            <span class="hc-label">Savings calendar</span>
+            <button class="btn-icon" id="btn-calendar" aria-label="Toggle savings calendar" title="View savings calendar">
+              &#x1F4C5;
+            </button>
+          </div>
+          <div id="calendar-container" hidden></div>
           <div class="hc-row reset-row">
             <button class="btn-danger btn-sm" id="btn-reset-tracker">Reset Tracker</button>
             <div class="confirm-reset" id="confirm-reset" hidden>
