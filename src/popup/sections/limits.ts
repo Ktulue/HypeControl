@@ -1,4 +1,5 @@
-import { UserSettings, DEFAULT_SPENDING_TRACKER } from '../../shared/types';
+import { UserSettings, DEFAULT_SPENDING_TRACKER, migrateSettings } from '../../shared/types';
+import { initCalendar } from './calendar';
 import { getPending, setPendingField } from '../pendingState';
 
 const TRACKER_KEY = 'hcSpending'; // Matches interceptor.ts SPENDING_KEY
@@ -139,6 +140,19 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
     confirmResetEl.hidden = true;
     resetBtnEl.hidden = false;
     await refreshTracker();
+  });
+
+  // Savings calendar
+  const calendarBtnEl = el.querySelector<HTMLButtonElement>('#btn-calendar')!;
+  const calendarContainerEl = el.querySelector<HTMLElement>('#calendar-container')!;
+
+  const calendar = initCalendar(calendarContainerEl, async () => {
+    const result = await chrome.storage.sync.get('hcSettings');
+    return migrateSettings(result['hcSettings'] || {});
+  });
+
+  calendarBtnEl.addEventListener('click', () => {
+    calendar.toggle();
   });
 
   async function refreshTracker(): Promise<void> {
