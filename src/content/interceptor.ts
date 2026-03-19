@@ -1920,7 +1920,15 @@ async function handleClick(event: MouseEvent): Promise<void> {
 
     if (whitelistEntry.behavior === 'skip') {
       log(`Purchase on whitelisted channel — silently logged (${attempt.rawPrice ?? 'price unknown'})`);
+      const priceWithTax = Math.round((attempt.priceValue ?? 0) * (1 + settings.taxRate / 100) * 100) / 100;
       await recordPurchase(attempt.priceValue, settings, tracker);
+      await writeInterceptEvent({
+        channel: attempt.channel,
+        purchaseType: attempt.type,
+        rawPrice: attempt.rawPrice,
+        priceWithTax,
+        outcome: 'proceeded',
+      });
       allowNextClick(actualButton);
       return;
     }
@@ -1928,7 +1936,15 @@ async function handleClick(event: MouseEvent): Promise<void> {
     if (whitelistEntry.behavior === 'reduced') {
       const priceDisplay = attempt.rawPrice || 'purchase';
       log(`Purchase on whitelisted channel — toast displayed (${priceDisplay})`);
+      const priceWithTax = Math.round((attempt.priceValue ?? 0) * (1 + settings.taxRate / 100) * 100) / 100;
       await recordPurchase(attempt.priceValue, settings, tracker);
+      await writeInterceptEvent({
+        channel: attempt.channel,
+        purchaseType: attempt.type,
+        rawPrice: attempt.rawPrice,
+        priceWithTax,
+        outcome: 'proceeded',
+      });
       showWhitelistReducedToast(attempt.channel, priceDisplay, settings.toastDurationSeconds * 1000);
       allowNextClick(actualButton);
       return;
@@ -1956,13 +1972,28 @@ async function handleClick(event: MouseEvent): Promise<void> {
     log(`Cap bypass — proceeding silently`);
     showBudgetToast(settings, tracker, priceWithTax, settings.toastDurationSeconds * 1000);
     await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel: attempt.channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'proceeded',
+    });
     allowNextClick(actualButton);
     return;
   }
 
   // No friction: track silently and let through
   if (frictionLevel === 'none') {
+    const priceWithTax = Math.round((attempt.priceValue ?? 0) * (1 + settings.taxRate / 100) * 100) / 100;
     await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel: attempt.channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'proceeded',
+    });
     allowNextClick(actualButton);
     return;
   }

@@ -524,10 +524,19 @@ body {
 /* ─── Confirm reset ──────────────────────────────────────── */
 .confirm-reset {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
   font-size: 11px;
   color: var(--text-secondary);
+}
+.reset-summary {
+  color: var(--danger);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.reset-actions {
+  display: flex;
+  gap: 6px;
 }
 .tracker-value {
   font-size: 12px;

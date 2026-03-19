@@ -1197,20 +1197,22 @@ This is simpler than the multi-step cooldown - it's a single timer that applies 
 
 ---
 
-## Add-on 2: Spending Tracker (History View)
+## Add-on 2: Spending Tracker (History View) — COMPLETE
 
-**Complexity:** ⭐⭐ Medium  
-**Estimated Time:** 1-1.5 hours  
-**Dependencies:** MVP Part 4b (Analytics)  
+**Complexity:** ⭐⭐ Medium
+**Estimated Time:** 1-1.5 hours
+**Dependencies:** MVP Part 4b (Analytics)
 **Goal:** Show detailed spending history in a dedicated page.
 
 ### Features
 
-- [ ] Full-page view of all tracked purchases
-- [ ] Filter by: date range, channel, outcome
-- [ ] Sort by: date, amount, channel
-- [ ] Show totals: spent, blocked, saved
+- [x] Full-page view of all tracked purchases
+- [x] Filter by: date range, channel, outcome
+- [x] Sort by: date, amount, channel
+- [x] Show totals: spent, blocked, saved
 - [ ] Exportable to CSV
+
+**Bug fix (v0.4.26):** Purchases that bypassed friction (cap-bypass, no-friction, whitelist-skip, whitelist-reduced) were not being recorded in spending history via `writeInterceptEvent()`. All bypass paths now correctly write intercept events so the history view is complete and accurate.
 
 ---
 
@@ -1539,6 +1541,11 @@ Seven UX issues addressed from Round 2 feedback:
 
 Enhancement 8: All 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step) now show a ⓘ icon in the bottom-right corner. Hovering or focusing the tile reveals a tooltip explaining the stat. CSS-only implementation — no JS required.
 
+### v0.4.26 — Bypass Recording Fix & Logs Copy All (2026-03-19)
+
+1. **Spending history bypass-recording fix** — Purchases that bypassed friction (cap-bypass, no-friction, whitelist-skip, whitelist-reduced) were not calling `writeInterceptEvent()`, so they never appeared in spending history. All bypass paths now correctly record intercept events.
+2. **Logs — Copy All button** — Added a "Copy All" button to the logs page that copies all visible log entries to the clipboard for easy sharing and debugging.
+
 ## Links & Resources
 
 - **Chrome Extension Docs:** https://developer.chrome.com/docs/extensions/
@@ -1548,6 +1555,6 @@ Enhancement 8: All 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step) now sho
 
 ---
 
-**Document Version:** 1.2
-**Last Updated:** 2026-03-13
+**Document Version:** 1.3
+**Last Updated:** 2026-03-19
 **Ready for:** Software Saturdays Stream Series

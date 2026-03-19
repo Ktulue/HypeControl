@@ -104,8 +104,29 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
     });
   });
 
-  // Reset tracker (inline confirmation)
-  resetBtnEl.addEventListener('click', () => {
+  // Reset tracker (inline confirmation with dynamic summary)
+  const resetSummaryEl = el.querySelector<HTMLElement>('#reset-summary')!;
+
+  resetBtnEl.addEventListener('click', async () => {
+    const result = await chrome.storage.local.get(TRACKER_KEY);
+    const tracker = result[TRACKER_KEY];
+    const parts: string[] = [];
+    const daily = tracker?.dailyTotal ?? 0;
+    const session = tracker?.sessionTotal ?? 0;
+    const weekly = tracker?.weeklyTotal ?? 0;
+    const monthly = tracker?.monthlyTotal ?? 0;
+
+    if (daily > 0) parts.push(`daily $${daily.toFixed(2)}`);
+    if (session > 0) parts.push(`session $${session.toFixed(2)}`);
+    if (weekly > 0) parts.push(`weekly $${weekly.toFixed(2)}`);
+    if (monthly > 0) parts.push(`monthly $${monthly.toFixed(2)}`);
+
+    if (parts.length === 0) {
+      resetSummaryEl.textContent = 'All totals are already $0. Reset anyway?';
+    } else {
+      resetSummaryEl.textContent = `This wipes ${parts.join(', ')} back to $0. Cooldown timer resets too.`;
+    }
+
     resetBtnEl.hidden = true;
     confirmResetEl.hidden = false;
   });
