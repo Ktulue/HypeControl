@@ -324,6 +324,9 @@ export function initCalendar(
       dayNum.textContent = String(day);
       cell.appendChild(dayNum);
 
+      // Default: not keyboard-focusable; roving tabindex will promote one cell
+      cell.setAttribute('tabindex', '-1');
+
       // Only tiered (non-empty) cells are clickable
       if (tier !== 'empty' && summary) {
         cell.style.cursor = 'pointer';
@@ -340,6 +343,71 @@ export function initCalendar(
 
       grid.appendChild(cell);
     }
+
+    // ── Roving tabindex: promote initial focused cell ──
+    // Prefer today's cell if visible, else first numbered cell.
+    const allCells = Array.from(grid.querySelectorAll<HTMLElement>('.calendar-cell'));
+    // Only real day cells (those with a data-date-key) participate in keyboard nav.
+    const dayCells = allCells.filter(c => c.dataset.dateKey !== undefined);
+    const todayCell = dayCells.find(c => c.dataset.dateKey === todayKey);
+    const initialCell = todayCell ?? dayCells[0] ?? null;
+    if (initialCell) {
+      initialCell.setAttribute('tabindex', '0');
+    }
+
+    // ── Keyboard navigation handler ──
+    grid.addEventListener('keydown', (e: KeyboardEvent) => {
+      const key = e.key;
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', ' '].includes(key)) {
+        return;
+      }
+
+      // Find which day cell currently holds tabindex="0"
+      const cells = Array.from(grid.querySelectorAll<HTMLElement>('.calendar-cell'))
+        .filter(c => c.dataset.dateKey !== undefined);
+
+      if (cells.length === 0) return;
+
+      const currentIndex = cells.findIndex(c => c.getAttribute('tabindex') === '0');
+      if (currentIndex === -1) return;
+
+      if (key === 'Enter' || key === ' ') {
+        e.preventDefault();
+        cells[currentIndex].click();
+        return;
+      }
+
+      e.preventDefault();
+
+      let nextIndex = currentIndex;
+
+      if (key === 'ArrowLeft') {
+        // Search backward for a real cell
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          nextIndex = i;
+          break;
+        }
+      } else if (key === 'ArrowRight') {
+        for (let i = currentIndex + 1; i < cells.length; i++) {
+          nextIndex = i;
+          break;
+        }
+      } else if (key === 'ArrowUp') {
+        // Move back 7 positions (one week)
+        const target = currentIndex - 7;
+        if (target >= 0) nextIndex = target;
+      } else if (key === 'ArrowDown') {
+        // Move forward 7 positions (one week)
+        const target = currentIndex + 7;
+        if (target < cells.length) nextIndex = target;
+      }
+
+      if (nextIndex !== currentIndex) {
+        cells[currentIndex].setAttribute('tabindex', '-1');
+        cells[nextIndex].setAttribute('tabindex', '0');
+        cells[nextIndex].focus();
+      }
+    });
 
     calWrap.appendChild(grid);
 
