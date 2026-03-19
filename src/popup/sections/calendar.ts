@@ -32,8 +32,9 @@ function aggregateByDay(events: InterceptEvent[]): Map<string, DaySummary> {
   return map;
 }
 
-function getTier(summary: DaySummary | undefined, dailyCap: number | null): Tier {
-  if (!summary || !summary.hasEvents) return 'empty';
+function getTier(summary: DaySummary | undefined, dailyCap: number | null, isFuture: boolean): Tier {
+  if (isFuture) return 'empty';
+  if (!summary || !summary.hasEvents) return 'zero'; // past day, no events = $0 spent = win
   if (summary.spent === 0) return 'zero';
   if (dailyCap !== null && summary.spent > dailyCap) return 'over';
   return 'within';
@@ -55,8 +56,9 @@ function formatDateKey(year: number, month: number, day: number): string {
 function tierAriaDescription(tier: Tier, summary: DaySummary | undefined): string {
   if (tier === 'empty') return 'no activity';
   if (tier === 'zero') return '$0 spent';
-  if (summary) return `$${summary.spent.toFixed(2)} spent`;
-  return '';
+  if (!summary) return '';
+  if (tier === 'over') return `$${summary.spent.toFixed(2)} spent, over limits`;
+  return `$${summary.spent.toFixed(2)} spent, within limits`;
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -302,8 +304,9 @@ export function initCalendar(
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = formatDateKey(viewYear, viewMonth, day);
       const summary = dayMap.get(dateKey);
-      const tier = getTier(summary, dailyCap);
       const date = new Date(viewYear, viewMonth, day);
+      const isFuture = date > today;
+      const tier = getTier(summary, dailyCap, isFuture);
 
       const cell = document.createElement('div');
       cell.className = `calendar-cell tier-${tier}`;
@@ -327,10 +330,10 @@ export function initCalendar(
       // Default: not keyboard-focusable; roving tabindex will promote one cell
       cell.setAttribute('tabindex', '-1');
 
-      // Only tiered (non-empty) cells are clickable
-      if (tier !== 'empty' && summary) {
+      // All non-empty (non-future) cells are clickable
+      if (tier !== 'empty') {
         cell.style.cursor = 'pointer';
-        const capturedSummary = summary;
+        const capturedSummary = summary ?? { saved: 0, spent: 0, hasEvents: false };
         const capturedDate = date;
         const capturedKey = dateKey;
         const capturedTier = tier;
