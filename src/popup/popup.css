@@ -62,6 +62,11 @@
   --success-rgb: 22, 163, 74;
 }
 
+[data-theme="light"] .calendar-cell.tier-grass {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0369a1;
+}
+
 [data-theme="light"] .calendar-cell.tier-over {
   background: rgba(245, 158, 11, 0.12);
   color: #b45309;
@@ -616,6 +621,13 @@ body {
 .calendar-cell.selected { border-color: var(--text-primary); }
 
 .calendar-cell.tier-empty { color: var(--text-muted); }
+
+.calendar-cell.tier-grass {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  cursor: pointer;
+}
+.calendar-cell.tier-grass:hover { background: rgba(56, 189, 248, 0.25); }
 
 .calendar-cell.tier-zero {
   background: rgba(34, 197, 94, 0.2);

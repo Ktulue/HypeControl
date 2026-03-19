@@ -1,6 +1,6 @@
 import { InterceptEvent, UserSettings } from '../../shared/types';
 import { readInterceptEvents } from '../../shared/interceptLogger';
-import { pickMessage, ZERO_MESSAGES, WITHIN_LIMIT_MESSAGES, OVER_LIMIT_MESSAGES } from '../calendarMessages';
+import { pickMessage, ZERO_MESSAGES, GRASS_MESSAGES, WITHIN_LIMIT_MESSAGES, OVER_LIMIT_MESSAGES } from '../calendarMessages';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -10,7 +10,7 @@ interface DaySummary {
   hasEvents: boolean;
 }
 
-type Tier = 'zero' | 'within' | 'over' | 'empty';
+type Tier = 'zero' | 'grass' | 'within' | 'over' | 'empty';
 
 // ─── Data Aggregation ────────────────────────────────────────────────────────
 
@@ -34,8 +34,8 @@ function aggregateByDay(events: InterceptEvent[]): Map<string, DaySummary> {
 
 function getTier(summary: DaySummary | undefined, dailyCap: number | null, isFuture: boolean): Tier {
   if (isFuture) return 'empty';
-  if (!summary || !summary.hasEvents) return 'zero'; // past day, no events = $0 spent = win
-  if (summary.spent === 0) return 'zero';
+  if (!summary || !summary.hasEvents) return 'grass'; // past day, no events = chill day
+  if (summary.spent === 0) return 'zero'; // had intercepts, cancelled them all
   if (dailyCap !== null && summary.spent > dailyCap) return 'over';
   return 'within';
 }
@@ -55,7 +55,8 @@ function formatDateKey(year: number, month: number, day: number): string {
 
 function tierAriaDescription(tier: Tier, summary: DaySummary | undefined): string {
   if (tier === 'empty') return 'no activity';
-  if (tier === 'zero') return '$0 spent';
+  if (tier === 'grass') return '$0 spent, no purchase attempts';
+  if (tier === 'zero') return '$0 spent, resisted temptation';
   if (!summary) return '';
   if (tier === 'over') return `$${summary.spent.toFixed(2)} spent, over limits`;
   return `$${summary.spent.toFixed(2)} spent, within limits`;
@@ -155,7 +156,9 @@ export function initCalendar(
     msgEl.className = 'calendar-detail-message';
 
     let pool: readonly string[];
-    if (tier === 'zero') {
+    if (tier === 'grass') {
+      pool = GRASS_MESSAGES;
+    } else if (tier === 'zero') {
       pool = ZERO_MESSAGES;
     } else if (tier === 'over') {
       pool = OVER_LIMIT_MESSAGES;
