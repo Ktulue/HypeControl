@@ -1154,6 +1154,7 @@ function showTrackerStatus(message: string, type: 'success' | 'error'): void {
  * Reset the spending tracker stored in local storage
  */
 async function handleResetTracker(): Promise<void> {
+  if (!confirm('Reset all spending totals (daily, session, weekly, monthly) to $0?')) return;
   await chrome.storage.local.remove('hcSpending');
   showTrackerStatus('✅ Spending tracker reset', 'success');
   const dataEl = document.getElementById('tracker-data') as HTMLPreElement;

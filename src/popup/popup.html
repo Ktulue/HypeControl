@@ -306,13 +306,15 @@
             <span class="hc-label">Monthly total</span>
             <span class="tracker-value" id="tracker-monthly">—</span>
           </div>
-          <div class="hc-row">
+          <div class="hc-row reset-row">
             <button class="btn-danger btn-sm" id="btn-reset-tracker">Reset Tracker</button>
-            <span class="confirm-reset" id="confirm-reset" hidden>
-              Are you sure?
-              <button class="btn-danger btn-sm" id="btn-reset-confirm">Yes, reset</button>
-              <button class="btn-sm" id="btn-reset-cancel">Cancel</button>
-            </span>
+            <div class="confirm-reset" id="confirm-reset" hidden>
+              <p class="reset-summary" id="reset-summary"></p>
+              <div class="reset-actions">
+                <button class="btn-danger btn-sm" id="btn-reset-confirm">Wipe it</button>
+                <button class="btn-sm" id="btn-reset-cancel">Nevermind</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

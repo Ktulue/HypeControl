@@ -85,8 +85,29 @@ function setupTabs(): void {
   });
 }
 
+function formatLogsAsText(entries: LogEntry[]): string {
+  const reversed = [...entries].reverse();
+  return reversed.map(e => {
+    const parts = [e.timestamp, levelLabel(e.level), e.message];
+    if (e.data !== undefined) parts.push(JSON.stringify(e.data));
+    return parts.join('\t');
+  }).join('\n');
+}
+
 function setupControls(): void {
   document.getElementById('btn-refresh')?.addEventListener('click', loadAndRender);
+
+  document.getElementById('btn-copy')?.addEventListener('click', async () => {
+    const entries = activeTab === 'extension'
+      ? await getExtensionLogs()
+      : await getSettingsLogs();
+    const text = formatLogsAsText(entries);
+    await navigator.clipboard.writeText(text);
+    const btn = document.getElementById('btn-copy')!;
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
 
   document.getElementById('btn-clear')?.addEventListener('click', async () => {
     if (!confirm(`Clear the ${activeTab} log?`)) return;

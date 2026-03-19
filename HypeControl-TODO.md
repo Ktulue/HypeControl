@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-16
-**Current Version:** 0.4.25
+**Updated:** 2026-03-19
+**Current Version:** 0.4.26
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -324,4 +324,11 @@ All items in the input validation hardening pass are complete:
 
 ---
 
-_Last updated 2026-03-16 against the v0.4.25 codebase. Input validation hardening complete — defense-in-depth sanitizers on all storage read/write paths, XSS fix, detector hardening._
+## BUG FIX & LOGS ENHANCEMENT — v0.4.26 (2026-03-19)
+
+- [x] **Spending history bypass-recording fix** — Purchases that bypassed friction (cap-bypass, no-friction, whitelist-skip, whitelist-reduced) were not being recorded in spending history via `writeInterceptEvent()`. Now all bypass paths correctly write intercept events so spending history is complete.
+- [x] **Logs Copy All button** — Added a "Copy All" button to the logs page that copies all visible log entries to the clipboard.
+
+---
+
+_Last updated 2026-03-19 against the v0.4.26 codebase. Bypass-recording bug fix ensures all purchase paths write to spending history; Copy All button added to logs page._
