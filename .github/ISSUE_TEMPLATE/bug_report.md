@@ -23,7 +23,7 @@ If applicable, add screenshots.
 **Environment**
 - OS: [e.g. Windows 11, macOS 15]
 - Browser: [e.g. Chrome 124, Firefox 128]
-- Extension version: [e.g. v0.4.14]
+- Extension version: [e.g. v1.0.0]
 
 **Additional context**
 Any other details.

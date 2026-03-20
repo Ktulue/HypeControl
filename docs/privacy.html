@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Hype Control</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      color: #1a1a2e;
+      background: #fafafa;
+      line-height: 1.7;
+      padding: 48px 24px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+
+    .effective-date {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: #1a1a2e;
+    }
+
+    p, li {
+      font-size: 0.95rem;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    ul {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    li { margin-bottom: 8px; }
+
+    a { color: #9147ff; }
+    a:hover { text-decoration: none; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 40px;
+      font-size: 0.9rem;
+    }
+
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 0.85rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="effective-date">Effective date: March 20, 2026</p>
+
+    <p>Hype Control is a free, open-source Chrome extension that creates intentional friction before Twitch purchases. This policy explains what data the extension handles and how.</p>
+
+    <h2>Data Collection</h2>
+    <p><strong>Hype Control does not collect, transmit, or share any personal data.</strong> There are no analytics, no tracking, no external servers, and no third-party services. All data stays on your device.</p>
+
+    <h2>Data Storage</h2>
+    <p>The extension stores two categories of data locally on your device using Chrome's built-in storage APIs:</p>
+    <ul>
+      <li><strong>User settings</strong> (<code>chrome.storage.sync</code>) — Your hourly rate, tax rate, friction level, comparison items, spending caps, channel whitelist, and other preferences. These sync across your Chrome browsers if you're signed into Chrome, but are never sent to Hype Control or any third party.</li>
+      <li><strong>Spending data</strong> (<code>chrome.storage.local</code>) — Daily, weekly, and monthly spending totals, intercept event history (purchase type, price, outcome), and activity logs. This data stays on the device where it was created and is not synced.</li>
+    </ul>
+    <p>You can reset all spending data at any time using the "Reset Tracker" button in the extension popup. Uninstalling the extension removes all stored data.</p>
+
+    <h2>Permissions</h2>
+    <p>Hype Control requests only the permissions necessary to function:</p>
+    <ul>
+      <li><strong>Host permission for Twitch</strong> (<code>*://*.twitch.tv/*</code>) — Required to inject the content script that detects purchase buttons and displays friction overlays on Twitch pages. The extension does not access, read, or modify any other websites.</li>
+      <li><strong>Storage</strong> (<code>storage</code>) — Required to save your settings and spending data locally using Chrome's storage API.</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+    <p>Hype Control does not use any third-party services, SDKs, or APIs. No data is sent to external servers of any kind.</p>
+
+    <h2>Open Source</h2>
+    <p>The complete source code is publicly available at <a href="https://github.com/Ktulue/HypeControl">github.com/Ktulue/HypeControl</a> under the GNU GPL v3.0 license. You can verify every claim in this policy by reading the code.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>If this policy changes, the updated version will be posted here with a new effective date. Significant changes will be noted in the extension's changelog.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or concerns? Open an issue on <a href="https://github.com/Ktulue/HypeControl/issues">GitHub</a>.</p>
+
+    <a href="index.html" class="back-link">&larr; Back to Hype Control</a>
+
+    <div class="footer">
+      <p>Hype Control is created by <a href="https://github.com/Ktulue">Ktulue</a> and is not affiliated with Twitch or Amazon.</p>
+    </div>
+  </div>
+
+</body>
+</html>

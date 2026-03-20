@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Ideas & Feature Discussions"
+    url: https://github.com/Ktulue/HypeControl/discussions/new?category=ideas
+    about: "Suggest ideas or discuss potential features"
