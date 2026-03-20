@@ -1,4 +1,4 @@
-import { migrateSettings, DEFAULT_SETTINGS, UserSettings } from '../../src/shared/types';
+import { migrateSettings, DEFAULT_SETTINGS, UserSettings, sanitizeTracker, DEFAULT_SPENDING_TRACKER, SpendingTracker } from '../../src/shared/types';
 
 describe('migrateSettings', () => {
   test('adds weeklyResetDay with default monday for existing users', () => {
@@ -33,5 +33,38 @@ describe('migrateSettings', () => {
     const saved: Partial<UserSettings> = { frictionIntensity: 'high' };
     const result = migrateSettings(saved);
     expect(result.frictionIntensity).toBe('high');
+  });
+});
+
+describe('sanitizeTracker', () => {
+  test('returns valid tracker with correct defaults', () => {
+    const result = sanitizeTracker({ ...DEFAULT_SPENDING_TRACKER });
+    expect(result.dailyTotal).toBe(0);
+    expect(result.weeklyTotal).toBe(0);
+    expect(result.monthlyTotal).toBe(0);
+    expect(result.lastProceedTimestamp).toBeNull();
+    expect(result).not.toHaveProperty('sessionTotal');
+    expect(result).not.toHaveProperty('sessionChannel');
+  });
+
+  test('strips legacy sessionTotal/sessionChannel from old storage', () => {
+    const oldData = {
+      ...DEFAULT_SPENDING_TRACKER,
+      sessionTotal: 42.50,
+      sessionChannel: 'xqc',
+    } as any;
+    const result = sanitizeTracker(oldData);
+    expect(result).not.toHaveProperty('sessionTotal');
+    expect(result).not.toHaveProperty('sessionChannel');
+  });
+
+  test('clamps negative totals to 0', () => {
+    const bad = { ...DEFAULT_SPENDING_TRACKER, dailyTotal: -5 } as any;
+    expect(sanitizeTracker(bad).dailyTotal).toBe(0);
+  });
+
+  test('rounds totals to 2 decimal places', () => {
+    const t = { ...DEFAULT_SPENDING_TRACKER, dailyTotal: 1.999 } as any;
+    expect(sanitizeTracker(t).dailyTotal).toBe(2.00);
   });
 });

@@ -203,8 +203,6 @@ export interface SpendingTracker {
   lastProceedTimestamp: number | null;
   dailyTotal: number;
   dailyDate: string;
-  sessionTotal: number;
-  sessionChannel: string;
   weeklyTotal: number;
   weeklyStartDate: string;   // ISO date of the day that starts the current week (Monday or Sunday, YYYY-MM-DD)
   monthlyTotal: number;
@@ -215,8 +213,6 @@ export const DEFAULT_SPENDING_TRACKER: SpendingTracker = {
   lastProceedTimestamp: null,
   dailyTotal: 0,
   dailyDate: '',
-  sessionTotal: 0,
-  sessionChannel: '',
   weeklyTotal: 0,
   weeklyStartDate: '',
   monthlyTotal: 0,
@@ -515,8 +511,6 @@ export function sanitizeTracker(t: SpendingTracker): SpendingTracker {
     lastProceedTimestamp,
     dailyTotal: sanitizeTotal(t.dailyTotal),
     dailyDate: validDate(t.dailyDate, /^\d{4}-\d{2}-\d{2}$/),
-    sessionTotal: sanitizeTotal(t.sessionTotal),
-    sessionChannel: typeof t.sessionChannel === 'string' ? t.sessionChannel : '',
     weeklyTotal: sanitizeTotal(t.weeklyTotal),
     weeklyStartDate: validDate(t.weeklyStartDate, /^\d{4}-\d{2}-\d{2}$/),
     monthlyTotal: sanitizeTotal(t.monthlyTotal),
