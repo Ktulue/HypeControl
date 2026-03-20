@@ -2,7 +2,7 @@
 
 **Updated:** 2026-03-20
 **Current Version:** 0.4.28
-**Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
+**Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
 
@@ -92,8 +92,8 @@ Working:
 - [x] **Cancel-rate insight** — % of intercepts cancelled, displayed in popup
 - [x] **Most effective step insight** — Step with highest cancel rate shown in popup
 - [x] **Auto-prune to 90 days** — `interceptLogger.ts` prunes events older than 90 days on every write
-- [ ] **Peak spending hours** — Hour-of-day bucketing (not implemented — deferred to Add-on 2)
-- [ ] **Top channels** — Per-channel stats (not implemented — deferred to Add-on 2)
+- [x] ~~**Peak spending hours**~~ — Deferred to future enhancement (not part of Add-on 2 final scope)
+- [x] ~~**Top channels**~~ — Deferred to future enhancement (not part of Add-on 2 final scope)
 
 ---
 
@@ -119,7 +119,7 @@ Working:
 
 ---
 
-### ⚠️ MVP Part 6 — Polish & Edge Cases (PARTIALLY DONE)
+### ✅ MVP Part 6 — Polish & Edge Cases (COMPLETE)
 
 **What's implemented:** Error handling, multiple DOM fallback selectors, debounced saves, escape-key dismissal, backdrop click to cancel, version tracking, debug functions (`HC.testOverlay()`, `HC.scanButtons()`), inline field validation with error messages, overlay entrance animations (fadeIn + slideIn CSS keyframes). Options page UI polish: responsive two/three-column grid layout on wider screens, centered section headers, styled footer with centered buttons and version number, comparison item deduplication in migration.
 
@@ -134,34 +134,21 @@ Working:
 
 ---
 
-## SECURITY FIXES
+## SECURITY FIXES (v0.4.9, v0.4.21)
 
-### Stored XSS in Logs Page (High Priority)
-
-Two confirmed stored XSS vulnerabilities in `src/logs/logs.ts` found via security review. Both execute in the `chrome-extension://` page context, which has access to `chrome.storage.sync` and other extension APIs.
-
-- [x] **Fix `e.message` injection (logs.ts:37)** — ✅ Fixed in v0.4.9: `renderLogs()` rewritten with DOM construction (`createElement`, `textContent`, `appendChild`).
-- [x] **Fix `JSON.stringify(e.data)` injection (logs.ts:31)** — ✅ Fixed in v0.4.9: `e.data` field rendered via `textContent` on a `<span>` element.
-
-Both fixes: `container.innerHTML` template replaced with full DOM construction.
+Stored XSS vulnerabilities in logs.ts and interceptor.ts resolved via DOM construction (textContent). All user-controlled and storage values now use safe rendering.
 
 ---
 
 ## ROUND 2 BUG FIXES (v0.4.12)
 
-All 7 issues from the Round 2 feedback pass — fixed and shipped.
+7 issues fixed: duplicate thresholds toggle, popup scroll, nudge step capping, settings log, logs centering, emoji hint, whitelist copy.
 
-- [x] **Duplicate Thresholds toggle removed from Stats section** — Stats section no longer renders a second Thresholds toggle; the authoritative toggle lives in Friction section only.
-- [x] **Popup scroll fixed** — `.hc-content` now has `min-height: 0` so the flex child can shrink and the scroll container behaves correctly on all section heights.
-- [x] **Soft Nudge Steps capped at comparison item count** — Step count is now clamped to `Math.min(stepCount, comparisonItems.length)` so the UI never shows more steps than there are items to display.
-- [x] **Popup saves write to Settings Log tab** — Save operations now append an entry to the Settings Log tab in addition to triggering the toast, so all setting changes are traceable.
-- [x] **Logs page content centered** — Logs page layout updated so content is horizontally centered in the viewport.
-- [x] **Emoji picker hint restored in comparison subpanel** — The "type : to open the emoji picker" hint text is shown again in the comparison item add/edit subpanel.
-- [x] **Whitelist banner copy fixed** — Banner in the friction overlay now reads "This channel is on your whitelist" (was previously incorrect copy).
+---
 
 ## STAT CARD TOOLTIPS (v0.4.13)
 
-- [x] Enhancement 8: Added ⓘ hover tooltips to all 4 stat tiles (Saved, Blocked, Cancel Rate, Best Step)
+Added ⓘ hover tooltips to all 4 stat tiles.
 
 ---
 
@@ -187,20 +174,12 @@ All settings consolidated into a single 500×580px popup with right-side scroll-
 - [x] Options page retired (deprecation notice), removed from manifest and webpack
 - [x] Jest + ts-jest test infrastructure with 9 unit tests for pendingState module
       
-### Interactive Onboarding Tour (Long-term Milestone)
+### ✅ Interactive Onboarding Tour (COMPLETE — Popup Wizard)
 
-**Complexity:** ⭐⭐⭐⭐⭐ Very Hard
-**Dependencies:** Settings UI Redesign
+**What was implemented:** First-run setup wizard in the popup with hourly rate, tax rate, friction level, and comparison item selection. Skip option with defaults summary. Replay button at bottom of popup.
 
-Guided first-install walkthrough that overlays the Twitch page and highlights each interceptable element (Gift Sub, Subscribe, Get Bits) one at a time. Slide-out explainer panel shows what HC does at each point and where the related setting lives in the options page. Beginner/Advanced toggle so experienced users can skip the tour entirely.
-
-**Reference:** Previews extension slide-out changelog panel pattern.
-
-- [ ] First-install detection triggers tour
-- [ ] Beginner / Advanced mode selection
-- [ ] Sequential element highlighting on Twitch page
-- [ ] Slide-out explainer panel per highlighted element
-- [ ] Links from tour steps to relevant settings sections
+**What was deferred (full Twitch-page tour):**
+The original design called for a guided overlay on the Twitch page highlighting each interceptable element. This was descoped in favor of the popup wizard approach. If revisited, it would be a future enhancement.
 
 ### ✅ Add-on 5 — Streamer Whitelist (COMPLETE)
 
@@ -238,16 +217,12 @@ Guided first-install walkthrough that overlays the Twitch page and highlights ea
 
 ## CURRENT ROADMAP
 
-### Next Up (In Order)
+### Next Up
 
-1. **Add-on 2 — Spending History View** — Full-page view of all logged intercept events. Filter by date range, channel, outcome. Sort controls. Totals row.
-2. ~~**Add-on 3 — Weekly/Monthly Spending Limits**~~ ✅ Complete (v0.4.22)
-3. ~~**Interactive Onboarding Tour**~~ ✅ Complete (v0.4.21)
-4. **Firefox AMO Port** — Adapt extension for Firefox. Requires `browser_specific_settings` in manifest, MV3 background script adjustment, `browser.*` API compatibility review, and AMO submission assets.
+1. **Chrome Web Store Launch** — Store listing, privacy policy, screenshots, version 1.0.0 release
+2. **Firefox AMO Port** — Adapt extension for Firefox (manifest changes, `browser.*` API audit, AMO submission)
 
-### Deferred to Future Enhancements
-
-Add-ons 6–12 are out of scope for the current build phase:
+### Future Enhancements
 
 - Add-on 6 — Export Data (CSV/JSON)
 - Add-on 7 — Accountability Partner
@@ -256,8 +231,9 @@ Add-ons 6–12 are out of scope for the current build phase:
 - Add-on 10 — Regret Scoring (24-Hour Check-in)
 - Add-on 11 — Monthly Budget & Rollover System
 - Add-on 12 — Reporting Dashboard + Google Sheets
-
----
+- Peak spending hours (hour-of-day bucketing)
+- Top channels (per-channel stats)
+- Full Twitch-page onboarding tour (overlay-based walkthrough)
 
 ---
 
@@ -285,72 +261,38 @@ Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a
 
 ## UI POLISH & REBRAND (v0.4.14)
 
-- [x] **Rebrand styles.css** — teal/green token system, sweep hardcoded colors, fix transition and progress bar
-- [x] **Rebrand popup.css** — Space Grotesk, teal/green tokens, focus rings, touch targets
-- [x] **Extract logs.css** — teal/green tokens, Space Grotesk, ARIA tab pattern (tablist/tab/tabpanel + aria-selected management)
-- [x] **ARIA label associations** — label-for and fieldsets added to segmented controls in popup.html
-- [x] **Light mode token fixes** — hc-primary-rgb, accent-rgb, success-rgb overrides added to styles.css
+Space Grotesk typography, teal/green token system, ARIA label associations, light mode fixes.
 
 ---
 
-## MAINTENANCE PASS — v0.4.24 (2026-03-16)
+## MAINTENANCE PASS (v0.4.24)
 
-All items in the maintenance pass are complete:
-
-- [x] **Toggle vertical alignment** — `.toggle-wrap` flex items now align via `align-items: center`
-- [x] **History summary bar true-center** — `.hc-history-summary` uses `justify-content: center` with `flex-wrap: wrap`
-- [x] **History metric color parity** — Positive/negative/neutral metric values use green/red/default tokens consistently
-- [x] **Replay tour button relocation** — "Replay Setup Tour" button moved to bottom of `.hc-content` (above nav), out of Settings section
-- [x] **New settings fields + migration** — `weeklyResetDay` (monday/sunday), `intensityLocked` (bool), `dynamicIntensity` (bool) added to `UserSettings` with defaults and migration
-- [x] **Escalation logic module** — `src/shared/escalation.ts` computes escalated intensity from cap percentage thresholds
-- [x] **Weekly reset day preference** — Popup Limits section shows Mon/Sun segmented control when weekly cap is enabled; `getWeekStart()` respects the setting
-- [x] **Escalation wired into content script** — `interceptor.ts` reads tracker + settings, computes effective intensity via `computeEscalatedIntensity`, uses it for overlay
-- [x] **Escalation UI in popup** — Stats and Friction sections show escalation indicator banner + lock toggle; bidirectional intensity mirrors updated
-- [x] **Wizard default changed to Low** — Wizard friction segmented control, skip-confirmation text, friction-desc, and fallback all updated to Low intensity
+Toggle alignment, history summary centering, metric color parity, tour button relocation, escalation logic, weekly reset day, wizard default changed to Low.
 
 ---
 
-## INPUT VALIDATION HARDENING — v0.4.25 (2026-03-16)
+## INPUT VALIDATION HARDENING (v0.4.25)
 
-All items in the input validation hardening pass are complete:
-
-- [x] **sanitizeSettings()** — Shared validation function for UserSettings: clamps numerics, validates enums/booleans, sanitizes strings, filters invalid comparison items and whitelist entries
-- [x] **sanitizeTracker()** — Validation function for SpendingTracker: clamps totals, validates date formats, sanitizes timestamps
-- [x] **Read-side gate** — migrateSettings() pipes its return through sanitizeSettings()
-- [x] **Write-side gates** — All chrome.storage.sync.set calls for UserSettings wrapped with sanitizeSettings() (popup.ts, options.ts, interceptor.ts, stats.ts)
-- [x] **SpendingTracker gates** — loadSpendingTracker() and saveSpendingTracker() wrapped with sanitizeTracker()
-- [x] **XSS fix** — options.ts comparison item rendering replaced innerHTML template with DOM construction (textContent/setAttribute)
-- [x] **Detector hardening** — parsePrice() returns null on NaN/Infinity instead of propagating bad values
+sanitizeSettings()/sanitizeTracker() gates on all storage paths, XSS fix in options comparison items, parsePrice() NaN/Infinity guard.
 
 ---
 
-## BUG FIX & LOGS ENHANCEMENT — v0.4.26 (2026-03-19)
+## BUG FIX & LOGS ENHANCEMENT (v0.4.26)
 
-- [x] **Spending history bypass-recording fix** — Purchases that bypassed friction (cap-bypass, no-friction, whitelist-skip, whitelist-reduced) were not being recorded in spending history via `writeInterceptEvent()`. Now all bypass paths correctly write intercept events so spending history is complete.
-- [x] **Logs Copy All button** — Added a "Copy All" button to the logs page that copies all visible log entries to the clipboard.
-
-## SAVINGS CALENDAR — v0.4.27 (2026-03-19)
-
-- [x] **Savings calendar UI component** — Interactive calendar in popup Limits section with calendar icon toggle
-- [x] **Three-tier day classification** — Days marked as zero-spend, within-limits, or over-limits with color coding
-- [x] **90 rotating motivational messages** — 30 messages per tier (zero/within/over), randomly selected based on day seed for determinism
-- [x] **Date-seeded message selection** — Each day gets the same message on revisit (deterministic per date)
-- [x] **Tracker row reorder** — Session/Daily tracker rows reordered for better UX flow
-- [x] **Keyboard navigation** — Arrow keys (left/right/up/down) navigate dates, Enter/Space to select, Escape to close
-- [x] **Click-outside-to-close** — Clicking outside the calendar dismisses it
-- [x] **90-day rolling window** — Calendar shows 90 days of data history, auto-pruning older entries
-- [x] **Empty state for new users** — Helpful messaging when user has insufficient data
+Silent-proceed bypass paths now record to spending history. Logs page Copy All button added.
 
 ---
 
-## TRACKER RESET FIX & SESSION REMOVAL — v0.4.28 (2026-03-20)
+## SAVINGS CALENDAR (v0.4.27)
 
-- [x] **Shared spendingTracker module** — Extracted `loadSpendingTracker()`, `saveSpendingTracker()`, `recordPurchase()`, and date helpers into `src/shared/spendingTracker.ts`. Both the popup and content script now use the same loader with automatic period reset checks.
-- [x] **Daily/weekly/monthly reset fix** — Reset logic (date comparison → zero out) now runs whenever the tracker is read, not just in the content script. Popup displays fresh totals even without navigating Twitch first.
-- [x] **Auto-save on reset** — `loadSpendingTracker()` now auto-saves to storage when any period reset occurs, so the reset persists immediately.
-- [x] **Session total removed** — `sessionTotal` and `sessionChannel` removed from `SpendingTracker` type, UI, overlay, and all code paths. Daily/weekly/monthly cover the useful ranges.
-- [x] **Shared SPENDING_KEY constant** — All files now import the storage key from the shared module instead of using raw strings.
+Interactive calendar in popup Limits section with 3-tier day classification, 90 motivational messages, keyboard navigation, 90-day rolling window.
 
 ---
 
-_Last updated 2026-03-20 against the v0.4.28 codebase. Tracker reset fix and session removal complete._
+## TRACKER RESET FIX & SESSION REMOVAL (v0.4.28)
+
+Shared spendingTracker module, daily/weekly/monthly reset fix for popup, session total removed.
+
+---
+
+_Last updated 2026-03-20 against the v0.4.28 codebase. Repository cleaned up for Chrome Web Store launch preparation._

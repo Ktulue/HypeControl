@@ -35,7 +35,7 @@ For development:
    - On Windows you can also just double-click `setup.bat`
 3. Open Chrome → `chrome://extensions/`
 4. Enable "Developer mode"
-5. Click "Load unpacked" and select the project root folder (where `manifest.json` lives)
+5. Click "Load unpacked" and select the `dist/` folder
 
 ## Configuration
 
