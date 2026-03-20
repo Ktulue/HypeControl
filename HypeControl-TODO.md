@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-19
-**Current Version:** 0.4.27
+**Updated:** 2026-03-20
+**Current Version:** 0.4.28
 **Based On:** MTS-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -343,4 +343,14 @@ All items in the input validation hardening pass are complete:
 
 ---
 
-_Last updated 2026-03-19 against the v0.4.27 codebase. Savings calendar feature complete with motivational messaging, keyboard navigation, and 90-day rolling window._
+## TRACKER RESET FIX & SESSION REMOVAL — v0.4.28 (2026-03-20)
+
+- [x] **Shared spendingTracker module** — Extracted `loadSpendingTracker()`, `saveSpendingTracker()`, `recordPurchase()`, and date helpers into `src/shared/spendingTracker.ts`. Both the popup and content script now use the same loader with automatic period reset checks.
+- [x] **Daily/weekly/monthly reset fix** — Reset logic (date comparison → zero out) now runs whenever the tracker is read, not just in the content script. Popup displays fresh totals even without navigating Twitch first.
+- [x] **Auto-save on reset** — `loadSpendingTracker()` now auto-saves to storage when any period reset occurs, so the reset persists immediately.
+- [x] **Session total removed** — `sessionTotal` and `sessionChannel` removed from `SpendingTracker` type, UI, overlay, and all code paths. Daily/weekly/monthly cover the useful ranges.
+- [x] **Shared SPENDING_KEY constant** — All files now import the storage key from the shared module instead of using raw strings.
+
+---
+
+_Last updated 2026-03-20 against the v0.4.28 codebase. Tracker reset fix and session removal complete._
