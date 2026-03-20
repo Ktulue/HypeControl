@@ -8,6 +8,7 @@ import {
   WhitelistEntry, WhitelistBehavior, ThemePreference,
 } from '../shared/types';
 import { settingsLog, loadLogs, setVersion } from '../shared/logger';
+import { SPENDING_KEY } from '../shared/spendingTracker';
 
 /** Storage key for user settings */
 const SETTINGS_KEY = 'hcSettings';
@@ -1154,8 +1155,8 @@ function showTrackerStatus(message: string, type: 'success' | 'error'): void {
  * Reset the spending tracker stored in local storage
  */
 async function handleResetTracker(): Promise<void> {
-  if (!confirm('Reset all spending totals (daily, session, weekly, monthly) to $0?')) return;
-  await chrome.storage.local.remove('hcSpending');
+  if (!confirm('Reset all spending totals (daily, weekly, monthly) to $0?')) return;
+  await chrome.storage.local.remove(SPENDING_KEY);
   showTrackerStatus('✅ Spending tracker reset', 'success');
   const dataEl = document.getElementById('tracker-data') as HTMLPreElement;
   if (dataEl) dataEl.style.display = 'none';
@@ -1165,7 +1166,7 @@ async function handleResetTracker(): Promise<void> {
  * Display the raw hcSpending JSON for debugging
  */
 async function handleViewTracker(): Promise<void> {
-  const result = await chrome.storage.local.get('hcSpending');
+  const result = await chrome.storage.local.get(SPENDING_KEY);
   const dataEl = document.getElementById('tracker-data') as HTMLPreElement;
   if (!dataEl) return;
   if (dataEl.style.display === 'block') {
