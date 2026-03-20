@@ -33,8 +33,8 @@ Attempt npm run build once after versioning. If the build fails for any reason (
 
 After completing any work, update these files before finishing:
 
-- **MTS-TODO.md** — Mark completed items with `[x]`, update phase statuses, set the `Updated` date and `Current Version` in the header, and update the footer timestamp.
-- **MTS-Project-Document.md** — If a feature's status has changed (e.g., a previously unimplemented MVP part is now done), update the relevant section to reflect the current state.
+- **docs/dev/HypeControl-TODO.md** — Mark completed items with `[x]`, update phase statuses, set the `Updated` date and `Current Version` in the header, and update the footer timestamp.
+- **docs/dev/HC-Project-Document.md** — If a feature's status has changed (e.g., a previously unimplemented MVP part is now done), update the relevant section to reflect the current state.
 
 ---
 
