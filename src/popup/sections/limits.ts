@@ -1,8 +1,7 @@
 import { UserSettings, DEFAULT_SPENDING_TRACKER, migrateSettings } from '../../shared/types';
+import { loadSpendingTracker, SPENDING_KEY } from '../../shared/spendingTracker';
 import { initCalendar } from './calendar';
 import { getPending, setPendingField } from '../pendingState';
-
-const TRACKER_KEY = 'hcSpending'; // Matches interceptor.ts SPENDING_KEY
 
 export interface LimitsController {
   render(settings: UserSettings): void;
@@ -19,7 +18,6 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
   const cooldownEnabledEl = el.querySelector<HTMLInputElement>('#cooldown-enabled')!;
   const cooldownDurationEl = el.querySelector<HTMLSelectElement>('#cooldown-duration')!;
   const trackerDailyEl = el.querySelector<HTMLElement>('#tracker-daily')!;
-  const trackerSessionEl = el.querySelector<HTMLElement>('#tracker-session')!;
   const resetBtnEl = el.querySelector<HTMLButtonElement>('#btn-reset-tracker')!;
   const confirmResetEl = el.querySelector<HTMLElement>('#confirm-reset')!;
   const resetConfirmBtnEl = el.querySelector<HTMLButtonElement>('#btn-reset-confirm')!;
@@ -109,16 +107,14 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
   const resetSummaryEl = el.querySelector<HTMLElement>('#reset-summary')!;
 
   resetBtnEl.addEventListener('click', async () => {
-    const result = await chrome.storage.local.get(TRACKER_KEY);
-    const tracker = result[TRACKER_KEY];
+    const result = await chrome.storage.local.get(SPENDING_KEY);
+    const tracker = result[SPENDING_KEY];
     const parts: string[] = [];
     const daily = tracker?.dailyTotal ?? 0;
-    const session = tracker?.sessionTotal ?? 0;
     const weekly = tracker?.weeklyTotal ?? 0;
     const monthly = tracker?.monthlyTotal ?? 0;
 
     if (daily > 0) parts.push(`daily $${daily.toFixed(2)}`);
-    if (session > 0) parts.push(`session $${session.toFixed(2)}`);
     if (weekly > 0) parts.push(`weekly $${weekly.toFixed(2)}`);
     if (monthly > 0) parts.push(`monthly $${monthly.toFixed(2)}`);
 
@@ -136,7 +132,7 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
     resetBtnEl.hidden = false;
   });
   resetConfirmBtnEl.addEventListener('click', async () => {
-    await chrome.storage.local.set({ [TRACKER_KEY]: DEFAULT_SPENDING_TRACKER });
+    await chrome.storage.local.set({ [SPENDING_KEY]: DEFAULT_SPENDING_TRACKER });
     confirmResetEl.hidden = true;
     resetBtnEl.hidden = false;
     await refreshTracker();
@@ -156,29 +152,19 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
   });
 
   async function refreshTracker(): Promise<void> {
-    const result = await chrome.storage.local.get(TRACKER_KEY);
-    const tracker = result[TRACKER_KEY];
-    if (tracker) {
-      trackerDailyEl.textContent = `$${(tracker.dailyTotal ?? 0).toFixed(2)}`;
-      trackerSessionEl.textContent = `$${(tracker.sessionTotal ?? 0).toFixed(2)}`;
+    const settingsResult = await chrome.storage.sync.get('hcSettings');
+    const userSettings = migrateSettings(settingsResult['hcSettings'] || {});
+    const tracker = await loadSpendingTracker(userSettings);
 
-      // Show weekly/monthly tracker rows only when their cap is enabled
-      const settings = await chrome.storage.sync.get('hcSettings');
-      const userSettings = settings['hcSettings'];
+    trackerDailyEl.textContent = `$${(tracker.dailyTotal ?? 0).toFixed(2)}`;
 
-      if (tracker.weeklyTotal !== undefined) {
-        trackerWeeklyEl.textContent = `$${(tracker.weeklyTotal ?? 0).toFixed(2)}`;
-      }
-      if (tracker.monthlyTotal !== undefined) {
-        trackerMonthlyEl.textContent = `$${(tracker.monthlyTotal ?? 0).toFixed(2)}`;
-      }
+    trackerWeeklyEl.textContent = `$${(tracker.weeklyTotal ?? 0).toFixed(2)}`;
+    trackerMonthlyEl.textContent = `$${(tracker.monthlyTotal ?? 0).toFixed(2)}`;
 
-      // Show/hide rows based on whether caps are enabled
-      const weeklyEnabled = userSettings?.weeklyCap?.enabled ?? false;
-      const monthlyEnabled = userSettings?.monthlyCap?.enabled ?? false;
-      trackerWeeklyRowEl.hidden = !weeklyEnabled;
-      trackerMonthlyRowEl.hidden = !monthlyEnabled;
-    }
+    const weeklyEnabled = userSettings.weeklyCap?.enabled ?? false;
+    const monthlyEnabled = userSettings.monthlyCap?.enabled ?? false;
+    trackerWeeklyRowEl.hidden = !weeklyEnabled;
+    trackerMonthlyRowEl.hidden = !monthlyEnabled;
   }
 
   function render(settings: UserSettings): void {

@@ -6,7 +6,7 @@
 
 import {
   PurchaseAttempt, OverlayDecision, OverlayCallback, UserSettings, DEFAULT_SETTINGS,
-  FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings, sanitizeSettings, sanitizeTracker,
+  FrictionLevel, SpendingTracker, DEFAULT_SPENDING_TRACKER, ComparisonItem, migrateSettings, sanitizeSettings,
   WhitelistEntry, WhitelistBehavior,
 } from '../shared/types';
 import { isPurchaseButton, createPurchaseAttempt, getCurrentChannel } from './detector';
@@ -15,6 +15,7 @@ import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
 import { writeInterceptEvent } from '../shared/interceptLogger';
 import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
+import { loadSpendingTracker, recordPurchase } from '../shared/spendingTracker';
 
 /** Result returned by runFrictionFlow */
 interface FrictionResult {
@@ -25,48 +26,6 @@ interface FrictionResult {
 
 /** Storage keys */
 const SETTINGS_KEY = 'hcSettings';
-const SPENDING_KEY = 'hcSpending';
-
-// ── Date Helpers ─────────────────────────────────────────────────────────
-
-/**
- * Format a local Date as YYYY-MM-DD without UTC conversion.
- * Using toISOString() would shift dates for users in non-UTC timezones
- * (e.g., 11:30 PM EDT March 31 → April 1 in UTC).
- */
-function formatLocalDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-/**
- * Get the start of the current week as YYYY-MM-DD.
- * Supports Monday-start (ISO default) or Sunday-start weeks.
- */
-function getCurrentWeekStart(date: Date = new Date(), resetDay: 'monday' | 'sunday' = 'monday'): string {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  if (resetDay === 'sunday') {
-    // Sunday = 0, so offset is just -dayOfWeek
-    d.setDate(d.getDate() - dayOfWeek);
-  } else {
-    // Monday start (ISO): Sunday needs -6, others need 1-dayOfWeek
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    d.setDate(d.getDate() + mondayOffset);
-  }
-  return formatLocalDate(d);
-}
-
-/**
- * Get the current month as YYYY-MM string using local time.
- */
-function getCurrentMonth(date: Date = new Date()): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  return `${y}-${m}`;
-}
 
 // ── Settings & Tracker ──────────────────────────────────────────────────
 
@@ -78,67 +37,6 @@ async function loadSettings(): Promise<UserSettings> {
     debug('Failed to load settings, using defaults:', e);
     return { ...DEFAULT_SETTINGS };
   }
-}
-
-async function loadSpendingTracker(settings: UserSettings): Promise<SpendingTracker> {
-  try {
-    const result = await chrome.storage.local.get(SPENDING_KEY);
-    const tracker: SpendingTracker = sanitizeTracker(result[SPENDING_KEY] || { ...DEFAULT_SPENDING_TRACKER });
-
-    // Backfill new fields for existing installs
-    if (tracker.weeklyTotal === undefined) tracker.weeklyTotal = 0;
-    if (!tracker.weeklyStartDate) tracker.weeklyStartDate = '';
-    if (tracker.monthlyTotal === undefined) tracker.monthlyTotal = 0;
-    if (!tracker.monthlyMonth) tracker.monthlyMonth = '';
-
-    const today = formatLocalDate(new Date());
-    if (tracker.dailyDate !== today) {
-      tracker.dailyTotal = 0;
-      tracker.dailyDate = today;
-    }
-
-    // Weekly reset: calendar-aligned to Monday or Sunday per user preference
-    const currentWeekStart = getCurrentWeekStart(new Date(), settings.weeklyResetDay ?? 'monday');
-    if (tracker.weeklyStartDate !== currentWeekStart) {
-      tracker.weeklyTotal = 0;
-      tracker.weeklyStartDate = currentWeekStart;
-    }
-
-    // Monthly reset: calendar-aligned to 1st of month
-    const currentMonth = getCurrentMonth();
-    if (tracker.monthlyMonth !== currentMonth) {
-      tracker.monthlyTotal = 0;
-      tracker.monthlyMonth = currentMonth;
-    }
-
-    return tracker;
-  } catch (e) {
-    debug('Failed to load spending tracker:', e);
-    return { ...DEFAULT_SPENDING_TRACKER };
-  }
-}
-
-async function saveSpendingTracker(tracker: SpendingTracker): Promise<void> {
-  try {
-    await chrome.storage.local.set({ [SPENDING_KEY]: sanitizeTracker(tracker) });
-  } catch (e) {
-    debug('Failed to save spending tracker:', e);
-  }
-}
-
-async function recordPurchase(priceValue: number | null, settings: UserSettings, tracker: SpendingTracker): Promise<void> {
-  if (priceValue && priceValue > 0) {
-    const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
-    const before = tracker.dailyTotal;
-    tracker.dailyTotal = Math.round((tracker.dailyTotal + priceWithTax) * 100) / 100;
-    tracker.sessionTotal = Math.round((tracker.sessionTotal + priceWithTax) * 100) / 100;
-    tracker.weeklyTotal = Math.round((tracker.weeklyTotal + priceWithTax) * 100) / 100;
-    tracker.monthlyTotal = Math.round((tracker.monthlyTotal + priceWithTax) * 100) / 100;
-    tracker.dailyDate = formatLocalDate(new Date());
-    log(`recordPurchase: +$${priceWithTax.toFixed(2)} (raw=$${priceValue.toFixed(2)}, tax=${settings.taxRate}%) — daily $${before.toFixed(2)} → $${tracker.dailyTotal.toFixed(2)}, weekly $${tracker.weeklyTotal.toFixed(2)}, monthly $${tracker.monthlyTotal.toFixed(2)}`);
-  }
-  tracker.lastProceedTimestamp = Date.now();
-  await saveSpendingTracker(tracker);
 }
 
 // ── Cooldown & Friction Level ───────────────────────────────────────────
@@ -427,11 +325,6 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
   }
   const capSection = capBars ? `<div class="hc-cap-bars">${capBars}</div>` : '';
 
-  let sessionInfo = '';
-  if (tracker.sessionTotal > 0) {
-    sessionInfo = `<p class="hc-session-tracker">Session total: $${tracker.sessionTotal.toFixed(2)}</p>`;
-  }
-
   return `
     <div class="hc-cost-breakdown">
       <p class="hc-cost-line">
@@ -440,7 +333,6 @@ function buildCostBreakdown(priceValue: number, settings: UserSettings, tracker:
       </p>
       ${hoursLine}
       ${capSection}
-      ${sessionInfo}
     </div>
   `;
 }
@@ -1906,12 +1798,6 @@ async function handleClick(event: MouseEvent): Promise<void> {
   }
 
   const tracker = await loadSpendingTracker(settings);
-
-  // Update session channel
-  if (tracker.sessionChannel !== attempt.channel) {
-    tracker.sessionTotal = 0;
-    tracker.sessionChannel = attempt.channel;
-  }
 
   // Whitelist check
   const whitelistEntry = checkWhitelist(attempt.channel, settings);
