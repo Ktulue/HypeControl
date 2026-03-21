@@ -1,128 +1,52 @@
 # Hype Control
 
-A Chrome extension that creates intentional friction before spending money on Twitch. Designed to promote mindful spending habits.
+*Friction between your wallet and the hype train.*
 
-## Overview
+You love your streamers. You've also tipped more in one stream than you spent on groceries that week. Hype Control is a lightweight Chrome extension that adds a friction layer between you and impulse purchases — spending caps, cooldown timers, and confirmation prompts that give your future self a fighting chance.
 
-Hype Control intercepts Twitch checkout flows (gifting subs, subscribing, Bits purchases) and presents a series of prompts that:
-
-- Shows the **real cost** including sales tax
-- Converts the cost to **hours of work** based on your take-home pay
-- Requires **multi-step confirmation** before proceeding
-- Compares the purchase to relatable real-world items (e.g., "That's 16 Costco hot dogs")
-- Optionally bypasses friction during **streaming mode** (so you can gift to your community while live)
+**[Install from the Chrome Web Store](TODO(store-url))**
 
 ## Features
 
-- 🛑 Intercepts gift subs, subs, and Bits purchases before they go through
-- 💰 Calculates true cost with configurable sales tax rate
-- ⏱️ Converts cost to work hours based on your take-home hourly rate
-- 🔢 Multi-step friction flow — each comparison item is its own confirmation step
-- 📊 Daily spending cap with silent bypass below budget and full friction when over
-- ⏳ Spending cooldown — enforces a waiting period after each purchase
-- 🎥 Streaming mode — detects when you're live on your own channel and bypasses friction automatically, with a configurable grace period after your stream ends
-- ⭐ Channel whitelist — skip, reduce, or apply full friction for channels you intentionally support
-- 📋 Activity log — full history of intercepts, decisions, and settings changes
-- 🔔 Toast notifications for silent bypass events (budget bypass, streaming mode, whitelisted channels)
+- **Real cost display** — Shows the actual price including sales tax, because Twitch won't.
+- **Work-hours conversion** — Translates every purchase into hours of your life. "That's 2.5 hours of work" hits different than "$50."
+- **Comparison items** — Puts your spending in terms you actually feel. That gift sub? That's 16 Costco hot dogs.
+- **Multi-step confirmation** — Confirmation steps scale with price. Small purchases get a nudge; big ones get a cooldown timer, type-to-confirm, and a math challenge. Earn it.
+- **Daily, weekly, and monthly spending caps** — Purchases under budget pass through silently; go over and the friction kicks in. Progress bars track where you stand.
+- **Spending cooldown timer** — Enforces a waiting period after each purchase. The hype fades fast when you have to sit with it.
+- **Activity log and savings calendar** — Full history of every intercept, every decision, and every dollar you didn't spend. The calendar turns your restraint into a streak.
+- **Streaming mode** — Auto-detects when you're live on your own channel and steps aside. Toast notifications let you know friction was bypassed, so you stay aware without the interruption.
+- **Channel whitelist** — Skip friction entirely, reduce it to a toast, or keep full friction per channel. Your regulars, your rules.
 
-## Installation
+## How It Works
 
-Available on the [Chrome Web Store](https://chromewebstore.google.com/detail/hype-control/).
+You click a purchase button on Twitch and Hype Control steps in before the transaction goes through. An overlay shows you the real cost with tax, how many hours of work it represents, and what else that money could buy. If the price is high enough, you'll need to clear multiple confirmation steps — cooldown timers, type-to-confirm, even a math problem. You either proceed deliberately, knowing exactly what you're spending, or you walk away. Either way, the decision is yours — Hype Control just makes sure it's actually a decision.
 
-For development:
-1. Clone this repository
-2. Run `npm install` (this also triggers the build automatically via `postinstall`)
-   - On Windows you can also just double-click `setup.bat`
-3. Open Chrome → `chrome://extensions/`
-4. Enable "Developer mode"
-5. Click "Load unpacked" and select the `dist/` folder
+## Privacy
 
-## Configuration
-
-Click the extension icon (or right-click → Options) to open the settings page:
-
-- **Hourly rate** — Your take-home pay, used to calculate "X hours of work"
-- **Sales tax rate** — Added to the displayed price to show true cost
-- **Comparison items** — Toggle preset items on/off; add your own with a custom name, emoji, and price
-- **Daily spending cap** — Set a daily limit; purchases under the cap pass through silently with a toast
-- **Spending cooldown** — Block further purchases for 5/10/30 minutes after each one
-- **Friction thresholds** — Set floor/ceiling dollar amounts to control nudge vs. full friction
-- **Streaming mode** — Enter your Twitch username; friction bypasses while you're live and during a configurable grace period after your stream ends
-- **Channel whitelist** — Add channels with Skip (no friction), Reduced (toast only), or Full (full friction with a note) behavior
-- **Toast duration** — How long silent-bypass notifications stay on screen
-
-## Tech Stack
-
-- TypeScript
-- Chrome Extension Manifest V3
-- Webpack
-- Live detection via DOM selectors (no Twitch API required)
-
-## Project Structure
-
-```
-HypeControl/
-├── manifest.json
-├── package.json
-├── assets/
-│   └── icons/
-└── src/
-    ├── background/
-    │   └── serviceWorker.ts
-    ├── content/
-    │   ├── index.ts           # Entry point, sets up observer + interceptor
-    │   ├── interceptor.ts     # Overlay flow, friction logic, click handling
-    │   ├── detector.ts        # Purchase button detection, price extraction
-    │   ├── streamingMode.ts   # Live detection, grace period, bypass logic
-    │   └── styles.css
-    ├── options/
-    │   ├── options.html
-    │   └── options.ts
-    ├── logs/
-    │   ├── logs.html
-    │   └── logs.ts
-    └── shared/
-        ├── types.ts           # Shared interfaces and defaults
-        └── logger.ts          # Event logging to chrome.storage.local
-```
+All data stays on your device. Nothing is collected, transmitted, or tracked — ever. Read the full [privacy policy](https://ktulue.github.io/HypeControl/privacy.html).
 
 ## Known Issues
 
 - **Bits Combo module** — The animated Bits Combo (timer/counter) that Twitch displays during cheering cannot currently be intercepted. Hype Control can intercept the "Get Bits" button in the top navigation bar, but the Combo module uses a non-standard rendering path that doesn't expose a clickable element Hype Control can hook.
-- **Emoji input (Windows)** — The Windows emoji picker (Win + .) allows inserting non-emoji characters (Latin symbols, special characters) into the emoji field. GIF selection is not supported. For best results, stick to standard emoji from the Smileys or Symbols categories.
-- **Emoji input (macOS)** — The macOS Character Viewer works as expected for standard emoji. GIF insertion is not supported.
 
 ## Contributing
 
-Contributions welcome! Please read the license terms below before contributing.
+Want to contribute, report a bug, or run it locally? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
-
-This means you are free to:
-- ✅ Use this software
-- ✅ Modify this software
-- ✅ Distribute this software
-
-Under the following conditions:
-- 📖 Source code must remain open
-- 📖 Derivative works must also be GPL v3
-- 📖 Changes must be documented
-
-You **cannot**:
-- ❌ Close-source this project or derivatives
-- ❌ Sell closed-source versions
+[GNU General Public License v3.0](LICENSE)
 
 ## Acknowledgments
 
 - **HolmsB** — For helping name the extension "Hype Control"
 - **Lanzirelli** — Logo & Icons design
 
-## Support
-
-☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ktulue)
-
 ---
 
-*Created by [Ktulue](https://github.com/Ktulue) | The Water Father 🌊*
+## Support
+
+☕ [Buy me a coffee on Ko-fi](http://ko-fi.com/ktulue)
+
+Created by Ktulue | The Water Father 🌊
