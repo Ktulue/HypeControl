@@ -1,6 +1,6 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-20
+**Updated:** 2026-03-21
 **Current Version:** 0.4.28
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
@@ -222,6 +222,10 @@ The original design called for a guided overlay on the Twitch page highlighting 
 1. **Chrome Web Store Launch** — Store listing, privacy policy, screenshots, version 1.0.0 release
 2. **Firefox AMO Port** — Adapt extension for Firefox (manifest changes, `browser.*` API audit, AMO submission)
 
+### Recently Completed
+
+- [x] **README Rewrite (2026-03-21)** — Rewrote README.md from developer-focused internal docs to a user-first, brand-voice public page for the Chrome Web Store launch. No version bump (content-only change).
+
 ### Future Enhancements
 
 - Add-on 6 — Export Data (CSV/JSON)
@@ -295,4 +299,4 @@ Shared spendingTracker module, daily/weekly/monthly reset fix for popup, session
 
 ---
 
-_Last updated 2026-03-20 against the v0.4.28 codebase. Repository cleaned up for Chrome Web Store launch preparation._
+_Last updated 2026-03-21 against the v0.4.28 codebase. Repository cleaned up for Chrome Web Store launch preparation. README rewritten for public launch._
