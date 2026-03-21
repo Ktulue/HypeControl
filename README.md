@@ -24,7 +24,7 @@ You click a purchase button on Twitch and Hype Control steps in before the trans
 
 ## Privacy
 
-All data stays on your device. Nothing is collected, transmitted, or tracked — ever. Read the full [privacy policy](https://ktulue.github.io/HypeControl/privacy.html).
+All data stays on your device. Nothing is collected, transmitted, or tracked — read the full [privacy policy](https://ktulue.github.io/HypeControl/privacy.html).
 
 ## Known Issues
 
