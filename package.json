@@ -1,7 +1,7 @@
 {
   "name": "hype-control",
-  "version": "0.4.28",
-  "description": "Chrome extension that creates intentional friction before Twitch spending",
+  "version": "1.0.0",
+  "description": "Friction between your wallet and the hype train. Spending caps, cooldown timers, and reality checks before Twitch purchases.",
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Hype Control",
-  "version": "0.4.28",
-  "description": "Create intentional friction before Twitch purchases to encourage mindful spending",
+  "version": "1.0.0",
+  "description": "Friction between your wallet and the hype train. Spending caps, cooldown timers, and reality checks before Twitch purchases.",
   "icons": {
     "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
     "48": "assets/icons/ChromeWebStore/HC_icon_48px.png",
