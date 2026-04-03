@@ -2,7 +2,7 @@
 
 *Friction between your wallet and the hype train.*
 
-You love your streamers. You've also tipped more in one stream than you spent on groceries that week. Hype Control is a lightweight Chrome extension that adds a friction layer between you and impulse purchases — spending caps, cooldown timers, and confirmation prompts that give your future self a fighting chance.
+You love your streamers. You've also tipped more in one stream than you spent on groceries that week. Hype Control is a lightweight browser extension that adds a friction layer between you and impulse purchases — spending caps, cooldown timers, and confirmation prompts that give your future self a fighting chance.
 
 **[Install from the Chrome Web Store](TODO(store-url))**
 
