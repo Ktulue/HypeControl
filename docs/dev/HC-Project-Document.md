@@ -6,7 +6,7 @@
 
 **Created:** January 2026  
 **Author:** Josh (Ktulue) + Claude  
-**Status:** v1.0.0 — Chrome Web Store Launch  
+**Status:** v1.0.2 — Chrome Web Store + Firefox AMO Build Ready  
 **License:** GPL v3  
 **Repository:** Ktulue/MTS
 
