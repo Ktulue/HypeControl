@@ -4,7 +4,9 @@
   "description": "Friction between your wallet and the hype train. Spending caps, cooldown timers, and reality checks before Twitch purchases.",
   "scripts": {
     "build": "webpack --mode production",
+    "build:firefox": "webpack --mode production --env target=firefox",
     "dev": "webpack --mode development --watch",
+    "dev:firefox": "webpack --mode development --watch --env target=firefox",
     "clean": "rimraf dist",
     "postinstall": "npm run build",
     "test": "jest"
