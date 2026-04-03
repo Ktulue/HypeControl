@@ -160,7 +160,7 @@ function createPanel(): HTMLElement {
 
   panel.innerHTML = `
     <div class="hc-tour-header">
-      <img class="hc-tour-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="20" height="20" alt="">
+      <img class="hc-tour-icon" src="${chrome.runtime.getURL(`assets/icons/${__ICON_DIR__}/HC_icon_48px.png`)}" width="20" height="20" alt="">
       <span class="hc-tour-title">Hype Control</span>
       <button class="hc-tour-close" id="hc-tour-close" aria-label="Dismiss tour">✕</button>
     </div>
@@ -169,7 +169,7 @@ function createPanel(): HTMLElement {
     </div>
     <!-- Collapsed tab state -->
     <div class="hc-tour-tab">
-      <img src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="16" height="16" alt="HC">
+      <img src="${chrome.runtime.getURL(`assets/icons/${__ICON_DIR__}/HC_icon_48px.png`)}" width="16" height="16" alt="HC">
       <span>…</span>
     </div>
   `;
