@@ -542,7 +542,7 @@ async function showMainOverlay(
   overlay.innerHTML = `
     <div class="hc-modal">
       <div class="hc-header">
-        <img class="hc-icon" src="${chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png')}" width="32" height="32" alt="Hype Control">
+        <img class="hc-icon" src="${chrome.runtime.getURL(`assets/icons/${__ICON_DIR__}/HC_icon_48px.png`)}" width="32" height="32" alt="Hype Control">
         <h2 class="hc-title">Hype Control</h2>
       </div>
       <div class="hc-content">
@@ -1356,7 +1356,7 @@ function showCapExceedanceStep(
     header.className = 'hc-header';
     const headerIcon = document.createElement('img');
     headerIcon.className = 'hc-icon';
-    headerIcon.src = chrome.runtime.getURL('assets/icons/ChromeWebStore/HC_icon_48px.png');
+    headerIcon.src = chrome.runtime.getURL(`assets/icons/${__ICON_DIR__}/HC_icon_48px.png`);
     headerIcon.width = 32;
     headerIcon.height = 32;
     headerIcon.alt = 'Hype Control';

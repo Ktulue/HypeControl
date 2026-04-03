@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-03-31
-**Current Version:** 1.0.1
+**Updated:** 2026-04-02
+**Current Version:** 1.0.2
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -23,7 +23,7 @@
 | Add-on 2 — Spending History View         | ✅ Complete       |
 | Add-on 3 — Weekly/Monthly Limits         | ✅ Complete       |
 | Interactive Onboarding Tour              | ✅ Complete        |
-| Firefox AMO Port                         | 🔲 Not Started    |
+| Firefox AMO Port                         | ✅ Complete       |
 | Add-ons 6–12 — Future Enhancements       | ⏸️ Deferred       |
 
 ---
@@ -217,12 +217,9 @@ The original design called for a guided overlay on the Twitch page highlighting 
 
 ## CURRENT ROADMAP
 
-### Next Up
-
-1. **Firefox AMO Port** — Adapt extension for Firefox (manifest changes, `browser.*` API audit, AMO submission)
-
 ### Recently Completed
 
+- [x] **Firefox AMO Port (2026-04-02)** — v1.0.2. Dual-manifest build (`manifest.firefox.json`), webpack target flag, build-time icon directory constant. AMO submission pending.
 - [x] **Chrome Web Store Launch (2026-03-23)** — v1.0.0 release. Version bump, brand-voice alignment across manifest/landing page/store listing, build and submission.
 - [x] **Landing Page Brand Voice (2026-03-23)** — Aligned docs/index.html copy with README's sharp/cheeky tone.
 - [x] **README Rewrite (2026-03-21)** — Rewrote README.md from developer-focused internal docs to a user-first, brand-voice public page for the Chrome Web Store launch.
@@ -244,15 +241,16 @@ The original design called for a guided overlay on the Twitch page highlighting 
 
 ## FIREFOX AMO PORT
 
-**Status:** 🔲 Not Started — Planned as final release milestone after all in-scope add-ons are complete.
+**Status:** ✅ Build support complete (v1.0.2) — AMO submission pending (manual step).
 
-Firefox supports MV3 (since Firefox 109), so this is an adaptation rather than a rewrite. Key differences to address:
+Firefox supports MV3 (since Firefox 109). Dual-manifest build implemented:
 
-- [ ] Add `browser_specific_settings` block to `manifest.json` with a Firefox extension ID (e.g. `hypecontrol@ktulue`)
-- [ ] Adjust background script: Firefox MV3 uses `background.scripts` array alongside `service_worker`
-- [ ] Audit all `chrome.*` API calls — swap to `browser.*` or add the `webextension-polyfill` package for cross-browser compatibility
-- [ ] Verify content script injection and `host_permissions` work identically on Firefox
-- [ ] Use `assets/icons/FirefoxAMO/` icons (16, 32, 48, 64, 128px) for AMO listing — already present
+- [x] Add `browser_specific_settings` block to `manifest.firefox.json` with gecko ID `hypecontrol@ktulue`
+- [x] Adjust background script: Firefox manifest uses `background.scripts` array
+- [x] Audit all `chrome.*` API calls — Firefox supports `chrome.*` namespace natively, no polyfill needed
+- [x] Verify content script injection and `host_permissions` work identically on Firefox
+- [x] Use `assets/icons/FirefoxAMO/` icons (16, 32, 48, 64, 128px) via build-time `__ICON_DIR__` constant
+- [x] Webpack target-aware build: `npm run build:firefox` / `npm run dev:firefox`
 - [ ] Create AMO listing: screenshots, description, privacy policy
 - [ ] Submit to addons.mozilla.org for review
 
@@ -300,4 +298,4 @@ Shared spendingTracker module, daily/weekly/monthly reset fix for popup, session
 
 ---
 
-_Last updated 2026-03-23 against the v1.0.0 codebase. Chrome Web Store launch._
+_Last updated 2026-04-02 against the v1.0.2 codebase. Firefox AMO port._

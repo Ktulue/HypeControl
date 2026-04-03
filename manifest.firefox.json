@@ -3,10 +3,18 @@
   "name": "Hype Control",
   "version": "1.0.2",
   "description": "Friction between your wallet and the hype train. Spending caps, cooldown timers, and reality checks before Twitch purchases.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "hypecontrol@ktulue",
+      "strict_min_version": "109.0"
+    }
+  },
   "icons": {
-    "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
-    "48": "assets/icons/ChromeWebStore/HC_icon_48px.png",
-    "128": "assets/icons/ChromeWebStore/HC_icon_128px.png"
+    "16": "assets/icons/FirefoxAMO/HC_icon_16px.png",
+    "32": "assets/icons/FirefoxAMO/HC_icon_32px.png",
+    "48": "assets/icons/FirefoxAMO/HC_icon_48px.png",
+    "64": "assets/icons/FirefoxAMO/HC_icon_64px.png",
+    "128": "assets/icons/FirefoxAMO/HC_icon_128px.png"
   },
   "permissions": [
     "storage",
@@ -17,7 +25,7 @@
     "https://*.twitch.tv/*"
   ],
   "background": {
-    "service_worker": "serviceWorker.js"
+    "scripts": ["serviceWorker.js"]
   },
   "content_scripts": [
     {
@@ -30,7 +38,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "assets/icons/ChromeWebStore/HC_icon_48px.png",
+        "assets/icons/FirefoxAMO/HC_icon_48px.png",
         "assets/fonts/SpaceGrotesk-Regular.woff2",
         "assets/fonts/SpaceGrotesk-Medium.woff2",
         "assets/fonts/SpaceGrotesk-SemiBold.woff2",
@@ -43,9 +51,11 @@
     "default_title": "Hype Control - Click for settings",
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "assets/icons/ChromeWebStore/HC_icon_16px.png",
-      "48": "assets/icons/ChromeWebStore/HC_icon_48px.png",
-      "128": "assets/icons/ChromeWebStore/HC_icon_128px.png"
+      "16": "assets/icons/FirefoxAMO/HC_icon_16px.png",
+      "32": "assets/icons/FirefoxAMO/HC_icon_32px.png",
+      "48": "assets/icons/FirefoxAMO/HC_icon_48px.png",
+      "64": "assets/icons/FirefoxAMO/HC_icon_64px.png",
+      "128": "assets/icons/FirefoxAMO/HC_icon_128px.png"
     }
   }
 }
