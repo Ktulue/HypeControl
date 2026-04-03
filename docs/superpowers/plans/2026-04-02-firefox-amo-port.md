@@ -33,7 +33,11 @@ Copy the current `manifest.json` and apply three changes:
   "browser_specific_settings": {
     "gecko": {
       "id": "hypecontrol@ktulue",
-      "strict_min_version": "109.0"
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"],
+        "optional": []
+      }
     }
   },
   "icons": {
