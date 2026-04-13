@@ -1022,6 +1022,7 @@ async function getFormSettings(): Promise<UserSettings> {
     // Popup-managed fields — preserve current values
     weeklyResetDay: cachedSettings?.weeklyResetDay ?? DEFAULT_SETTINGS.weeklyResetDay,
     intensityLocked: cachedSettings?.intensityLocked ?? DEFAULT_SETTINGS.intensityLocked,
+    frictionTriggerMode: cachedSettings?.frictionTriggerMode ?? DEFAULT_SETTINGS.frictionTriggerMode,
   };
 }
 

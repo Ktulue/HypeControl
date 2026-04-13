@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-02
-**Current Version:** 1.0.2
+**Updated:** 2026-04-13
+**Current Version:** 1.0.3
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -24,6 +24,7 @@
 | Add-on 3 — Weekly/Monthly Limits         | ✅ Complete       |
 | Interactive Onboarding Tour              | ✅ Complete        |
 | Firefox AMO Port                         | ✅ Complete       |
+| Friction Trigger Mode (Price Guard / Zero Trust) | ✅ Complete |
 | Add-ons 6–12 — Future Enhancements       | ⏸️ Deferred       |
 
 ---

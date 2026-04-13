@@ -146,6 +146,18 @@
         </div>
         <div class="hc-row">
           <fieldset class="hc-fieldset">
+            <legend class="hc-label">Trigger Mode</legend>
+            <div class="segmented" id="friction-trigger-mode" data-pending-field="frictionTriggerMode">
+              <button class="seg-btn" data-value="price-guard">Price Guard</button>
+              <button class="seg-btn" data-value="zero-trust">Zero Trust</button>
+            </div>
+          </fieldset>
+        </div>
+        <div class="trigger-mode-desc" id="trigger-mode-desc">
+          <p class="hc-hint" id="trigger-mode-hint"></p>
+        </div>
+        <div class="hc-row">
+          <fieldset class="hc-fieldset">
             <legend class="hc-label">Intensity</legend>
             <div class="segmented" id="friction-intensity" data-pending-field="frictionIntensity">
               <button class="seg-btn" data-value="low">Low</button>

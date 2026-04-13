@@ -17,6 +17,52 @@ import { writeInterceptEvent } from '../shared/interceptLogger';
 import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { loadSpendingTracker, recordPurchase } from '../shared/spendingTracker';
 
+// ── Zero Trust no-price overlay messages ────────────────────────────────
+// Two tonal buckets: matter-of-fact and cheeky. Selection alternates buckets
+// with no back-to-back duplicates.
+
+const ZERO_TRUST_MESSAGES_FACTUAL = [
+  "No price detected. That doesn't mean it's free.",
+  "We couldn't read a number. You're in Zero Trust — so we showed up anyway.",
+  "Price? No idea. But you told us to stop you every time.",
+  "Can't see what this costs. Can you?",
+  "No price tag on this one. Zero Trust doesn't care.",
+  "We don't know the price. That's exactly why we're here.",
+  "Price not found. Zero Trust mode doesn't take days off.",
+  "Unknown cost. Known impulse risk.",
+];
+
+const ZERO_TRUST_MESSAGES_CHEEKY = [
+  "Zero Trust means zero exceptions. Even this one.",
+  "No price tag? Suspicious.",
+  "Flying blind on the cost. Good thing you brought a parachute.",
+  "Couldn't find a price. Found you clicking though.",
+  "The price is a mystery. Your spending habits are not.",
+  "No number to crunch. Just a button to question.",
+  "We can't tell you what this costs. We can tell you to think about it.",
+  "Price unknown. Wallet concern: very known.",
+];
+
+let lastZeroTrustBucket: 'factual' | 'cheeky' | null = null;
+let lastFactualIndex: number = -1;
+let lastCheekyIndex: number = -1;
+
+function pickZeroTrustMessage(): string {
+  // Alternate buckets; avoid repeating the same index within each bucket
+  const useBucket: 'factual' | 'cheeky' = lastZeroTrustBucket === 'factual' ? 'cheeky' : 'factual';
+  const pool = useBucket === 'factual' ? ZERO_TRUST_MESSAGES_FACTUAL : ZERO_TRUST_MESSAGES_CHEEKY;
+  const lastIdx = useBucket === 'factual' ? lastFactualIndex : lastCheekyIndex;
+
+  let idx: number;
+  do {
+    idx = Math.floor(Math.random() * pool.length);
+  } while (idx === lastIdx && pool.length > 1);
+
+  lastZeroTrustBucket = useBucket;
+  if (useBucket === 'factual') lastFactualIndex = idx; else lastCheekyIndex = idx;
+  return pool[idx];
+}
+
 /** Result returned by runFrictionFlow */
 interface FrictionResult {
   decision: OverlayDecision;
@@ -148,11 +194,19 @@ function determineFrictionLevel(
     return 'cap-bypass';
   }
 
+  if (priceValue === null || priceValue <= 0) {
+    if (settings.frictionTriggerMode === 'zero-trust') {
+      log('No price detected — Zero Trust mode: full friction applied');
+      return 'full';
+    }
+    log('No price detected — Price Guard mode: no friction applied');
+    return 'none';
+  }
+
   if (!settings.frictionThresholds.enabled) {
     log('Thresholds disabled — defaulting to full modal');
     return 'full';
   }
-  if (priceValue === null || priceValue <= 0) return 'full';
 
   const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
   const t1 = settings.frictionThresholds.thresholdFloor;
@@ -521,7 +575,12 @@ async function showMainOverlay(
   if (attempt.priceValue !== null && attempt.priceValue > 0) {
     priceExtra = buildCostBreakdown(attempt.priceValue, settings, tracker);
   } else {
-    priceExtra = '<p class="hc-price-note">Unable to detect price. Proceed with caution.</p>';
+    const noteEl = document.createElement('p');
+    noteEl.className = 'hc-price-note';
+    noteEl.textContent = settings.frictionTriggerMode === 'zero-trust'
+      ? pickZeroTrustMessage()
+      : 'Unable to detect price. Proceed with caution.';
+    priceExtra = noteEl.outerHTML;
   }
 
   const quickAddBtn = onWhitelistAdd
@@ -1538,59 +1597,61 @@ async function runFrictionFlow(
 
   if (priceWithTax === null) {
     log('Friction flow: no price detected, skipping comparison steps');
-    return { decision: 'proceed', purchaseReason };
+    // Price Guard would never reach here (determineFrictionLevel returns 'none').
+    // Zero Trust continues to intensity steps below — fall through.
   }
 
-  // nudge: enabled items where scope is 'nudge' or 'both', limited to softNudgeSteps
-  // full: enabled items where scope is 'full' or 'both' (scope replaces the old "all items" behavior)
-  const itemPool = maxComparisons !== undefined
-    ? settings.comparisonItems
-        .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'full')
-        .slice(0, maxComparisons)
-    : settings.comparisonItems
-        .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'nudge');
+  if (priceWithTax !== null) {
+    // nudge: enabled items where scope is 'nudge' or 'both', limited to softNudgeSteps
+    // full: enabled items where scope is 'full' or 'both' (scope replaces the old "all items" behavior)
+    const itemPool = maxComparisons !== undefined
+      ? settings.comparisonItems
+          .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'full')
+          .slice(0, maxComparisons)
+      : settings.comparisonItems
+          .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'nudge');
 
-  const taxPrice = `$${priceWithTax.toFixed(2)}`;
-  const comparisonSteps: { item: ComparisonItem; display: ComparisonDisplay }[] = [];
+    const taxPrice = `$${priceWithTax.toFixed(2)}`;
+    const comparisonSteps: { item: ComparisonItem; display: ComparisonDisplay }[] = [];
 
-  for (const item of itemPool) {
-    const display = formatComparisonDisplay(item, priceWithTax, taxPrice);
-    comparisonSteps.push({ item, display });
-  }
-
-  // Total steps = 1 (main) + N (comparisons)
-  const totalSteps = 1 + comparisonSteps.length;
-
-  log(`Friction flow: ${comparisonSteps.length} comparison step(s) (${maxComparisons !== undefined ? 'nudge/enabled only' : 'full/all items'}), priceWithTax=${taxPrice}`);
-
-  // Steps 2+: Each comparison item
-  // We need a reference to the last overlay shown so we can pass it to subsequent steps.
-  // Comparison steps each create their own overlay element; after the loop we need
-  // the most-recently-created overlay for the intensity steps below.
-  // showComparisonStep creates its own overlay internally, so we capture it via a
-  // wrapper that returns it. For now, we create a placeholder overlay to reuse for
-  // the intensity steps (it will be re-populated by each step function).
-  let intensityOverlay: HTMLElement | null = null;
-
-  for (let i = 0; i < comparisonSteps.length; i++) {
-    const { item, display } = comparisonSteps[i];
-    const stepNumber = i + 2; // Step 1 was the main overlay
-
-    const decision = await showComparisonStep(item, display, stepNumber, totalSteps, attempt);
-    if (decision === 'cancel') {
-      log(`Friction flow: cancelled at Step ${stepNumber} (${item.name})`, {
-        stepsCompleted: stepNumber - 1,
-        totalSteps,
-      });
-      return { decision: 'cancel', cancelledAtStep: stepNumber };
+    for (const item of itemPool) {
+      const display = formatComparisonDisplay(item, priceWithTax, taxPrice);
+      comparisonSteps.push({ item, display });
     }
-  }
 
-  log('Friction flow: completed all comparison steps', {
-    totalSteps,
-    channel: attempt.channel,
-    rawPrice: attempt.rawPrice,
-  });
+    // Total steps = 1 (main) + N (comparisons)
+    const totalSteps = 1 + comparisonSteps.length;
+
+    log(`Friction flow: ${comparisonSteps.length} comparison step(s) (${maxComparisons !== undefined ? 'nudge/enabled only' : 'full/all items'}), priceWithTax=${taxPrice}`);
+
+    // Steps 2+: Each comparison item
+    // We need a reference to the last overlay shown so we can pass it to subsequent steps.
+    // Comparison steps each create their own overlay element; after the loop we need
+    // the most-recently-created overlay for the intensity steps below.
+    // showComparisonStep creates its own overlay internally, so we capture it via a
+    // wrapper that returns it. For now, we create a placeholder overlay to reuse for
+    // the intensity steps (it will be re-populated by each step function).
+
+    for (let i = 0; i < comparisonSteps.length; i++) {
+      const { item, display } = comparisonSteps[i];
+      const stepNumber = i + 2; // Step 1 was the main overlay
+
+      const decision = await showComparisonStep(item, display, stepNumber, totalSteps, attempt);
+      if (decision === 'cancel') {
+        log(`Friction flow: cancelled at Step ${stepNumber} (${item.name})`, {
+          stepsCompleted: stepNumber - 1,
+          totalSteps,
+        });
+        return { decision: 'cancel', cancelledAtStep: stepNumber };
+      }
+    }
+
+    log('Friction flow: completed all comparison steps', {
+      totalSteps,
+      channel: attempt.channel,
+      rawPrice: attempt.rawPrice,
+    });
+  }
 
   // ── Intensity-gated steps ─────────────────────────────────────────────
   // For steps 3+, we reuse a shared overlay element that each step re-populates.
@@ -1598,6 +1659,7 @@ async function runFrictionFlow(
   // The subsequent steps (cooldown, type-to-confirm, math) expect the overlay to
   // already be in the DOM (they only set innerHTML and apply theme).
   // So after reason selection proceeds we must re-append before the next step.
+  let intensityOverlay: HTMLElement | null = null;
   const maxPercent = computeMaxCapPercent(settings, tracker);
   const intensity = computeEscalatedIntensity(
     settings.frictionIntensity ?? 'low',

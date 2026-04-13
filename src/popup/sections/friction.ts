@@ -1,4 +1,4 @@
-import { UserSettings, FrictionIntensity, DelayTimerConfig, FrictionThresholds, DEFAULT_SETTINGS } from '../../shared/types';
+import { UserSettings, FrictionIntensity, FrictionTriggerMode, DelayTimerConfig, FrictionThresholds, DEFAULT_SETTINGS } from '../../shared/types';
 import { setPendingField, getPending } from '../pendingState';
 
 function parseLocaleNumber(str: string): number {
@@ -32,6 +32,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   const ceilingEl = el.querySelector<HTMLInputElement>('#threshold-ceiling')!;
   const nudgeStepsEl = el.querySelector<HTMLInputElement>('#threshold-nudge-steps')!;
   const lockEl = el.querySelector<HTMLInputElement>('#friction-intensity-lock')!;
+  const triggerModeEl = el.querySelector<HTMLElement>('#friction-trigger-mode')!;
+  const triggerModeDescEl = el.querySelector<HTMLElement>('#trigger-mode-hint')!;
   const escalationIndicatorEl = el.querySelector<HTMLElement>('#friction-escalation-indicator')!;
   const calcToggle = el.querySelector<HTMLAnchorElement>('#friction-calc-toggle')!;
   const salaryCalcPanel = el.querySelector<HTMLElement>('#friction-salary-calc')!;
@@ -44,6 +46,15 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     container.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.value === value);
     });
+  }
+
+  const TRIGGER_MODE_DESCRIPTIONS: Record<FrictionTriggerMode, string> = {
+    'price-guard': "Friction triggers only when a price is detected. If we can't read the number, you walk.",
+    'zero-trust': "Friction on every purchase button — price or not. You asked for this.",
+  };
+
+  function updateTriggerModeDesc(mode: FrictionTriggerMode): void {
+    triggerModeDescEl.textContent = TRIGGER_MODE_DESCRIPTIONS[mode];
   }
 
   // Hourly rate
@@ -102,6 +113,16 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   lockEl.addEventListener('change', () => {
     setPendingField('intensityLocked', lockEl.checked);
     callbacks.onLockChange?.();
+  });
+
+  // Trigger mode segmented
+  triggerModeEl.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.value as FrictionTriggerMode;
+      setPendingField('frictionTriggerMode', val);
+      renderSegmented(triggerModeEl, val);
+      updateTriggerModeDesc(val);
+    });
   });
 
   // Delay timer toggle
@@ -166,6 +187,8 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     hourlyRateEl.value = String(settings.hourlyRate);
     taxRateEl.value = String(settings.taxRate);
     renderSegmented(intensityEl, settings.frictionIntensity);
+    renderSegmented(triggerModeEl, settings.frictionTriggerMode);
+    updateTriggerModeDesc(settings.frictionTriggerMode);
     delayEnabledEl.checked = settings.delayTimer.enabled;
     delayDurationEl.hidden = !settings.delayTimer.enabled;
     renderSegmented(delayDurationEl, String(settings.delayTimer.seconds));
