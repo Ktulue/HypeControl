@@ -17,6 +17,50 @@ import { writeInterceptEvent } from '../shared/interceptLogger';
 import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { loadSpendingTracker, recordPurchase } from '../shared/spendingTracker';
 
+// ── Zero Trust no-price overlay messages ────────────────────────────────
+// Two tonal buckets: matter-of-fact and cheeky. Selection alternates buckets
+// with no back-to-back duplicates.
+
+const ZERO_TRUST_MESSAGES_FACTUAL = [
+  "No price detected. That doesn't mean it's free.",
+  "We couldn't read a number. You're in Zero Trust — so we showed up anyway.",
+  "Price? No idea. But you told us to stop you every time.",
+  "Can't see what this costs. Can you?",
+  "No price tag on this one. Zero Trust doesn't care.",
+  "We don't know the price. That's exactly why we're here.",
+  "Price not found. Zero Trust mode doesn't take days off.",
+  "Unknown cost. Known impulse risk.",
+];
+
+const ZERO_TRUST_MESSAGES_CHEEKY = [
+  "Zero Trust means zero exceptions. Even this one.",
+  "No price tag? Suspicious.",
+  "Flying blind on the cost. Good thing you brought a parachute.",
+  "Couldn't find a price. Found you clicking though.",
+  "The price is a mystery. Your spending habits are not.",
+  "No number to crunch. Just a button to question.",
+  "We can't tell you what this costs. We can tell you to think about it.",
+  "Price unknown. Wallet concern: very known.",
+];
+
+let lastZeroTrustBucket: 'factual' | 'cheeky' | null = null;
+let lastZeroTrustIndex: number = -1;
+
+function pickZeroTrustMessage(): string {
+  // Alternate buckets, avoiding back-to-back duplicates within a bucket
+  const useBucket: 'factual' | 'cheeky' = lastZeroTrustBucket === 'factual' ? 'cheeky' : 'factual';
+  const pool = useBucket === 'factual' ? ZERO_TRUST_MESSAGES_FACTUAL : ZERO_TRUST_MESSAGES_CHEEKY;
+
+  let idx: number;
+  do {
+    idx = Math.floor(Math.random() * pool.length);
+  } while (idx === lastZeroTrustIndex && pool.length > 1);
+
+  lastZeroTrustBucket = useBucket;
+  lastZeroTrustIndex = idx;
+  return pool[idx];
+}
+
 /** Result returned by runFrictionFlow */
 interface FrictionResult {
   decision: OverlayDecision;
@@ -148,11 +192,19 @@ function determineFrictionLevel(
     return 'cap-bypass';
   }
 
+  if (priceValue === null || priceValue <= 0) {
+    if (settings.frictionTriggerMode === 'zero-trust') {
+      log('No price detected — Zero Trust mode: full friction applied');
+      return 'full';
+    }
+    log('No price detected — Price Guard mode: no friction applied');
+    return 'none';
+  }
+
   if (!settings.frictionThresholds.enabled) {
     log('Thresholds disabled — defaulting to full modal');
     return 'full';
   }
-  if (priceValue === null || priceValue <= 0) return 'full';
 
   const priceWithTax = Math.round(priceValue * (1 + settings.taxRate / 100) * 100) / 100;
   const t1 = settings.frictionThresholds.thresholdFloor;
