@@ -573,7 +573,12 @@ async function showMainOverlay(
   if (attempt.priceValue !== null && attempt.priceValue > 0) {
     priceExtra = buildCostBreakdown(attempt.priceValue, settings, tracker);
   } else {
-    priceExtra = '<p class="hc-price-note">Unable to detect price. Proceed with caution.</p>';
+    const noteEl = document.createElement('p');
+    noteEl.className = 'hc-price-note';
+    noteEl.textContent = settings.frictionTriggerMode === 'zero-trust'
+      ? pickZeroTrustMessage()
+      : 'Unable to detect price. Proceed with caution.';
+    priceExtra = noteEl.outerHTML;
   }
 
   const quickAddBtn = onWhitelistAdd
