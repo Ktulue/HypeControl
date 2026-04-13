@@ -253,6 +253,13 @@ Step 3: Type confirmation
 - Requires solving a simple math problem
 - Sends notification to accountability partner
 
+### Friction Trigger Mode
+
+Users choose when friction activates via the **Trigger Mode** setting:
+
+- **Price Guard** (default) — Friction triggers only when a price is detected on the purchase button. If the extension can't read the price, the click passes through silently (still logged).
+- **Zero Trust** — Friction triggers on every purchase button regardless of price detection. No-price overlays show rotating contextual messages from two tonal buckets (matter-of-fact and cheeky, 16 messages total). All intensity steps (reason selection, cooldown timer, math challenge, type-to-confirm) still apply based on the user's intensity setting.
+
 ---
 
 ## Technical Architecture
