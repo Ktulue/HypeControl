@@ -44,20 +44,22 @@ const ZERO_TRUST_MESSAGES_CHEEKY = [
 ];
 
 let lastZeroTrustBucket: 'factual' | 'cheeky' | null = null;
-let lastZeroTrustIndex: number = -1;
+let lastFactualIndex: number = -1;
+let lastCheekyIndex: number = -1;
 
 function pickZeroTrustMessage(): string {
-  // Alternate buckets, avoiding back-to-back duplicates within a bucket
+  // Alternate buckets; avoid repeating the same index within each bucket
   const useBucket: 'factual' | 'cheeky' = lastZeroTrustBucket === 'factual' ? 'cheeky' : 'factual';
   const pool = useBucket === 'factual' ? ZERO_TRUST_MESSAGES_FACTUAL : ZERO_TRUST_MESSAGES_CHEEKY;
+  const lastIdx = useBucket === 'factual' ? lastFactualIndex : lastCheekyIndex;
 
   let idx: number;
   do {
     idx = Math.floor(Math.random() * pool.length);
-  } while (idx === lastZeroTrustIndex && pool.length > 1);
+  } while (idx === lastIdx && pool.length > 1);
 
   lastZeroTrustBucket = useBucket;
-  lastZeroTrustIndex = idx;
+  if (useBucket === 'factual') lastFactualIndex = idx; else lastCheekyIndex = idx;
   return pool[idx];
 }
 
