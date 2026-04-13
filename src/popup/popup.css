@@ -488,6 +488,9 @@ body {
   margin-top: 2px;
   margin-bottom: 4px;
 }
+.trigger-mode-desc {
+  padding: 0 0 4px;
+}
 .hint-link {
   color: var(--text-muted);
   text-decoration: underline;
