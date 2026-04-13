@@ -40,6 +40,9 @@ export type FrictionLevel = 'none' | 'nudge' | 'full' | 'cap-bypass';
 /** User-selectable named friction intensity (how intense friction is when it triggers) */
 export type FrictionIntensity = 'low' | 'medium' | 'high' | 'extreme';
 
+/** Controls when friction triggers: price-detected only, or every purchase button */
+export type FrictionTriggerMode = 'price-guard' | 'zero-trust';
+
 /** Friction threshold tier configuration */
 export interface FrictionThresholds {
   enabled: boolean;
@@ -109,6 +112,7 @@ export interface UserSettings {
   monthlyCap: MonthlyCapConfig;
   frictionThresholds: FrictionThresholds;
   frictionIntensity: FrictionIntensity;
+  frictionTriggerMode: FrictionTriggerMode;
   delayTimer: DelayTimerConfig;
   streamingMode: StreamingModeConfig;
   toastDurationSeconds: number;
@@ -181,6 +185,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     softNudgeSteps: 1,
   },
   frictionIntensity: 'low',
+  frictionTriggerMode: 'price-guard',
   delayTimer: {
     enabled: false,
     seconds: 10,
@@ -297,6 +302,7 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
       };
     })(),
     frictionIntensity: saved.frictionIntensity ?? DEFAULT_SETTINGS.frictionIntensity,
+    frictionTriggerMode: saved.frictionTriggerMode ?? DEFAULT_SETTINGS.frictionTriggerMode,
     delayTimer: {
       ...DEFAULT_SETTINGS.delayTimer,
       ...(saved.delayTimer || {}),
@@ -400,6 +406,7 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
   const softNudgeSteps = clampNum(s.frictionThresholds.softNudgeSteps, 1, 10, DEFAULT_SETTINGS.frictionThresholds.softNudgeSteps);
 
   const frictionIntensity = validEnum(s.frictionIntensity, ['low', 'medium', 'high', 'extreme'] as const, DEFAULT_SETTINGS.frictionIntensity);
+  const frictionTriggerMode = validEnum(s.frictionTriggerMode, ['price-guard', 'zero-trust'] as const, DEFAULT_SETTINGS.frictionTriggerMode);
   const delaySeconds = validEnum(s.delayTimer.seconds, [5, 10, 30, 60] as const, DEFAULT_SETTINGS.delayTimer.seconds);
   const theme = validEnum(s.theme, ['auto', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme);
   const weeklyResetDay = validEnum(s.weeklyResetDay, ['monday', 'sunday'] as const, DEFAULT_SETTINGS.weeklyResetDay);
@@ -463,6 +470,7 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
       softNudgeSteps,
     },
     frictionIntensity,
+    frictionTriggerMode,
     delayTimer: {
       enabled: strictBool(s.delayTimer.enabled),
       seconds: delaySeconds,
