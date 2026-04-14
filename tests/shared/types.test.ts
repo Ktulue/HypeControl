@@ -1,4 +1,4 @@
-import { migrateSettings, DEFAULT_SETTINGS, UserSettings, sanitizeTracker, DEFAULT_SPENDING_TRACKER, SpendingTracker } from '../../src/shared/types';
+import { migrateSettings, DEFAULT_SETTINGS, UserSettings, sanitizeTracker, DEFAULT_SPENDING_TRACKER, SpendingTracker, InterceptEvent } from '../../src/shared/types';
 
 describe('migrateSettings', () => {
   test('adds weeklyResetDay with default monday for existing users', () => {
@@ -66,5 +66,20 @@ describe('sanitizeTracker', () => {
   test('rounds totals to 2 decimal places', () => {
     const t = { ...DEFAULT_SPENDING_TRACKER, dailyTotal: 1.999 } as any;
     expect(sanitizeTracker(t).dailyTotal).toBe(2.00);
+  });
+});
+
+describe('InterceptEvent outcome', () => {
+  it('accepts the streaming outcome value', () => {
+    const event: InterceptEvent = {
+      id: 'test-id',
+      timestamp: Date.now(),
+      channel: 'example',
+      purchaseType: 'cheer',
+      rawPrice: '$1.00',
+      priceWithTax: 1.07,
+      outcome: 'streaming',
+    };
+    expect(event.outcome).toBe('streaming');
   });
 });

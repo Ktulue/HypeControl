@@ -1752,23 +1752,6 @@ async function runFrictionFlow(
   return { decision: 'proceed', purchaseReason };
 }
 
-// ── Streaming Mode Toast ────────────────────────────────────────────────
-
-function showStreamingModeToast(channel: string, durationMs: number): void {
-  document.getElementById('hc-streaming-toast')?.remove();
-
-  const toast = document.createElement('div');
-  toast.id = 'hc-streaming-toast';
-  toast.className = 'hc-streaming-toast';
-  toast.textContent = `🔴 LIVE — Streaming mode active on ${channel}`;
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add('hc-streaming-toast--fade');
-    setTimeout(() => toast.remove(), 300);
-  }, durationMs);
-}
-
 function showBudgetToast(
   settings: UserSettings,
   tracker: SpendingTracker,
@@ -1847,6 +1830,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
   // Streaming mode bypass check
   const streamingBypass = await shouldBypassFriction(settings);
   if (streamingBypass) {
+    const tracker = await loadSpendingTracker(settings);
     const whitelistOverridden = checkWhitelist(attempt.channel, settings);
     if (whitelistOverridden) {
       log(`Streaming mode active \u2014 whitelist setting for ${attempt.channel} ignored`);
@@ -1854,7 +1838,15 @@ async function handleClick(event: MouseEvent): Promise<void> {
     if (settings.streamingMode.logBypassed) {
       log('Streaming mode bypass:', { type: attempt.type, rawPrice: attempt.rawPrice, wasStreamingMode: true });
     }
-    showStreamingModeToast(attempt.channel, settings.toastDurationSeconds * 1000);
+    const priceWithTax = Math.round((attempt.priceValue ?? 0) * (1 + settings.taxRate / 100) * 100) / 100;
+    await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel: attempt.channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax: attempt.priceValue == null ? null : priceWithTax,
+      outcome: 'streaming',
+    });
     allowNextClick(actualButton);
     return;
   }

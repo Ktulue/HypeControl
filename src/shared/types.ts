@@ -232,7 +232,7 @@ export interface InterceptEvent {
   purchaseType: string;
   rawPrice: string | null;
   priceWithTax: number | null;
-  outcome: 'cancelled' | 'proceeded';
+  outcome: 'cancelled' | 'proceeded' | 'streaming';
   cancelledAtStep?: number; // which step the user cancelled at (1 = main modal, 2+ = subsequent)
   savedAmount?: number;     // set on cancelled entries = priceWithTax (or 0 if no price)
   purchaseReason?: string;  // set when reason-selection step is completed

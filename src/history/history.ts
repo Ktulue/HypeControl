@@ -334,12 +334,22 @@ function renderTable(): void {
     tdAmount.textContent = formatCurrency(event.priceWithTax);
     if (event.outcome === 'proceeded') {
       tdAmount.className = 'amount-proceeded';
+    } else if (event.outcome === 'streaming') {
+      tdAmount.className = 'amount-streaming';
     }
     tr.appendChild(tdAmount);
 
     const tdOutcome = document.createElement('td');
-    tdOutcome.textContent = event.outcome === 'cancelled' ? 'Cancelled' : 'Proceeded';
-    tdOutcome.className = event.outcome === 'cancelled' ? 'outcome-cancelled' : 'outcome-proceeded';
+    if (event.outcome === 'cancelled') {
+      tdOutcome.textContent = 'Cancelled';
+      tdOutcome.className = 'outcome-cancelled';
+    } else if (event.outcome === 'streaming') {
+      tdOutcome.textContent = 'Streaming';
+      tdOutcome.className = 'outcome-streaming';
+    } else {
+      tdOutcome.textContent = 'Proceeded';
+      tdOutcome.className = 'outcome-proceeded';
+    }
     tr.appendChild(tdOutcome);
 
     const tdSaved = document.createElement('td');

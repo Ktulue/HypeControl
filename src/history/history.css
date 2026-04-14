@@ -305,9 +305,18 @@ body {
   color: var(--outcome-proceeded);
 }
 
+.outcome-streaming {
+  color: #3aa3ff;
+  font-weight: 600;
+}
+
 .amount-proceeded {
   color: var(--danger);
   font-weight: 600;
+}
+
+.amount-streaming {
+  color: #3aa3ff;
 }
 
 .saved-value {

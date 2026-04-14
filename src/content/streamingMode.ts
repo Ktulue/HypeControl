@@ -11,15 +11,14 @@ const STREAMING_STATE_KEY = 'hcStreamingState';
 
 interface StreamingState {
   streamEndedAt: number | null;
-  manualOverrideUntil: number | null;
 }
 
 async function loadStreamingState(): Promise<StreamingState> {
   try {
     const result = await chrome.storage.local.get(STREAMING_STATE_KEY);
-    return result[STREAMING_STATE_KEY] || { streamEndedAt: null, manualOverrideUntil: null };
+    return result[STREAMING_STATE_KEY] || { streamEndedAt: null };
   } catch {
-    return { streamEndedAt: null, manualOverrideUntil: null };
+    return { streamEndedAt: null };
   }
 }
 
@@ -83,18 +82,19 @@ export async function shouldBypassFriction(settings: UserSettings): Promise<bool
   const logResult = (result: boolean | string) =>
     log(`Streaming mode check: enabled=${enabled}, onOwnChannel=${onOwnChannel}, channelIsLive=${channelIsLive}, result=${result}`);
 
+  // Manual override from popup — global, no channel or streaming-mode-enabled gate
+  const override = settings.streamingOverride;
+  if (override && typeof override.expiresAt === 'number' && Date.now() < override.expiresAt) {
+    logResult('true (manual override)');
+    return true;
+  }
+
   if (!enabled || !username || !onOwnChannel) {
     logResult(false);
     return false;
   }
 
   const state = await loadStreamingState();
-
-  // Manual override (future popup feature)
-  if (state.manualOverrideUntil && Date.now() < state.manualOverrideUntil) {
-    logResult('true (manual override)');
-    return true;
-  }
 
   if (channelIsLive) {
     logResult('true (live)');
@@ -143,37 +143,71 @@ export async function checkAndUpdateLiveStatus(settings: UserSettings): Promise<
     _wasLive = true;
   }
 
-  updateGracePeriodBadge(settings);
+  await updateStreamingBadge(settings);
 }
 
 /**
- * Show or update the grace period badge in the page corner.
- * Badge is removed when outside the grace period.
+ * Show or update the unified streaming-mode status badge in the page corner.
+ * Covers manual override, live-on-own-channel, and grace-period states.
+ * Badge is removed when no bypass reason is active.
  */
-export async function updateGracePeriodBadge(settings: UserSettings): Promise<void> {
-  const existingBadge = document.getElementById('hc-grace-badge');
+export async function updateStreamingBadge(settings: UserSettings): Promise<void> {
+  const BADGE_ID = 'hc-streaming-badge';
+  const existing = document.getElementById(BADGE_ID);
 
-  const state = await loadStreamingState();
-  if (!state.streamEndedAt) {
-    existingBadge?.remove();
+  const reason = await computeBadgeReason(settings);
+  if (!reason) {
+    existing?.remove();
     return;
   }
 
-  const elapsed = Date.now() - state.streamEndedAt;
-  const gracePeriodMs = settings.streamingMode.gracePeriodMinutes * 60000;
-  const remaining = gracePeriodMs - elapsed;
-
-  if (remaining <= 0) {
-    existingBadge?.remove();
-    return;
-  }
-
-  const minutesLeft = Math.ceil(remaining / 60000);
-  const badge = existingBadge || document.createElement('div');
-  badge.id = 'hc-grace-badge';
-  badge.textContent = `Grace Period: ${minutesLeft}m remaining`;
-
-  if (!existingBadge) {
+  const badge = existing || document.createElement('div');
+  badge.id = BADGE_ID;
+  badge.className = 'hc-streaming-badge';
+  badge.textContent = reason;
+  if (!existing) {
     document.body.appendChild(badge);
   }
+}
+
+/**
+ * Return the human-readable badge text for the current bypass state,
+ * or null if no bypass reason is active.
+ * Priority: manual override > live on own channel > grace period.
+ */
+async function computeBadgeReason(settings: UserSettings): Promise<string | null> {
+  // Manual override
+  const override = settings.streamingOverride;
+  if (override && typeof override.expiresAt === 'number' && override.expiresAt > Date.now()) {
+    const remainingMs = override.expiresAt - Date.now();
+    const totalMin = Math.floor(remainingMs / 60000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    return `⏸ HC paused — override (${timeStr})`;
+  }
+
+  // Auto-detect (gated on own channel)
+  const enabled = settings.streamingMode.enabled;
+  const username = settings.streamingMode.twitchUsername.trim().toLowerCase();
+  const currentChannel = getCurrentChannel()?.toLowerCase() || '';
+  const onOwnChannel = !!username && currentChannel === username;
+  if (!enabled || !onOwnChannel) return null;
+
+  if (detectIfLive()) {
+    return `🔴 HC paused — live on ${currentChannel}`;
+  }
+
+  const state = await loadStreamingState();
+  if (state.streamEndedAt) {
+    const elapsed = Date.now() - state.streamEndedAt;
+    const gracePeriodMs = settings.streamingMode.gracePeriodMinutes * 60000;
+    const remaining = gracePeriodMs - elapsed;
+    if (remaining > 0) {
+      const minutesLeft = Math.ceil(remaining / 60000);
+      return `⏳ HC paused — grace period (${minutesLeft}m)`;
+    }
+  }
+
+  return null;
 }
