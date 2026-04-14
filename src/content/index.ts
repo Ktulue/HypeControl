@@ -9,7 +9,7 @@
 
 import { setupInterceptor, triggerDemoOverlay } from './interceptor';
 import { setupModalObserver, getCurrentChannel } from './detector';
-import { checkAndUpdateLiveStatus } from './streamingMode';
+import { checkAndUpdateLiveStatus, updateStreamingBadge } from './streamingMode';
 import { initThemeManager } from './themeManager';
 import { log, debug, error, setVersion, loadLogs } from '../shared/logger';
 import { migrateSettings, DEFAULT_SETTINGS, ONBOARDING_KEYS } from '../shared/types';
@@ -194,6 +194,19 @@ function init(): void {
     };
     startStreamingPoller();
     setInterval(startStreamingPoller, 30000);
+
+    // Refresh streaming badge every 30s so manual-override countdown stays current
+    // off-own-channel (checkAndUpdateLiveStatus only runs when on own channel).
+    setInterval(async () => {
+      const settings = await loadSettings();
+      await updateStreamingBadge(settings);
+    }, 30000);
+
+    // Run once immediately so the badge appears without waiting 30s
+    (async () => {
+      const settings = await loadSettings();
+      await updateStreamingBadge(settings);
+    })();
 
     // Set up modal observer for dynamically loaded content
     setupModalObserver((modal) => {
