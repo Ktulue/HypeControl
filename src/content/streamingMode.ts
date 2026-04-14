@@ -11,15 +11,14 @@ const STREAMING_STATE_KEY = 'hcStreamingState';
 
 interface StreamingState {
   streamEndedAt: number | null;
-  manualOverrideUntil: number | null;
 }
 
 async function loadStreamingState(): Promise<StreamingState> {
   try {
     const result = await chrome.storage.local.get(STREAMING_STATE_KEY);
-    return result[STREAMING_STATE_KEY] || { streamEndedAt: null, manualOverrideUntil: null };
+    return result[STREAMING_STATE_KEY] || { streamEndedAt: null };
   } catch {
-    return { streamEndedAt: null, manualOverrideUntil: null };
+    return { streamEndedAt: null };
   }
 }
 
@@ -83,18 +82,19 @@ export async function shouldBypassFriction(settings: UserSettings): Promise<bool
   const logResult = (result: boolean | string) =>
     log(`Streaming mode check: enabled=${enabled}, onOwnChannel=${onOwnChannel}, channelIsLive=${channelIsLive}, result=${result}`);
 
+  // Manual override from popup — global, no channel or streaming-mode-enabled gate
+  const override = settings.streamingOverride;
+  if (override && typeof override.expiresAt === 'number' && Date.now() < override.expiresAt) {
+    logResult('true (manual override)');
+    return true;
+  }
+
   if (!enabled || !username || !onOwnChannel) {
     logResult(false);
     return false;
   }
 
   const state = await loadStreamingState();
-
-  // Manual override (future popup feature)
-  if (state.manualOverrideUntil && Date.now() < state.manualOverrideUntil) {
-    logResult('true (manual override)');
-    return true;
-  }
 
   if (channelIsLive) {
     logResult('true (live)');
