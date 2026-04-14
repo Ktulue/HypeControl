@@ -924,13 +924,13 @@ Keep last 90 days of data, auto-prune older entries.
 
 ### Features
 
-- [ ] Add Twitch username to settings
-- [ ] Detect if user is on their own channel
-- [ ] Detect if channel is currently live
-- [ ] Bypass friction when both conditions are true
-- [ ] Configurable grace period after stream ends
-- [ ] Still log purchases even when bypassed
-- [ ] Show toast notification instead of full overlay
+- [x] Add Twitch username to settings
+- [x] Detect if user is on their own channel
+- [x] Detect if channel is currently live
+- [x] Bypass friction when both conditions are true (v1.0.4: also short-circuits on manual override regardless of channel)
+- [x] Configurable grace period after stream ends
+- [x] Still log purchases even when bypassed (outcome: 'streaming')
+- [x] Persistent status badge replaces per-purchase toast; shows bypass reason (override / live / grace) and live countdown for manual override
 
 ### Detection Logic
 
@@ -1025,13 +1025,15 @@ The toast notification should:
 
 ### Success Criteria
 
-- [ ] Streaming mode activates only on user's own channel
-- [ ] Live detection works reliably
-- [ ] Grace period extends bypass after stream ends
-- [ ] Purchases are still logged when bypassed
-- [ ] Toast notification appears instead of blocking overlay
-- [ ] Manual override works with auto-expiry
-- [ ] Disabling streaming mode makes it always show friction
+- [x] Streaming mode activates only on user's own channel
+- [x] Live detection works reliably
+- [x] Grace period extends bypass after stream ends
+- [x] Purchases are still logged when bypassed
+- [x] Persistent status badge (not toast) shows bypass reason and live countdown — replaced per-purchase toast with a `hc-streaming-badge` covering all three bypass reasons (override / live / grace period)
+- [x] Manual override works — fixed in v1.0.4: popup now writes `streamingOverride` to `chrome.storage.sync`; `shouldBypassFriction` reads from the correct location and short-circuits globally regardless of channel
+- [x] Disabling streaming mode makes it always show friction
+
+**Note (v1.0.4):** The original manual override implementation had a storage-location mismatch — popup wrote to `chrome.storage.sync` but `streamingMode.ts` was reading a never-written `manualOverrideUntil` key from `chrome.storage.local`. Fix (#32) corrects the read path, adds a 2-hour auto-expiry, and replaces the per-purchase toast with a persistent badge that polls every 30s.
 
 ### Validation Steps
 
@@ -1075,13 +1077,13 @@ The toast notification should:
 
 **Streaming Mode:**
 
-- [ ] Activates only on own channel
-- [ ] Live detection works
-- [ ] Grace period works
-- [ ] Toast notification appears
-- [ ] Purchases logged when bypassed
-- [ ] Manual override works
-- [ ] Auto-expiry works
+- [x] Activates only on own channel
+- [x] Live detection works
+- [x] Grace period works
+- [x] Persistent badge appears (replaced toast — badge covers override / live / grace reasons)
+- [x] Purchases logged when bypassed (outcome: 'streaming')
+- [x] Manual override works (v1.0.4 fix — storage-location mismatch resolved)
+- [x] Auto-expiry works (2-hour manual override window)
 
 **Analytics:**
 

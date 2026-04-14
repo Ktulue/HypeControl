@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-04-13
-**Current Version:** 1.0.3
+**Current Version:** 1.0.4
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -220,6 +220,7 @@ The original design called for a guided overlay on the Twitch page highlighting 
 
 ### Recently Completed
 
+- [x] **Fix stream override storage mismatch (#32) — v1.0.4** — Override now short-circuits `shouldBypassFriction` globally (any channel), popup writes `streamingOverride` to `chrome.storage.sync` so the content script actually reads it. Purchases during bypass logged as `outcome: 'streaming'`. Replaced per-purchase toast with persistent `hc-streaming-badge` showing live countdown / live-on-channel / grace-period state.
 - [x] **Firefox AMO Port (2026-04-02)** — v1.0.2. Dual-manifest build (`manifest.firefox.json`), webpack target flag, build-time icon directory constant. AMO submission pending.
 - [x] **Chrome Web Store Launch (2026-03-23)** — v1.0.0 release. Version bump, brand-voice alignment across manifest/landing page/store listing, build and submission.
 - [x] **Landing Page Brand Voice (2026-03-23)** — Aligned docs/index.html copy with README's sharp/cheeky tone.
@@ -299,4 +300,4 @@ Shared spendingTracker module, daily/weekly/monthly reset fix for popup, session
 
 ---
 
-_Last updated 2026-04-02 against the v1.0.2 codebase. Firefox AMO port._
+_Last updated 2026-04-13 against the v1.0.4 codebase. Stream override bug fix (#32)._
