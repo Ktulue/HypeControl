@@ -495,25 +495,6 @@
   }
 }
 
-/* Streaming mode toast */
-.hc-streaming-toast {
-  position: fixed;
-  bottom: 48px;
-  right: 10px;
-  background: var(--hc-danger);
-  color: white;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  z-index: 999998;
-  font-family: var(--hc-font);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-.hc-streaming-toast--fade { opacity: 0; }
-
 /* Daily budget bypass toast */
 .hc-budget-toast {
   position: fixed;

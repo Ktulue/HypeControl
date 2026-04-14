@@ -1752,23 +1752,6 @@ async function runFrictionFlow(
   return { decision: 'proceed', purchaseReason };
 }
 
-// ── Streaming Mode Toast ────────────────────────────────────────────────
-
-function showStreamingModeToast(channel: string, durationMs: number): void {
-  document.getElementById('hc-streaming-toast')?.remove();
-
-  const toast = document.createElement('div');
-  toast.id = 'hc-streaming-toast';
-  toast.className = 'hc-streaming-toast';
-  toast.textContent = `🔴 LIVE — Streaming mode active on ${channel}`;
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add('hc-streaming-toast--fade');
-    setTimeout(() => toast.remove(), 300);
-  }, durationMs);
-}
-
 function showBudgetToast(
   settings: UserSettings,
   tracker: SpendingTracker,
