@@ -317,15 +317,13 @@
             </button>
           </div>
           <div id="calendar-container" hidden></div>
-          <div class="hc-row reset-row">
-            <button class="btn-danger btn-sm" id="btn-reset-tracker">Reset Tracker</button>
-            <div class="confirm-reset" id="confirm-reset" hidden>
-              <p class="reset-summary" id="reset-summary"></p>
-              <div class="reset-actions">
-                <button class="btn-danger btn-sm" id="btn-reset-confirm">Wipe it</button>
-                <button class="btn-sm" id="btn-reset-cancel">Nevermind</button>
-              </div>
+          <div class="reset-row">
+            <div class="reset-actions">
+              <button class="btn-danger btn-sm" id="btn-reset-tracker">Reset Tracker</button>
+              <button class="btn-danger btn-sm" id="btn-reset-confirm" hidden>Wipe it</button>
+              <button class="btn-secondary btn-sm" id="btn-reset-cancel" hidden>Nevermind</button>
             </div>
+            <p class="reset-summary" id="reset-summary" hidden></p>
           </div>
         </div>
       </section>

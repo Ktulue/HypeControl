@@ -363,14 +363,14 @@ body {
 .btn-danger {
   background: var(--danger);
   color: white;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius);
   font-size: 12px;
   padding: 8px 14px;
   cursor: pointer;
 }
 .btn-danger:hover { background: var(--danger-hover); }
-.btn-sm { padding: 3px 8px; font-size: 11px; }
+.btn-sm { padding: 3px 8px; font-size: 11px; line-height: 1.4; box-sizing: border-box; }
 
 /* ─── Stat tiles ─────────────────────────────────────────── */
 .stat-tiles {
@@ -534,22 +534,21 @@ body {
   color: var(--text-muted);
 }
 
-/* ─── Confirm reset ──────────────────────────────────────── */
-.confirm-reset {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-.reset-summary {
-  color: var(--danger);
-  font-weight: 500;
-  line-height: 1.4;
+/* ─── Reset tracker ─────────────────────────────────────── */
+.reset-row {
+  padding: 4px 0;
 }
 .reset-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+.reset-summary {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-top: 4px;
 }
 
 /* ─── Savings Calendar ──────────────────────────────────── */

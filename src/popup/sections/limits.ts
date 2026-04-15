@@ -19,9 +19,9 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
   const cooldownDurationEl = el.querySelector<HTMLSelectElement>('#cooldown-duration')!;
   const trackerDailyEl = el.querySelector<HTMLElement>('#tracker-daily')!;
   const resetBtnEl = el.querySelector<HTMLButtonElement>('#btn-reset-tracker')!;
-  const confirmResetEl = el.querySelector<HTMLElement>('#confirm-reset')!;
   const resetConfirmBtnEl = el.querySelector<HTMLButtonElement>('#btn-reset-confirm')!;
   const resetCancelBtnEl = el.querySelector<HTMLButtonElement>('#btn-reset-cancel')!;
+  const resetSummaryEl = el.querySelector<HTMLElement>('#reset-summary')!;
   const weeklyCapEnabledEl = el.querySelector<HTMLInputElement>('#weekly-cap-enabled')!;
   const weeklyCapAmountEl = el.querySelector<HTMLInputElement>('#weekly-cap-amount')!;
   const weeklyResetDayRowEl = el.querySelector<HTMLElement>('#weekly-reset-day-row')!;
@@ -104,7 +104,16 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
   });
 
   // Reset tracker (inline confirmation with dynamic summary)
-  const resetSummaryEl = el.querySelector<HTMLElement>('#reset-summary')!;
+  function showConfirm(): void {
+    resetConfirmBtnEl.hidden = false;
+    resetCancelBtnEl.hidden = false;
+    resetSummaryEl.hidden = false;
+  }
+  function hideConfirm(): void {
+    resetConfirmBtnEl.hidden = true;
+    resetCancelBtnEl.hidden = true;
+    resetSummaryEl.hidden = true;
+  }
 
   resetBtnEl.addEventListener('click', async () => {
     const result = await chrome.storage.local.get(SPENDING_KEY);
@@ -124,17 +133,14 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
       resetSummaryEl.textContent = `This wipes ${parts.join(', ')} back to $0. Cooldown timer resets too.`;
     }
 
-    resetBtnEl.hidden = true;
-    confirmResetEl.hidden = false;
+    showConfirm();
   });
   resetCancelBtnEl.addEventListener('click', () => {
-    confirmResetEl.hidden = true;
-    resetBtnEl.hidden = false;
+    hideConfirm();
   });
   resetConfirmBtnEl.addEventListener('click', async () => {
     await chrome.storage.local.set({ [SPENDING_KEY]: DEFAULT_SPENDING_TRACKER });
-    confirmResetEl.hidden = true;
-    resetBtnEl.hidden = false;
+    hideConfirm();
     await refreshTracker();
   });
 
