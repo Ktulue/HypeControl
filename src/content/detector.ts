@@ -114,7 +114,9 @@ function determinePurchaseType(element: HTMLElement): PurchaseType {
   if (lowerText.includes('community gift')) {
     return 'Community Gift';
   }
-  if (lowerText.includes('gift') && lowerText.includes('sub')) {
+  // "Gift N sub(s)" — quantity variant. Imperative "gift" only, never past-tense
+  // "gifted" (e.g. "Gifted Subscriptions" tab is navigation, not a purchase).
+  if (/\bgift\s+\d+\s+subs?\b/.test(lowerText)) {
     return 'Gift A Sub';
   }
   if (lowerText.includes('get bits') || lowerText.includes('buy bits')) {
@@ -340,8 +342,10 @@ export function isPurchaseButton(element: HTMLElement | null): boolean {
     if (INTERCEPT_KEYWORDS.some(keyword => str.includes(keyword))) {
       return true;
     }
-    // Check for "gift" + "sub" pattern (catches "Gift 1 sub", "Gift 5 subs", etc.)
-    if (str.includes('gift') && str.includes('sub')) {
+    // Check for "gift N sub(s)" pattern (catches "Gift 1 sub", "Gift 5 subs", etc.)
+    // Must be imperative "gift", NOT past-tense "gifted" — "gifted" means the
+    // purchase already happened (e.g. "Gifted Subscriptions" tab in Firefox).
+    if (/\bgift\s+\d+\s+subs?\b/.test(str)) {
       return true;
     }
     return false;
