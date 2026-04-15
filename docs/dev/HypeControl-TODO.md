@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-13
-**Current Version:** 1.0.4
+**Updated:** 2026-04-15
+**Current Version:** 1.0.5
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -300,4 +300,4 @@ Shared spendingTracker module, daily/weekly/monthly reset fix for popup, session
 
 ---
 
-_Last updated 2026-04-13 against the v1.0.4 codebase. Stream override bug fix (#32)._
+_Last updated 2026-04-15 against the v1.0.5 codebase. Firefox "Gifted Subscriptions" tab false-positive fix._

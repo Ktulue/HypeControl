@@ -1,6 +1,6 @@
 {
   "name": "hype-control",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Friction between your wallet and the hype train. Spending caps, cooldown timers, and reality checks before Twitch purchases.",
   "scripts": {
     "build": "webpack --mode production",
