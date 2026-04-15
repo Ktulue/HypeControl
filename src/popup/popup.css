@@ -136,6 +136,7 @@ body {
   border-left: 1px solid var(--border-color);
   gap: 2px;
 }
+.hc-nav[hidden] { display: none; }
 .nav-label {
   width: 100%;
   padding: 7px 10px;
