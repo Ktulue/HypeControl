@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-04-15
-**Current Version:** 1.0.6
+**Current Version:** 1.0.7
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -300,4 +300,10 @@ Shared spendingTracker module, daily/weekly/monthly reset fix for popup, session
 
 ---
 
-_Last updated 2026-04-15 against the v1.0.5 codebase. Firefox "Gifted Subscriptions" tab false-positive fix._
+## NAV LOCK DURING ONBOARDING (v1.0.7)
+
+Sidebar nav was clickable during the onboarding wizard because `.hc-nav { display: flex }` overrode the `hidden` HTML attribute. Added `.hc-nav[hidden] { display: none; }` rule.
+
+---
+
+_Last updated 2026-04-15 against the v1.0.7 codebase. Nav lock during onboarding wizard._
