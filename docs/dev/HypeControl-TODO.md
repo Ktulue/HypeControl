@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-04-15
-**Current Version:** 1.0.5
+**Current Version:** 1.0.6
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
