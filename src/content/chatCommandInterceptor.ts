@@ -8,7 +8,7 @@
  * a sharper, power-user voice that acknowledges the user knows the shortcuts.
  */
 
-import { PurchaseAttempt, UserSettings, DEFAULT_SETTINGS, migrateSettings, WhitelistBehavior, SpendingTracker, sanitizeSettings } from '../shared/types';
+import { PurchaseAttempt, UserSettings, DEFAULT_SETTINGS, migrateSettings, WhitelistBehavior, SpendingTracker } from '../shared/types';
 import { getCurrentChannel } from './detector';
 import { log, debug } from '../shared/logger';
 import { shouldBypassFriction } from './streamingMode';
