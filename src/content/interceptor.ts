@@ -64,7 +64,7 @@ function pickZeroTrustMessage(): string {
 }
 
 /** Result returned by runFrictionFlow */
-interface FrictionResult {
+export interface FrictionResult {
   decision: OverlayDecision;
   cancelledAtStep?: number;
   purchaseReason?: string;
@@ -87,7 +87,7 @@ async function loadSettings(): Promise<UserSettings> {
 
 // ── Cooldown & Friction Level ───────────────────────────────────────────
 
-function checkCooldown(settings: UserSettings, tracker: SpendingTracker): { active: boolean; remainingMs: number } {
+export function checkCooldown(settings: UserSettings, tracker: SpendingTracker): { active: boolean; remainingMs: number } {
   if (!settings.cooldown.enabled || !tracker.lastProceedTimestamp) {
     return { active: false, remainingMs: 0 };
   }
@@ -98,13 +98,13 @@ function checkCooldown(settings: UserSettings, tracker: SpendingTracker): { acti
 
 // ── Whitelist ────────────────────────────────────────────────────────────
 
-function checkWhitelist(channel: string, settings: UserSettings): WhitelistEntry | null {
+export function checkWhitelist(channel: string, settings: UserSettings): WhitelistEntry | null {
   if (!settings.whitelistedChannels || settings.whitelistedChannels.length === 0) return null;
   const normalized = channel.trim().toLowerCase();
   return settings.whitelistedChannels.find(e => e.username === normalized) ?? null;
 }
 
-function showWhitelistReducedToast(channel: string, priceDisplay: string, durationMs: number): void {
+export function showWhitelistReducedToast(channel: string, priceDisplay: string, durationMs: number): void {
   document.getElementById('hc-whitelist-toast')?.remove();
   const toast = document.createElement('div');
   toast.id = 'hc-whitelist-toast';
@@ -121,7 +121,7 @@ function showWhitelistReducedToast(channel: string, priceDisplay: string, durati
  * Check which caps (if any) would be exceeded by this purchase.
  * Returns an object indicating which caps are exceeded — used for escalated friction.
  */
-function checkCapExceedance(
+export function checkCapExceedance(
   priceValue: number | null,
   settings: UserSettings,
   tracker: SpendingTracker,
@@ -147,7 +147,7 @@ function checkCapExceedance(
   return result;
 }
 
-function determineFrictionLevel(
+export function determineFrictionLevel(
   priceValue: number | null,
   settings: UserSettings,
   tracker: SpendingTracker,
@@ -707,7 +707,7 @@ function formatCountdown(ms: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-function showCooldownBlock(remainingMs: number): void {
+export function showCooldownBlock(remainingMs: number): void {
   if (overlayVisible) return;
   overlayVisible = true;
 
@@ -1386,7 +1386,7 @@ async function showMathChallengeStep(
  * Doubles the delay timer and requires an acknowledgment checkbox.
  * Uses DOM construction (not innerHTML) per project XSS prevention rules.
  */
-function showCapExceedanceStep(
+export function showCapExceedanceStep(
   exceedance: { weeklyExceeded: boolean; monthlyExceeded: boolean },
   settings: UserSettings,
   tracker: SpendingTracker,
@@ -1752,7 +1752,7 @@ async function runFrictionFlow(
   return { decision: 'proceed', purchaseReason };
 }
 
-function showBudgetToast(
+export function showBudgetToast(
   settings: UserSettings,
   tracker: SpendingTracker,
   priceWithTax: number,
@@ -2054,6 +2054,21 @@ function allowNextClick(element: HTMLElement): void {
 function clickHandler(event: MouseEvent): void {
   if (allowClick) return;
   handleClick(event);
+}
+
+/**
+ * Run the friction flow for an externally-constructed PurchaseAttempt.
+ * Used by chatCommandInterceptor to reuse the full overlay pipeline.
+ */
+export async function runFrictionFlowForAttempt(
+  attempt: PurchaseAttempt,
+  settings: UserSettings,
+  tracker: SpendingTracker,
+  maxComparisons?: number,
+  whitelistNote?: string,
+  onWhitelistAdd?: (behavior: WhitelistBehavior) => Promise<void>,
+): Promise<FrictionResult> {
+  return runFrictionFlow(attempt, settings, tracker, maxComparisons, whitelistNote, onWhitelistAdd);
 }
 
 // ── Setup / Teardown ────────────────────────────────────────────────────

@@ -8,9 +8,22 @@
  * a sharper, power-user voice that acknowledges the user knows the shortcuts.
  */
 
-import { PurchaseAttempt, UserSettings, DEFAULT_SETTINGS, migrateSettings } from '../shared/types';
+import { PurchaseAttempt, UserSettings, DEFAULT_SETTINGS, migrateSettings, WhitelistBehavior, SpendingTracker, sanitizeSettings } from '../shared/types';
 import { getCurrentChannel } from './detector';
 import { log, debug } from '../shared/logger';
+import { shouldBypassFriction } from './streamingMode';
+import { writeInterceptEvent } from '../shared/interceptLogger';
+import { loadSpendingTracker, recordPurchase } from '../shared/spendingTracker';
+import {
+  runFrictionFlowForAttempt,
+  checkWhitelist,
+  checkCooldown,
+  determineFrictionLevel,
+  showCooldownBlock,
+  showBudgetToast,
+  checkCapExceedance,
+  showCapExceedanceStep,
+} from './interceptor';
 
 // ── Purchase Command Definitions ──────────────────────────────────────────────
 // Adding a new command = one array entry.
@@ -123,15 +136,181 @@ function matchCommand(text: string): MatchedCommand | null {
   return null;
 }
 
-// ── Friction Flow (placeholder — fully implemented in Task 3) ─────────────────
+// ── Friction Flow ─────────────────────────────────────────────────────────────
 
 async function runChatFrictionFlow(
-  _attempt: PurchaseAttempt,
-  _settings: UserSettings,
-  _matched: MatchedCommand,
+  attempt: PurchaseAttempt,
+  settings: UserSettings,
+  matched: MatchedCommand,
 ): Promise<boolean> {
-  // Task 3 replaces this with the real friction flow
-  return true;
+  const tracker = await loadSpendingTracker(settings);
+  const channel = attempt.channel;
+  const priceWithTax = Math.round(attempt.priceValue! * (1 + settings.taxRate / 100) * 100) / 100;
+
+  // Streaming mode bypass
+  const streamingBypass = await shouldBypassFriction(settings);
+  if (streamingBypass) {
+    if (settings.streamingMode.logBypassed) {
+      log('Chat command — streaming mode bypass:', { type: attempt.type, rawPrice: attempt.rawPrice });
+    }
+    await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'streaming',
+      source: 'chat-command',
+      commandText: matched.rawCommand,
+      quantity: matched.quantity,
+    });
+    return true;
+  }
+
+  // Whitelist check
+  const whitelistEntry = checkWhitelist(channel, settings);
+  if (whitelistEntry) {
+    log(`Chat command — whitelisted channel: ${channel} (${whitelistEntry.behavior})`);
+
+    if (whitelistEntry.behavior === 'skip') {
+      await recordPurchase(attempt.priceValue, settings, tracker);
+      await writeInterceptEvent({
+        channel,
+        purchaseType: attempt.type,
+        rawPrice: attempt.rawPrice,
+        priceWithTax,
+        outcome: 'proceeded',
+        source: 'chat-command',
+        commandText: matched.rawCommand,
+        quantity: matched.quantity,
+      });
+      return true;
+    }
+
+    if (whitelistEntry.behavior === 'reduced') {
+      await recordPurchase(attempt.priceValue, settings, tracker);
+      await writeInterceptEvent({
+        channel,
+        purchaseType: attempt.type,
+        rawPrice: attempt.rawPrice,
+        priceWithTax,
+        outcome: 'proceeded',
+        source: 'chat-command',
+        commandText: matched.rawCommand,
+        quantity: matched.quantity,
+      });
+      return true;
+    }
+    // 'full' falls through to normal friction
+  }
+
+  // Cooldown check
+  const cooldownStatus = checkCooldown(settings, tracker);
+  if (cooldownStatus.active) {
+    showCooldownBlock(cooldownStatus.remainingMs);
+    return false;
+  }
+
+  // Friction level
+  const frictionLevel = determineFrictionLevel(attempt.priceValue, settings, tracker);
+
+  // Cap bypass — under budget, show remaining toast then pass through
+  if (frictionLevel === 'cap-bypass') {
+    showBudgetToast(settings, tracker, priceWithTax, settings.toastDurationSeconds * 1000);
+    await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'proceeded',
+      source: 'chat-command',
+      commandText: matched.rawCommand,
+      quantity: matched.quantity,
+    });
+    return true;
+  }
+
+  // No friction — track silently
+  if (frictionLevel === 'none') {
+    await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'proceeded',
+      source: 'chat-command',
+      commandText: matched.rawCommand,
+      quantity: matched.quantity,
+    });
+    return true;
+  }
+
+  // Run full friction flow
+  const maxComparisons = frictionLevel === 'nudge' ? settings.frictionThresholds.softNudgeSteps : undefined;
+  const whitelistNote = whitelistEntry?.behavior === 'full'
+    ? '\u2B50 Whitelisted Channel \u2014 This channel is on your whitelist'
+    : undefined;
+
+  const frictionResult = await runFrictionFlowForAttempt(
+    attempt, settings, tracker, maxComparisons, whitelistNote,
+  );
+
+  if (frictionResult.decision === 'proceed') {
+    // Cap exceedance check
+    const capExceedance = checkCapExceedance(attempt.priceValue, settings, tracker);
+    if (capExceedance.weeklyExceeded || capExceedance.monthlyExceeded) {
+      log('Chat command — cap exceedance detected, showing escalated friction');
+      const escalatedDecision = await showCapExceedanceStep(capExceedance, settings, tracker);
+      if (escalatedDecision === 'cancel') {
+        await writeInterceptEvent({
+          channel,
+          purchaseType: attempt.type,
+          rawPrice: attempt.rawPrice,
+          priceWithTax,
+          outcome: 'cancelled',
+          savedAmount: priceWithTax,
+          source: 'chat-command',
+          commandText: matched.rawCommand,
+          quantity: matched.quantity,
+          purchaseReason: frictionResult.purchaseReason,
+        });
+        return false;
+      }
+    }
+
+    log('Chat command — user completed all friction steps');
+    await recordPurchase(attempt.priceValue, settings, tracker);
+    await writeInterceptEvent({
+      channel,
+      purchaseType: attempt.type,
+      rawPrice: attempt.rawPrice,
+      priceWithTax,
+      outcome: 'proceeded',
+      source: 'chat-command',
+      commandText: matched.rawCommand,
+      quantity: matched.quantity,
+      purchaseReason: frictionResult.purchaseReason,
+    });
+    return true;
+  }
+
+  // Cancelled
+  await writeInterceptEvent({
+    channel,
+    purchaseType: attempt.type,
+    rawPrice: attempt.rawPrice,
+    priceWithTax,
+    outcome: 'cancelled',
+    cancelledAtStep: frictionResult.cancelledAtStep,
+    savedAmount: priceWithTax,
+    source: 'chat-command',
+    commandText: matched.rawCommand,
+    quantity: matched.quantity,
+    purchaseReason: frictionResult.purchaseReason,
+  });
+  return false;
 }
 
 // ── Keydown Handler ───────────────────────────────────────────────────────────
