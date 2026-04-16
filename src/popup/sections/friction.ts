@@ -39,6 +39,7 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
   const salaryCalcPanel = el.querySelector<HTMLElement>('#friction-salary-calc')!;
   const annualSalaryEl = el.querySelector<HTMLInputElement>('#friction-annual-salary')!;
   const hoursPerWeekEl = el.querySelector<HTMLInputElement>('#friction-hours-per-week')!;
+  const chatInterceptEnabledEl = el.querySelector<HTMLInputElement>('#chat-intercept-enabled')!;
 
   let currentSettings: UserSettings = { ...DEFAULT_SETTINGS };
 
@@ -148,6 +149,13 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     setPendingField('frictionThresholds', { ...getPending().frictionThresholds, enabled });
   });
 
+  // Chat command interception toggle
+  chatInterceptEnabledEl.addEventListener('change', () => {
+    setPendingField('chatCommandInterception', {
+      enabled: chatInterceptEnabledEl.checked,
+    });
+  });
+
   // Threshold fields
   function updateThresholds(): void {
     const t: FrictionThresholds = {
@@ -198,6 +206,7 @@ export function initFriction(el: HTMLElement, callbacks: FrictionCallbacks): Fri
     ceilingEl.value = String(settings.frictionThresholds.thresholdCeiling);
     nudgeStepsEl.value = String(settings.frictionThresholds.softNudgeSteps);
     lockEl.checked = settings.intensityLocked ?? false;
+    chatInterceptEnabledEl.checked = settings.chatCommandInterception.enabled;
   }
 
   return { render, showEscalation };

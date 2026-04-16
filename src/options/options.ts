@@ -1023,6 +1023,7 @@ async function getFormSettings(): Promise<UserSettings> {
     weeklyResetDay: cachedSettings?.weeklyResetDay ?? DEFAULT_SETTINGS.weeklyResetDay,
     intensityLocked: cachedSettings?.intensityLocked ?? DEFAULT_SETTINGS.intensityLocked,
     frictionTriggerMode: cachedSettings?.frictionTriggerMode ?? DEFAULT_SETTINGS.frictionTriggerMode,
+    chatCommandInterception: cachedSettings?.chatCommandInterception ?? DEFAULT_SETTINGS.chatCommandInterception,
   };
 }
 
