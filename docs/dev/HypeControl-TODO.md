@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-04-15
-**Current Version:** 1.0.7
+**Current Version:** 1.0.8
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -312,4 +312,10 @@ Sidebar nav was clickable during the onboarding wizard because `.hc-nav { displa
 
 ---
 
-_Last updated 2026-04-15 against the v1.0.7 codebase. Nav lock during onboarding wizard._
+## SUBDOMAIN SCOPE FIX (v1.0.8)
+
+Manifest match patterns narrowed from `*.twitch.tv` to `www.twitch.tv` in both Chrome and Firefox manifests. HC no longer activates on docs.twitch.tv, dashboard.twitch.tv, or other non-spending subdomains. (#40)
+
+---
+
+_Last updated 2026-04-15 against the v1.0.8 codebase. Subdomain scope fix._
