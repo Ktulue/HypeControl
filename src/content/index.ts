@@ -8,6 +8,7 @@
  */
 
 import { setupInterceptor, triggerDemoOverlay } from './interceptor';
+import { setupChatInterceptor } from './chatCommandInterceptor';
 import { setupModalObserver, getCurrentChannel } from './detector';
 import { checkAndUpdateLiveStatus, updateStreamingBadge } from './streamingMode';
 import { initThemeManager } from './themeManager';
@@ -183,6 +184,10 @@ function init(): void {
     // Set up the click interceptor
     setupInterceptor();
     log('Click interceptor active');
+
+    // Set up chat command interceptor (/gift, /subscribe)
+    setupChatInterceptor();
+    log('Chat command interceptor active');
 
     // Phase 2 onboarding tour (fires on first Twitch visit after install)
     maybeInitTourPanel();
