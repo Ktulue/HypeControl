@@ -258,6 +258,12 @@ Firefox supports MV3 (since Firefox 109). Dual-manifest build implemented:
 
 ---
 
+## KNOWN LIMITATIONS
+
+- **`/gift <#>` chat command bypass (#39) — Won't Fix.** Twitch's `/gift` chat command appears to process gift subs without an on-page confirmation button, going straight to the payment processor. HC intercepts via click-capture on DOM elements; if there's no on-page confirm button, there's nothing to intercept. Monitoring chat input would be fragile, high-risk for regressions, and targets an extremely niche power-user flow. If evidence surfaces that `/gift` does produce an on-page modal, this can be revisited as a simple selector addition.
+
+---
+
 ## COMMUNITY ITEMS (From Planning Doc)
 
 - [x] **Icon Design Contest** — ✅ Complete. Custom icons designed and added to `assets/icons/ChromeWebStore/` (16, 48, 128px) and `assets/icons/FirefoxAMO/` (16, 32, 48, 64, 128px).
