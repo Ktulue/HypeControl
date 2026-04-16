@@ -154,13 +154,19 @@ async function handleKeydown(event: KeyboardEvent): Promise<void> {
     return;
   }
 
-  // Load settings — check if feature is enabled BEFORE blocking
-  const settings = await loadSettings();
-  if (!settings.chatCommandInterception.enabled) return;
-
-  // Block the command from sending
+  // Block synchronously BEFORE any async work — otherwise the browser may
+  // dispatch Enter to Twitch during the await gap (race condition).
   event.preventDefault();
   event.stopPropagation();
+
+  // Now safe to go async — check if feature is enabled
+  const settings = await loadSettings();
+  if (!settings.chatCommandInterception.enabled) {
+    // Feature disabled — user must re-press Enter (unavoidable since we
+    // already blocked synchronously; can't un-preventDefault).
+    debug('Chat command interception disabled — command blocked, user must re-press');
+    return;
+  }
 
   log(`Chat command intercepted: ${matched.rawCommand}`, {
     type: matched.definition.type,
