@@ -10,6 +10,7 @@ import {
   WhitelistEntry, WhitelistBehavior,
 } from '../shared/types';
 import { isPurchaseButton, createPurchaseAttempt, getCurrentChannel } from './detector';
+import { wasRecentlyChatApproved } from './chatCommandInterceptor';
 import { shouldBypassFriction } from './streamingMode';
 import { applyThemeToOverlay } from './themeManager';
 import { log, debug } from '../shared/logger';
@@ -1824,6 +1825,17 @@ async function handleClick(event: MouseEvent): Promise<void> {
 
   const attempt = createPurchaseAttempt(actualButton);
   attempt.element = actualButton;
+
+  // Double-friction prevention: if the chat command interceptor already
+  // showed friction for this channel, let the modal click through silently.
+  if (wasRecentlyChatApproved(attempt.channel)) {
+    log('Chat command already approved — skipping modal friction', {
+      channel: attempt.channel,
+      type: attempt.type,
+    });
+    allowNextClick(actualButton);
+    return;
+  }
 
   const settings = await loadSettings();
 
