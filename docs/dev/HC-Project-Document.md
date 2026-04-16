@@ -260,6 +260,17 @@ Users choose when friction activates via the **Trigger Mode** setting:
 - **Price Guard** (default) — Friction triggers only when a price is detected on the purchase button. If the extension can't read the price, the click passes through silently (still logged).
 - **Zero Trust** — Friction triggers on every purchase button regardless of price detection. No-price overlays show rotating contextual messages from two tonal buckets (matter-of-fact and cheeky, 16 messages total). All intensity steps (reason selection, cooldown timer, math challenge, type-to-confirm) still apply based on the user's intensity setting.
 
+### Chat Command Interception
+
+Intercepts `/gift <#>` and `/subscribe` typed directly in Twitch chat — commands that previously bypassed HC's click-based interception entirely (#39).
+
+- **Two-layer defense:** Primary keydown listener on `[data-a-target="chat-input"]` catches commands before they send. Modal fallback safety net catches the purchase confirmation button if the primary layer misses.
+- **Exact pricing:** Slash commands are locked to Tier 1 ($5.99/sub). HC knows the exact price — no estimation needed.
+- **Full friction pipeline:** Same decision tree as button clicks (streaming bypass, whitelist, cooldown, caps, intensity escalation). All events tracked with `source: 'chat-command'` metadata.
+- **Power-user voice:** Log entries and spending history use sharper copy that acknowledges the user knows the shortcuts.
+- **Independent toggle:** "Chat commands" toggle in Friction settings. Enabled by default.
+- **Maintained command list:** Adding a new Twitch purchase command is a one-line addition to the `PURCHASE_COMMANDS` array.
+
 ---
 
 ## Technical Architecture

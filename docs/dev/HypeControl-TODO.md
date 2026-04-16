@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-15
-**Current Version:** 1.0.8
+**Updated:** 2026-04-16
+**Current Version:** 1.0.9
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -25,6 +25,7 @@
 | Interactive Onboarding Tour              | ✅ Complete        |
 | Firefox AMO Port                         | ✅ Complete       |
 | Friction Trigger Mode (Price Guard / Zero Trust) | ✅ Complete |
+| Chat Command Interception (#39)           | ✅ Complete       |
 | Add-ons 6–12 — Future Enhancements       | ⏸️ Deferred       |
 
 ---
@@ -260,7 +261,7 @@ Firefox supports MV3 (since Firefox 109). Dual-manifest build implemented:
 
 ## KNOWN LIMITATIONS
 
-- **`/gift <#>` chat command bypass (#39) — Won't Fix.** Twitch's `/gift` chat command appears to process gift subs without an on-page confirmation button, going straight to the payment processor. HC intercepts via click-capture on DOM elements; if there's no on-page confirm button, there's nothing to intercept. Monitoring chat input would be fragile, high-risk for regressions, and targets an extremely niche power-user flow. If evidence surfaces that `/gift` does produce an on-page modal, this can be revisited as a simple selector addition.
+- **`/gift <#>` chat command bypass (#39) — FIXED in v1.0.9.** Two-layer interception: keydown listener on `[data-a-target="chat-input"]` catches `/gift` and `/subscribe` commands before they send, with modal fallback safety net. Power-user voice copy in logs. Uses exact Tier 1 pricing ($5.99/sub). Independent toggle in Friction settings.
 
 ---
 
@@ -318,4 +319,4 @@ Manifest match patterns narrowed from `*.twitch.tv` to `www.twitch.tv` in both C
 
 ---
 
-_Last updated 2026-04-15 against the v1.0.8 codebase. Subdomain scope fix._
+_Last updated 2026-04-16 against the v1.0.9 codebase. Chat command interception (#39)._
