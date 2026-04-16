@@ -319,4 +319,8 @@ Manifest match patterns narrowed from `*.twitch.tv` to `www.twitch.tv` in both C
 
 ---
 
+<<<<<<< HEAD
 _Last updated 2026-04-16 against the v1.0.9 codebase. Chat command interception (#39)._
+=======
+_Last updated 2026-04-15 against the v1.0.8 codebase. Subdomain scope fix._
+>>>>>>> origin/main
