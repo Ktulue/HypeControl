@@ -22,14 +22,14 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://*.twitch.tv/*"
+    "https://www.twitch.tv/*"
   ],
   "background": {
     "scripts": ["serviceWorker.js"]
   },
   "content_scripts": [
     {
-      "matches": ["https://*.twitch.tv/*"],
+      "matches": ["https://www.twitch.tv/*"],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
@@ -44,7 +44,7 @@
         "assets/fonts/SpaceGrotesk-SemiBold.woff2",
         "assets/fonts/SpaceGrotesk-Bold.woff2"
       ],
-      "matches": ["https://*.twitch.tv/*"]
+      "matches": ["https://www.twitch.tv/*"]
     }
   ],
   "action": {
