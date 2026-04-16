@@ -313,10 +313,39 @@ async function runChatFrictionFlow(
   return false;
 }
 
+// ── Enter Replay ──────────────────────────────────────────────────────────────
+// After pass-through paths (none, cap-bypass, whitelist skip/reduced, streaming,
+// feature disabled), the Enter was already blocked by preventDefault. We replay
+// it so the command sends automatically. For approved paths, the approval token
+// lets it through. For the disabled path, the allowReplay flag bypasses matching.
+
+let allowReplay = false;
+
+function replayEnter(chatInput: HTMLElement): void {
+  allowReplay = true;
+  const enterEvent = new KeyboardEvent('keydown', {
+    key: 'Enter',
+    code: 'Enter',
+    keyCode: 13,
+    which: 13,
+    bubbles: true,
+    cancelable: true,
+  });
+  chatInput.dispatchEvent(enterEvent);
+  // Clear flag after a tick (in case the event didn't fire synchronously)
+  setTimeout(() => { allowReplay = false; }, 200);
+}
+
 // ── Keydown Handler ───────────────────────────────────────────────────────────
 
 async function handleKeydown(event: KeyboardEvent): Promise<void> {
   if (event.key !== 'Enter') return;
+
+  // Allow replayed Enter events through without interception
+  if (allowReplay) {
+    allowReplay = false;
+    return;
+  }
 
   const chatInput = event.currentTarget as HTMLElement;
   const text = chatInput.innerText.trim();
@@ -341,9 +370,9 @@ async function handleKeydown(event: KeyboardEvent): Promise<void> {
   // Now safe to go async — check if feature is enabled
   const settings = await loadSettings();
   if (!settings.chatCommandInterception.enabled) {
-    // Feature disabled — user must re-press Enter (unavoidable since we
-    // already blocked synchronously; can't un-preventDefault).
-    debug('Chat command interception disabled — command blocked, user must re-press');
+    // Feature disabled — replay the Enter we blocked so the command sends
+    debug('Chat command interception disabled — replaying blocked Enter');
+    replayEnter(chatInput);
     return;
   }
 
@@ -369,7 +398,10 @@ async function handleKeydown(event: KeyboardEvent): Promise<void> {
 
   if (proceeded) {
     setApproved(matched.rawCommand, channel);
-    log(`Chat command approved — waiting for user re-press: ${matched.rawCommand}`);
+    // Replay Enter on the chat input so the command sends automatically.
+    // The approval token will let it through on the next handleKeydown call.
+    log(`Chat command approved — replaying Enter: ${matched.rawCommand}`);
+    replayEnter(chatInput);
   } else {
     log(`Chat command cancelled: ${matched.rawCommand}`);
   }
