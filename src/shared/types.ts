@@ -98,6 +98,11 @@ export interface StreamingModeConfig {
   logBypassed: boolean;       // default: true
 }
 
+/** Chat command interception configuration */
+export interface ChatCommandInterceptionConfig {
+  enabled: boolean;
+}
+
 /** Theme preference for overlay styling */
 export type ThemePreference = 'auto' | 'light' | 'dark';
 
@@ -115,6 +120,7 @@ export interface UserSettings {
   frictionTriggerMode: FrictionTriggerMode;
   delayTimer: DelayTimerConfig;
   streamingMode: StreamingModeConfig;
+  chatCommandInterception: ChatCommandInterceptionConfig;
   toastDurationSeconds: number;
   whitelistedChannels: WhitelistEntry[];
   theme: ThemePreference;
@@ -196,6 +202,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
     gracePeriodMinutes: 15,
     logBypassed: true,
   },
+  chatCommandInterception: {
+    enabled: true,
+  },
   toastDurationSeconds: 15,
   whitelistedChannels: [],
   theme: 'auto',
@@ -236,6 +245,9 @@ export interface InterceptEvent {
   cancelledAtStep?: number; // which step the user cancelled at (1 = main modal, 2+ = subsequent)
   savedAmount?: number;     // set on cancelled entries = priceWithTax (or 0 if no price)
   purchaseReason?: string;  // set when reason-selection step is completed
+  source?: 'button' | 'chat-command';  // how the purchase was initiated (default: 'button')
+  commandText?: string;                // raw chat command e.g. '/gift 5' (chat-command only)
+  quantity?: number;                   // parsed quantity e.g. 5 (chat-command only)
 }
 
 /** Merge saved settings with defaults to handle upgrades */
@@ -310,6 +322,10 @@ export function migrateSettings(saved: Partial<UserSettings>): UserSettings {
     streamingMode: {
       ...DEFAULT_SETTINGS.streamingMode,
       ...(saved.streamingMode || {}),
+    },
+    chatCommandInterception: {
+      ...DEFAULT_SETTINGS.chatCommandInterception,
+      ...(saved.chatCommandInterception || {}),
     },
     toastDurationSeconds: saved.toastDurationSeconds ?? DEFAULT_SETTINGS.toastDurationSeconds,
     whitelistedChannels: (saved.whitelistedChannels ?? DEFAULT_SETTINGS.whitelistedChannels).map(e => ({
@@ -436,6 +452,13 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
     ? s.streamingMode.twitchUsername
     : '';
 
+  const chatCommandInterception: ChatCommandInterceptionConfig = {
+    enabled: strictBool(
+      (s as any).chatCommandInterception?.enabled ?? true,
+      true,
+    ),
+  };
+
   const streamingOverride = s.streamingOverride
     && typeof s.streamingOverride.expiresAt === 'number'
     && Number.isFinite(s.streamingOverride.expiresAt)
@@ -481,6 +504,7 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
       gracePeriodMinutes,
       logBypassed: strictBool(s.streamingMode.logBypassed, true),
     },
+    chatCommandInterception,
     toastDurationSeconds,
     whitelistedChannels,
     theme,
