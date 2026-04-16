@@ -453,10 +453,7 @@ export function sanitizeSettings(s: UserSettings): UserSettings {
     : '';
 
   const chatCommandInterception: ChatCommandInterceptionConfig = {
-    enabled: strictBool(
-      (s as any).chatCommandInterception?.enabled ?? true,
-      true,
-    ),
+    enabled: strictBool(s.chatCommandInterception.enabled, true),
   };
 
   const streamingOverride = s.streamingOverride
