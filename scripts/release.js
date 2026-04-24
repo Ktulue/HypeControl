@@ -170,6 +170,174 @@ function bumpManifests({ newVersion, fs: injectedFs = fs, root = ROOT }) {
   }
 }
 
+function getLastTag({ exec = defaultExec }) {
+  try {
+    return exec('git describe --tags --abbrev=0').trim();
+  } catch (err) {
+    return null;
+  }
+}
+
+function getGitLogSinceTag({ tag, exec = defaultExec }) {
+  if (tag) {
+    return exec(`git log ${tag}..HEAD --oneline`).trim().split('\n').filter(Boolean);
+  }
+  // Fallback: no prior tag exists
+  console.log('[release] No prior git tag found — falling back to last 30 commits for raw material.');
+  return exec('git log -n 30 --oneline').trim().split('\n').filter(Boolean);
+}
+
+function isoDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function prettyDate() {
+  const d = new Date();
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+async function runPhase1({ bumpType }) {
+  const { currentVersion } = preflight();
+  const newVersion = computeNextVersion(currentVersion, bumpType);
+  console.log(`[release] ${currentVersion} → ${newVersion} (${bumpType})`);
+
+  const lastTag = getLastTag({ exec: defaultExec });
+  const gitLogLines = getGitLogSinceTag({ tag: lastTag, exec: defaultExec });
+
+  // CHANGELOG scaffold
+  const changelogPath = path.join(ROOT, 'CHANGELOG.md');
+  const existing = fs.readFileSync(changelogPath, 'utf8');
+  const scaffold = getChangelogScaffold({
+    version: newVersion,
+    date: isoDate(),
+    gitLogLines,
+  });
+  const updated = scaffoldChangelogEntry({ existing, scaffold });
+  fs.writeFileSync(changelogPath, updated);
+  console.log(`[release] Scaffolded CHANGELOG.md entry for v${newVersion}`);
+
+  // Release notes scaffold
+  const notesPath = scaffoldReleaseNotes({
+    version: newVersion,
+    date: prettyDate(),
+  });
+  console.log(`[release] Scaffolded ${path.relative(ROOT, notesPath)}`);
+
+  console.log([
+    '',
+    'Phase 1 complete. Now:',
+    `  1. Edit CHANGELOG.md — replace the <!-- TODO: fill in from git log below --> block with real entries`,
+    `  2. Edit ${path.relative(ROOT, notesPath)} — write the hero paragraph, fill in category bullets`,
+    `  3. Run: npm run release -- --continue`,
+  ].join('\n'));
+}
+
+async function runPhase2() {
+  preflight();
+  const { version: currentVersion } = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+
+  // Figure out the "next" version from the latest scaffolded CHANGELOG entry
+  const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
+  const m = /^## \[(\d+\.\d+\.\d+)\]/m.exec(changelog);
+  if (!m) throw new Error('Could not find a ## [X.Y.Z] header in CHANGELOG.md.');
+  const newVersion = m[1];
+  if (newVersion === currentVersion) {
+    throw new Error(`CHANGELOG top entry is ${newVersion} but manifests are already at ${newVersion}. Did Phase 1 run?`);
+  }
+
+  verifyScaffoldsFilled({ version: newVersion });
+  console.log('[release] Scaffolds verified filled in.');
+
+  bumpManifests({ newVersion });
+  console.log(`[release] Bumped all three manifests to ${newVersion}`);
+
+  // Build Chrome
+  console.log('[release] Building Chrome...');
+  defaultExec('npm run build');
+  assertDistVersion(newVersion, 'chrome');
+  await zipDist(newVersion, 'chrome');
+
+  // Build Firefox (wipes dist/ — sequential is mandatory)
+  console.log('[release] Building Firefox...');
+  defaultExec('npm run build:firefox');
+  assertDistVersion(newVersion, 'firefox');
+  await zipDist(newVersion, 'firefox');
+
+  // Commit + tag
+  defaultExec(`git add package.json manifest.json manifest.firefox.json CHANGELOG.md docs/release-notes/v${newVersion}.md`);
+  defaultExec(`git commit -m "maint: cut v${newVersion} release"`);
+  defaultExec(`git tag v${newVersion}`);
+
+  console.log([
+    '',
+    `Local release cut complete.`,
+    `  Branch: ${defaultExec('git branch --show-current').trim()}`,
+    `  Tag: v${newVersion} (local only)`,
+    `  Zips:`,
+    `    releases/hype-control-chrome-v${newVersion}.zip`,
+    `    releases/hype-control-firefox-v${newVersion}.zip`,
+    '',
+    'Next steps (run manually):',
+    `  git push -u origin ${defaultExec('git branch --show-current').trim()}`,
+    `  gh pr create --title "maint: cut v${newVersion} release"`,
+    `  (after PR merge)`,
+    `  git push origin v${newVersion}`,
+    `  gh release create v${newVersion} --notes-file docs/release-notes/v${newVersion}.md \\`,
+    `    releases/hype-control-chrome-v${newVersion}.zip \\`,
+    `    releases/hype-control-firefox-v${newVersion}.zip`,
+    '  Upload zips to Chrome Web Store + Firefox AMO dashboards.',
+  ].join('\n'));
+}
+
+function assertDistVersion(expected, target) {
+  const distManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'dist/manifest.json'), 'utf8'));
+  if (distManifest.version !== expected) {
+    throw new Error(`dist/manifest.json version (${distManifest.version}) does not match expected ${expected} for ${target} build.`);
+  }
+}
+
+function zipDist(version, target) {
+  return new Promise((resolve, reject) => {
+    const archiver = require('archiver');
+    const zipPath = path.join(ROOT, 'releases', `hype-control-${target}-v${version}.zip`);
+    fs.mkdirSync(path.dirname(zipPath), { recursive: true });
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    output.on('close', () => {
+      console.log(`[release] Wrote ${path.relative(ROOT, zipPath)} (${archive.pointer()} bytes)`);
+      resolve();
+    });
+    archive.on('error', reject);
+    archive.pipe(output);
+    archive.directory(path.join(ROOT, 'dist'), false);
+    archive.finalize();
+  });
+}
+
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  if (args.includes('--continue')) return { phase: 2 };
+  if (args.includes('--major')) return { phase: 1, bumpType: 'major' };
+  if (args.includes('--minor')) return { phase: 1, bumpType: 'minor' };
+  return { phase: 1, bumpType: 'patch' };
+}
+
+async function main() {
+  const { phase, bumpType } = parseArgs(process.argv);
+  try {
+    if (phase === 1) await runPhase1({ bumpType });
+    else await runPhase2();
+  } catch (err) {
+    console.error(`[release] FAILED: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  main();
+}
+
 module.exports = {
   preflight,
   computeNextVersion,
