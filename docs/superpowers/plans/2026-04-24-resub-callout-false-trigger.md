@@ -670,13 +670,22 @@ Chat-callout surfaces (resub share, gifted-sub thanks, paid pins, community high
 
 Place these two sections in the "RECENT FIXES" chronological order the file already uses — immediately after the `## SUBDOMAIN SCOPE FIX (v1.0.8)` section and before the footer. (The chat-command-interception section is captured here because the feat/#39 branch never got its own entry despite shipping as v1.0.9 — this plan's update folds that in along with #44.)
 
-- [ ] **Step 4: Capture deferred Option C work in the Deferred section**
+- [ ] **Step 4: Capture all deferred work from this PR in the Deferred section**
 
 Locate the `### Deferred (Future Enhancements)` section (currently line 208-216). At the bottom of that bullet list (after `- [ ] **Add-on 12 — Reporting Dashboard + Google Sheets** ⭐⭐⭐⭐⭐`), add:
 
 ```markdown
-- [ ] **Detector: allowlist of known purchase surfaces** ⭐⭐⭐
+- [ ] **Detector: allowlist of known purchase surfaces (Option C)** ⭐⭐⭐
       Flip `isPurchaseButton` in `src/content/detector.ts` from "deny known non-purchases" (current heuristic mix) to "allow known purchase surfaces." Long-term correct approach to prevent the chat-callout-style false-positive class. Deferred from the #44 fix — see `docs/superpowers/specs/2026-04-24-resub-callout-false-trigger-design.md` Follow-ups section. Baseline `isPurchaseButton` test suite added in that PR is a prerequisite regression net.
+
+- [ ] **Detector: require real BUTTON tag for the label-keyword match path** ⭐⭐
+      The #44 bug logs showed the label-keyword path firing on a DIV via `textContent` / `tw-core-button-label-text` child aggregation. Tightening that path to require `element.tagName === 'BUTTON'` (or a role-scoped element) would reduce false-positive surface beyond the callout-exclusion rule. Not required to close #44; revisit if a new false-positive report surfaces that the callout-exclusion doesn't cover.
+
+- [ ] **Manifest version lockstep catch-up (Chrome + Firefox)** ⭐
+      `manifest.firefox.json` drifted to 1.0.2 while Chrome + `package.json` moved to 1.0.10. Plan is a 1.1.0 release cut that bumps all three in sync, then ships to both Chrome Web Store and Firefox AMO. The CLAUDE.md rule tightened in the #44 PR should prevent recurrence once the one-time catch-up lands.
+
+- [ ] **CLAUDE.md: remove duplicate `## Build` section** ⭐
+      The #44 PR consolidated the "Version Management" + "Versioning" sections into one rule that absorbs the build timing/retry guidance. The standalone `## Build` section (still present) now duplicates that guidance and can be removed in a future maint PR. Low priority — harmless duplication.
 ```
 
 - [ ] **Step 5: Commit**
