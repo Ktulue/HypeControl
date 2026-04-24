@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-16
-**Current Version:** 1.0.9
+**Updated:** 2026-04-24
+**Current Version:** 1.0.10
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -215,6 +215,18 @@ The original design called for a guided overlay on the Twitch page highlighting 
 - [ ] **Add-on 11 — Monthly Budget & Rollover System** ⭐⭐⭐⭐
 - [ ] **Add-on 12 — Reporting Dashboard + Google Sheets** ⭐⭐⭐⭐⭐
 
+- [ ] **Detector: allowlist of known purchase surfaces (Option C)** ⭐⭐⭐
+      Flip `isPurchaseButton` in `src/content/detector.ts` from "deny known non-purchases" (current heuristic mix) to "allow known purchase surfaces." Long-term correct approach to prevent the chat-callout-style false-positive class. Deferred from the #44 fix — see `docs/superpowers/specs/2026-04-24-resub-callout-false-trigger-design.md` Follow-ups section. Baseline `isPurchaseButton` test suite added in that PR is a prerequisite regression net.
+
+- [ ] **Detector: require real BUTTON tag for the label-keyword match path** ⭐⭐
+      The #44 bug logs showed the label-keyword path firing on a DIV via `textContent` / `tw-core-button-label-text` child aggregation. Tightening that path to require `element.tagName === 'BUTTON'` (or a role-scoped element) would reduce false-positive surface beyond the callout-exclusion rule. Not required to close #44; revisit if a new false-positive report surfaces that the callout-exclusion doesn't cover.
+
+- [ ] **Manifest version lockstep catch-up (Chrome + Firefox)** ⭐
+      `manifest.firefox.json` drifted to 1.0.2 while Chrome + `package.json` moved to 1.0.10. Plan is a 1.1.0 release cut that bumps all three in sync, then ships to both Chrome Web Store and Firefox AMO. The CLAUDE.md rule tightened in the #44 PR should prevent recurrence once the one-time catch-up lands.
+
+- [ ] **CLAUDE.md: remove duplicate `## Build` section** ⭐
+      The #44 PR consolidated the "Version Management" + "Versioning" sections into one rule that absorbs the build timing/retry guidance. The standalone `## Build` section (still present) now duplicates that guidance and can be removed in a future maint PR. Low priority — harmless duplication.
+
 ---
 
 ## CURRENT ROADMAP
@@ -319,8 +331,16 @@ Manifest match patterns narrowed from `*.twitch.tv` to `www.twitch.tv` in both C
 
 ---
 
-<<<<<<< HEAD
-_Last updated 2026-04-16 against the v1.0.9 codebase. Chat command interception (#39)._
-=======
-_Last updated 2026-04-15 against the v1.0.8 codebase. Subdomain scope fix._
->>>>>>> origin/main
+## CHAT COMMAND INTERCEPTION (v1.0.9)
+
+Two-layer `/gift` and `/subscribe` chat command interception: keydown listener on the chat input catches commands before they send; modal-fallback safety net. Exact Tier 1 pricing. Independent toggle in Friction settings. (#39)
+
+---
+
+## RESUB CALLOUT FALSE-TRIGGER FIX (v1.0.10)
+
+Chat-callout surfaces (resub share, gifted-sub thanks, paid pins, community highlight stacks) no longer trigger HC's friction overlay. `isPurchaseButton()` now short-circuits when the clicked element (or any ancestor) sits inside a Twitch chat-callout surface, identified by a seed list plus an anchored `-callout` suffix regex. Baseline regression test suite added for `isPurchaseButton`. (#44)
+
+---
+
+_Last updated 2026-04-24 against the v1.0.10 codebase. Resub callout false-trigger fix (#44)._
