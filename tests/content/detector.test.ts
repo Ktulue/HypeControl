@@ -27,4 +27,63 @@ describe('isPurchaseButton — chat-callout exclusion (#44)', () => {
 
     expect(isPurchaseButton(inner)).toBe(false);
   });
+
+  test('does not intercept a nested DIV whose ancestor is a chat-private-callout container', () => {
+    const container = document.createElement('div');
+    container.setAttribute('data-a-target', 'chat-private-callout');
+
+    const inner = document.createElement('div');
+    inner.textContent = 'Gift 1 sub';
+
+    container.appendChild(inner);
+    document.body.appendChild(container);
+
+    expect(isPurchaseButton(inner)).toBe(false);
+  });
+
+  test('does not intercept a button inside a community-highlight-stack ancestor', () => {
+    const container = document.createElement('div');
+    container.setAttribute('data-a-target', 'community-highlight-stack');
+
+    const inner = document.createElement('button');
+    const label = document.createElement('span');
+    label.setAttribute('data-a-target', 'tw-core-button-label-text');
+    label.textContent = 'Gift a sub';
+    inner.appendChild(label);
+
+    container.appendChild(inner);
+    document.body.appendChild(container);
+
+    expect(isPurchaseButton(inner)).toBe(false);
+  });
+
+  test('does not intercept an element whose ancestor data-a-target matches the -callout suffix rule (e.g. hype-train-callout)', () => {
+    const container = document.createElement('div');
+    container.setAttribute('data-a-target', 'hype-train-callout');
+
+    const inner = document.createElement('button');
+    const label = document.createElement('span');
+    label.setAttribute('data-a-target', 'tw-core-button-label-text');
+    label.textContent = 'Gift a sub';
+    inner.appendChild(label);
+
+    container.appendChild(inner);
+    document.body.appendChild(container);
+
+    expect(isPurchaseButton(inner)).toBe(false);
+  });
+
+  test('still intercepts a real purchase button whose ancestor has "callout" mid-string but does not end in -callout', () => {
+    // Verifies the suffix-anchoring: "callout-confirm-purchase" must NOT match.
+    const container = document.createElement('div');
+    container.setAttribute('data-a-target', 'callout-confirm-purchase');
+
+    const inner = document.createElement('button');
+    inner.setAttribute('data-a-target', 'gift-sub-button');
+
+    container.appendChild(inner);
+    document.body.appendChild(container);
+
+    expect(isPurchaseButton(inner)).toBe(true);
+  });
 });
