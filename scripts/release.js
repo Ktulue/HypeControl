@@ -142,6 +142,34 @@ function scaffoldReleaseNotes({ version, date, fs: injectedFs = fs, root = ROOT 
   return outPath;
 }
 
+function verifyScaffoldsFilled({ version, fs: injectedFs = fs, root = ROOT }) {
+  const changelogPath = `${root}/CHANGELOG.md`;
+  const notesPath = `${root}/docs/release-notes/v${version}.md`;
+
+  const changelog = injectedFs.readFileSync(changelogPath, 'utf8');
+  if (changelog.includes('<!-- TODO: fill in from git log below -->')) {
+    throw new Error(
+      `CHANGELOG.md contains placeholder marker. Fill in the v${version} entry before running --continue.`
+    );
+  }
+
+  const notes = injectedFs.readFileSync(notesPath, 'utf8');
+  if (notes.includes('<!-- TODO: hero paragraph -->')) {
+    throw new Error(
+      `Release notes file ${notesPath} contains placeholder marker. Fill in the hero paragraph before running --continue.`
+    );
+  }
+}
+
+function bumpManifests({ newVersion, fs: injectedFs = fs, root = ROOT }) {
+  for (const rel of ['package.json', 'manifest.json', 'manifest.firefox.json']) {
+    const p = `${root}/${rel}`;
+    const obj = JSON.parse(injectedFs.readFileSync(p, 'utf8'));
+    obj.version = newVersion;
+    injectedFs.writeFileSync(p, JSON.stringify(obj, null, 2) + '\n');
+  }
+}
+
 module.exports = {
   preflight,
   computeNextVersion,
@@ -149,4 +177,6 @@ module.exports = {
   getReleaseNotesScaffold,
   scaffoldChangelogEntry,
   scaffoldReleaseNotes,
+  verifyScaffoldsFilled,
+  bumpManifests,
 };

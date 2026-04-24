@@ -179,3 +179,58 @@ describe('release.js scaffold helpers', () => {
     expect(out).toContain('(no git-log output — no prior tag)');
   });
 });
+
+const { verifyScaffoldsFilled, bumpManifests } = require('../../scripts/release.js');
+
+describe('release.js Phase 2 continue', () => {
+  test('verifyScaffoldsFilled throws if changelog still has TODO marker', () => {
+    const fakeFs = {
+      readFileSync: (p) => {
+        if (p.endsWith('CHANGELOG.md')) return '## [1.1.1]\n<!-- TODO: fill in from git log below -->\n';
+        if (p.endsWith('v1.1.1.md')) return '# v1.1.1\nHero text.\n';
+        return '';
+      },
+    };
+    expect(() => verifyScaffoldsFilled({ version: '1.1.1', fs: fakeFs, root: '/tmp/hc' }))
+      .toThrow(/CHANGELOG.*placeholder/i);
+  });
+
+  test('verifyScaffoldsFilled throws if release notes still has TODO hero', () => {
+    const fakeFs = {
+      readFileSync: (p) => {
+        if (p.endsWith('CHANGELOG.md')) return '## [1.1.1]\n### Fixed\n- real entry\n';
+        if (p.endsWith('v1.1.1.md')) return '# v1.1.1\n<!-- TODO: hero paragraph -->\n';
+        return '';
+      },
+    };
+    expect(() => verifyScaffoldsFilled({ version: '1.1.1', fs: fakeFs, root: '/tmp/hc' }))
+      .toThrow(/release notes.*placeholder/i);
+  });
+
+  test('verifyScaffoldsFilled passes when both files are clean', () => {
+    const fakeFs = {
+      readFileSync: (p) => {
+        if (p.endsWith('CHANGELOG.md')) return '## [1.1.1]\n### Fixed\n- real\n';
+        if (p.endsWith('v1.1.1.md')) return '# v1.1.1\nReal hero paragraph.\n';
+        return '';
+      },
+    };
+    expect(() => verifyScaffoldsFilled({ version: '1.1.1', fs: fakeFs, root: '/tmp/hc' })).not.toThrow();
+  });
+
+  test('bumpManifests writes new version to all three JSON files', () => {
+    const written = {};
+    const fakeFs = {
+      readFileSync: () => JSON.stringify({ version: '1.1.0', otherField: 'keep' }, null, 2),
+      writeFileSync: (p, content) => { written[p] = content; },
+    };
+    bumpManifests({ newVersion: '1.1.1', fs: fakeFs, root: '/tmp/hc' });
+    const paths = Object.keys(written);
+    expect(paths.length).toBe(3);
+    for (const p of paths) {
+      const parsed = JSON.parse(written[p]);
+      expect(parsed.version).toBe('1.1.1');
+      expect(parsed.otherField).toBe('keep');
+    }
+  });
+});
