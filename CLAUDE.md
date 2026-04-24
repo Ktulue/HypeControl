@@ -1,10 +1,14 @@
-## Version Management
-
-Always bump version in both files BEFORE attempting the build. The build must happen after versioning so the dist output reflects the new version.
-
 ## Versioning
 
-After any successful code change, always bump the patch version in both `manifest.json` and `package.json` before finishing. Only increment the patch number (e.g., 0.3.17 -> 0.3.18). Never bump minor or major versions unless explicitly instructed.
+After any successful code change, always bump the patch version in **all three** of these files before finishing the task:
+
+- `manifest.json` (Chrome/Edge)
+- `manifest.firefox.json` (Firefox AMO)
+- `package.json`
+
+All three must stay in lockstep — never bump one without the others. Only increment the patch number (e.g., `1.0.9` → `1.0.10`). Never bump the minor or major number unless explicitly instructed.
+
+The bump must happen **before** `npm run build` so the `dist/` output reflects the new version. Attempt `npm run build` once after the bump; if it fails for any reason, do not retry — ask the user to run it manually.
 
 ## Currency Math
 
