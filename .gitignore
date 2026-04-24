@@ -53,3 +53,6 @@ docs/local/
 *.pid
 *.seed
 *.pid.lock
+
+# Release build artifacts (built by scripts/release.js)
+releases/

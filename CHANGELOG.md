@@ -7,6 +7,129 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-04-24
+
+### Changed
+- **Dual-platform release cut** — lockstep bump across `manifest.json`, `manifest.firefox.json`, and `package.json` to 1.1.0. Firefox manifest catches up from 1.0.2 drift.
+- **Release workflow introduced** — `npm run release` two-phase script, `docs/release-notes/` folder for user-facing notes, `docs/dev/RELEASE-PROCESS.md` documenting the workflow, `.github/pull_request_template.md` with lockstep checklist.
+
+### Added
+- `docs/release-notes/` folder with per-version user-facing notes for v1.0.0 → v1.1.0 (backfilled) and going forward.
+- `scripts/release.js` — automated lockstep manifest bump + dual-platform build + zip + tag.
+- Retroactive git tags: v1.0.0, v1.0.2, v1.0.3, v1.0.8, v1.0.9, v1.0.10, v1.1.0.
+
+---
+
+## [1.0.10] - 2026-04-24
+
+### Fixed
+- **Chat-callout surfaces excluded from purchase detection** (#44/#45) — resub share callouts were false-triggering `isPurchaseButton` via the "Gift 1 sub back" text. Added `isInsideChatCallout()` helper + `CHAT_CALLOUT_SEED_DATATARGETS` + `CHAT_CALLOUT_SUFFIX_RE`. Covers resub share, gifted-sub thanks, paid pins, community highlight stacks, hype-train callouts.
+
+### Added
+- `jest-environment-jsdom` for DOM-based detector unit tests.
+- Baseline `isPurchaseButton` regression test suite (locks down existing behavior for a future allowlist rewrite).
+
+### Changed
+- `CLAUDE.md` versioning rule consolidated — now explicitly names all three manifest files (Chrome, Firefox, package.json) as lockstep. Fixes the ambiguity that caused 1.0.2 / 1.0.9 drift.
+
+### Note
+- Chrome-only release. Firefox AMO held at 1.0.2 pending lockstep reconciliation in 1.1.0.
+
+---
+
+## [1.0.9] - 2026-04-16
+
+### Added
+- **Chat command interception** (#39/#43) — `/gift` and `/subscribe` typed into chat now go through the full friction flow. Keydown listener on chat input blocks Enter synchronously before async settings load.
+- Chat command interception toggle in popup settings (`chatCommandInterception`, on by default).
+- `InterceptEvent` extended with `source` and `command` fields.
+
+### Fixed
+- Race condition where Enter could reach Twitch during async settings load.
+- Double-friction prevention — modal approval doesn't re-trigger overlays after chat interceptor already handled the command.
+- Enter replays correctly after pass-through paths (none/cap-bypass/whitelist/streaming) so approved commands actually send.
+
+---
+
+## [1.0.8] - 2026-04-15
+
+### Fixed
+- **Subdomain scope narrowed** (#40/#42) — host permissions and content script matches changed from `*.twitch.tv` to `https://www.twitch.tv/*` only. Prevents HC from running on dashboard, mobile, dev subdomains. Both Chrome and Firefox manifests updated in lockstep.
+- **Stream override actually disables friction** (#32/#34) — was a no-op on 1.0.0 and 1.0.3.
+- **Gifted Subscriptions tab no longer false-triggers interception** (#36) — past-tense "Gifted Subscriptions" text in the inventory tab was hitting the gift-N-sub regex.
+- **Reset / Wipe / Nevermind buttons render on the same row** (#37) — were stacking vertically in the danger-zone dialog.
+- **Sidebar nav locked during onboarding wizard** (#38) — users could escape mid-tour by clicking off-route nav links.
+
+### Changed
+- `/gift` bypass documented as a known limitation (#39/#41) — this entry became obsolete in v1.0.9 when interception shipped.
+
+---
+
+## [1.0.3] - 2026-04-13
+
+### Added
+- **Friction trigger mode** (#33) — new setting with two options: Price Guard (default — friction only when price detected) and Zero Trust (friction on anything purchase-like, price or no price).
+
+### Changed
+- Default detection behavior now Price Guard — Twitch buttons without a detected price pass through silently.
+
+---
+
+## [1.0.2] - 2026-04-03
+
+### Added
+- **Firefox AMO build support** (#28) — `manifest.firefox.json` with MV3 `browser_specific_settings.gecko`, `scripts` array background, Firefox-specific icon assets. `npm run build:firefox` produces AMO-compatible zip.
+- "Chrome extension" → "browser extension" copy update throughout (#30).
+- `.gitignore` zip artifacts, Firefox port plan doc (#29).
+
+### Fixed
+- Bug report link opens with issue template pre-selected (#27).
+
+### Note
+- First Firefox AMO release. Chrome skipped 1.0.1 (Chrome-only patch that never shipped to store).
+
+---
+
+## [1.0.0] - 2026-03-23
+
+### Added
+- **Public Chrome Web Store launch** — Hype Control is now installable from the Chrome Web Store.
+- Landing page copy aligned with brand voice (#25).
+- README rewrite for Chrome Web Store launch (#24).
+- GitHub infrastructure for public launch — issue templates, PR conventions (#23).
+- Repo sanitization (removed internal test artifacts, old branches, etc.) (#22).
+
+### Changed
+- Repo flipped public.
+
+---
+
+## [0.4.28] - 2026-03-22
+
+### Summary (consolidated)
+
+Pre-launch polish between 0.4.6 and 0.4.28. Individual patch-level detail lives in the git history; this entry summarizes the work that shipped as the 1.0.0 Chrome Web Store launch.
+
+### Added
+- Spending history view (Add-on 2).
+- Weekly / monthly spending limits with escalated friction and calendar-aligned resets (Add-on 3).
+- Savings calendar in popup with 3-tier day classification and 90 motivational messages.
+- Interactive onboarding tour / setup wizard.
+- Dynamic intensity escalation based on spending.
+- Popup polish (stat card tooltips, credits section, layout improvements).
+- Friction overlay steps: type-to-confirm, math challenge, cooldown timer, reason selection.
+
+### Changed
+- UI rebrand to purple accent (`#9147ff` dark / `#7c3aed` light).
+- Extracted tracker load/save into shared `src/shared/spendingTracker.ts` module — reset checks run on every read. `sessionTotal` / `sessionChannel` removed entirely.
+- Input validation hardening: `sanitizeSettings()` / `sanitizeTracker()` gates on all storage read/write paths. XSS fix in `options.ts` comparison items. `parsePrice()` NaN/Infinity guard.
+- XSS fix in `interceptor.ts` `showWhitelistSelector()` — channel name was interpolated into `outerHTML`. Fixed with DOM construction + `textContent`.
+
+### Fixed
+- Silent-proceed paths (cap-bypass, no-friction, whitelist-skip/reduced) now call `writeInterceptEvent()` for spending history accuracy.
+
+---
+
 ## [0.4.5] - 2026-03-10
 
 ### Added
