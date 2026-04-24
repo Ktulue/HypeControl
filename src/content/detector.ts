@@ -73,6 +73,45 @@ const IGNORE_LABELS = [
 ];
 
 /**
+ * data-a-target values for Twitch chat-callout surfaces that are never
+ * purchase buttons. The family includes resub/gift-sub "say thanks"
+ * callouts, paid pinned messages, and community highlight stacks.
+ */
+const CHAT_CALLOUT_SEED_DATATARGETS = [
+  'chat-private-callout',
+  'chat-paid-pinned-chat-message',
+  'community-highlight-stack',
+];
+
+/**
+ * Matches data-a-target values that end in `-callout` (optionally with a
+ * BEM-style `__<suffix>`). Anchored on the `-callout` suffix so it can't be
+ * tripped by unrelated mid-string `callout` substrings.
+ */
+const CHAT_CALLOUT_SUFFIX_RE = /-callout(__|$)/;
+
+/**
+ * Walks up from `element` looking for an ancestor whose data-a-target is
+ * a known chat-callout surface (seed list) or matches the suffix rule.
+ *
+ * Note: `closest()` does not cross shadow-DOM boundaries. Twitch does not
+ * use shadow DOM for callouts today; if that changes, this check will miss.
+ */
+function isInsideChatCallout(element: HTMLElement): { matched: boolean; dataTarget: string | null } {
+  let node: HTMLElement | null = element;
+  while (node) {
+    const ancestor = node.closest('[data-a-target]') as HTMLElement | null;
+    if (!ancestor) return { matched: false, dataTarget: null };
+    const dt = (ancestor.getAttribute('data-a-target') || '').toLowerCase();
+    if (CHAT_CALLOUT_SEED_DATATARGETS.includes(dt) || CHAT_CALLOUT_SUFFIX_RE.test(dt)) {
+      return { matched: true, dataTarget: dt };
+    }
+    node = ancestor.parentElement;
+  }
+  return { matched: false, dataTarget: null };
+}
+
+/**
  * Determines the type of purchase based on the clicked element.
  * Type is identified by the trigger source/selector first, then falls
  * back to keyword and text-based detection.  This ensures the Type
@@ -329,7 +368,15 @@ export function isPurchaseButton(element: HTMLElement | null): boolean {
     className: element.className?.substring?.(0, 50) || '',
   };
 
-  // FIRST: Check if this is a button we should NEVER intercept (Close, Cancel, etc.)
+  // Chat-callout surfaces (resub share, gifted-sub thanks, paid pins, community highlights)
+  // are never purchase buttons. Short-circuit before any match heuristics run (#44).
+  const callout = isInsideChatCallout(element);
+  if (callout.matched) {
+    debug('isPurchaseButton: IGNORED (chat-callout)', { ...elementInfo, calloutDataTarget: callout.dataTarget });
+    return false;
+  }
+
+  // Check if this is a button we should NEVER intercept (Close, Cancel, etc.)
   const isIgnoredLabel = IGNORE_LABELS.some(ignored => labelText === ignored || labelText.startsWith(ignored + ' '));
   if (isIgnoredLabel) {
     debug('isPurchaseButton: IGNORED (allow-list)', elementInfo);
