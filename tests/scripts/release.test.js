@@ -95,3 +95,87 @@ describe('release.js computeNextVersion', () => {
     expect(() => computeNextVersion('1.1.0', 'mega')).toThrow(/unknown bump type/i);
   });
 });
+
+const { scaffoldChangelogEntry, scaffoldReleaseNotes, getChangelogScaffold, getReleaseNotesScaffold } = require('../../scripts/release.js');
+
+describe('release.js scaffold helpers', () => {
+  test('getChangelogScaffold produces a dated version block with git-log comment', () => {
+    const out = getChangelogScaffold({
+      version: '1.1.1',
+      date: '2026-05-01',
+      gitLogLines: ['abc1234 fix: something'],
+    });
+    expect(out).toContain('## [1.1.1] - 2026-05-01');
+    expect(out).toContain('<!-- TODO: fill in from git log below -->');
+    expect(out).toContain('abc1234 fix: something');
+    expect(out).toMatch(/### Added[\s\S]*### Fixed[\s\S]*### Changed/);
+  });
+
+  test('getReleaseNotesScaffold fills version and date into template', () => {
+    const template = '# vX.Y.Z — Month DD, YYYY\n\n<!-- TODO: hero paragraph -->\n';
+    const out = getReleaseNotesScaffold({
+      template,
+      version: '1.1.1',
+      date: 'May 1, 2026',
+    });
+    expect(out).toContain('# v1.1.1 — May 1, 2026');
+    expect(out).toContain('<!-- TODO: hero paragraph -->');
+    expect(out).not.toContain('vX.Y.Z');
+    expect(out).not.toContain('Month DD, YYYY');
+  });
+
+  test('scaffoldChangelogEntry inserts new block above existing entries', () => {
+    const existing = '# Changelog\n\n---\n\n## [1.1.0] - 2026-04-24\n\n### Changed\n- prior\n';
+    const out = scaffoldChangelogEntry({
+      existing,
+      scaffold: '## [1.1.1] - 2026-05-01\n\n### Fixed\n- new\n',
+    });
+    const firstHeader = out.indexOf('## [1.1.1]');
+    const oldHeader = out.indexOf('## [1.1.0]');
+    expect(firstHeader).toBeGreaterThan(-1);
+    expect(firstHeader).toBeLessThan(oldHeader);
+    // preamble + separator preserved
+    expect(out.startsWith('# Changelog\n\n---\n\n')).toBe(true);
+  });
+
+  test('scaffoldReleaseNotes writes a new file when it does not exist', () => {
+    const written = {};
+    const fakeFs = {
+      existsSync: () => false,
+      writeFileSync: (p, content) => { written[p] = content; },
+      readFileSync: () => '# vX.Y.Z — Month DD, YYYY\n\n<!-- TODO: hero paragraph -->',
+    };
+    scaffoldReleaseNotes({
+      version: '1.1.1',
+      date: 'May 1, 2026',
+      fs: fakeFs,
+      root: '/tmp/hc',
+    });
+    const expectedPath = '/tmp/hc/docs/release-notes/v1.1.1.md';
+    expect(written[expectedPath]).toContain('# v1.1.1 — May 1, 2026');
+  });
+
+  test('scaffoldReleaseNotes refuses to overwrite existing file', () => {
+    const fakeFs = {
+      existsSync: () => true,
+      writeFileSync: () => { throw new Error('should not write'); },
+      readFileSync: () => '',
+    };
+    expect(() => scaffoldReleaseNotes({
+      version: '1.1.1',
+      date: 'May 1, 2026',
+      fs: fakeFs,
+      root: '/tmp/hc',
+    })).toThrow(/already exists/i);
+  });
+
+  test('no-prior-tags fallback: getChangelogScaffold handles empty gitLogLines', () => {
+    const out = getChangelogScaffold({
+      version: '1.0.0',
+      date: '2026-03-23',
+      gitLogLines: [],
+    });
+    expect(out).toContain('## [1.0.0] - 2026-03-23');
+    expect(out).toContain('(no git-log output — no prior tag)');
+  });
+});

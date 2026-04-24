@@ -82,4 +82,71 @@ function computeNextVersion(current, bumpType) {
   }
 }
 
-module.exports = { preflight, computeNextVersion };
+function getChangelogScaffold({ version, date, gitLogLines }) {
+  const logBlock = gitLogLines.length
+    ? gitLogLines.join('\n')
+    : '(no git-log output — no prior tag)';
+  return [
+    `## [${version}] - ${date}`,
+    '',
+    '<!-- TODO: fill in from git log below -->',
+    '',
+    '### Added',
+    '-',
+    '',
+    '### Fixed',
+    '-',
+    '',
+    '### Changed',
+    '-',
+    '',
+    '<!--',
+    'Raw material — commits since the last tag:',
+    '```',
+    logBlock,
+    '```',
+    '-->',
+    '',
+    '---',
+    '',
+  ].join('\n');
+}
+
+function getReleaseNotesScaffold({ template, version, date }) {
+  return template
+    .replace(/vX\.Y\.Z/g, `v${version}`)
+    .replace(/Month DD, YYYY/g, date);
+}
+
+function scaffoldChangelogEntry({ existing, scaffold }) {
+  // Find the first "## [" block header and insert scaffold immediately before it.
+  const firstHeaderIdx = existing.indexOf('\n## [');
+  if (firstHeaderIdx === -1) {
+    // No existing version entries — append at end after preamble.
+    return existing.trimEnd() + '\n\n' + scaffold;
+  }
+  const insertAt = firstHeaderIdx + 1; // After the newline, before "## ["
+  return existing.slice(0, insertAt) + scaffold + existing.slice(insertAt);
+}
+
+function scaffoldReleaseNotes({ version, date, fs: injectedFs = fs, root = ROOT }) {
+  // Use forward-slash joins so injected-root tests pass on Windows too.
+  const templatePath = `${root}/docs/release-notes/_template.md`;
+  const outPath = `${root}/docs/release-notes/v${version}.md`;
+  if (injectedFs.existsSync(outPath)) {
+    throw new Error(`Release notes already exists: ${outPath}`);
+  }
+  const template = injectedFs.readFileSync(templatePath, 'utf8');
+  const filled = getReleaseNotesScaffold({ template, version, date });
+  injectedFs.writeFileSync(outPath, filled);
+  return outPath;
+}
+
+module.exports = {
+  preflight,
+  computeNextVersion,
+  getChangelogScaffold,
+  getReleaseNotesScaffold,
+  scaffoldChangelogEntry,
+  scaffoldReleaseNotes,
+};
