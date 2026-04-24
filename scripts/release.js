@@ -130,9 +130,8 @@ function scaffoldChangelogEntry({ existing, scaffold }) {
 }
 
 function scaffoldReleaseNotes({ version, date, fs: injectedFs = fs, root = ROOT }) {
-  // Use forward-slash joins so injected-root tests pass on Windows too.
-  const templatePath = `${root}/docs/release-notes/_template.md`;
-  const outPath = `${root}/docs/release-notes/v${version}.md`;
+  const templatePath = path.join(root, 'docs/release-notes/_template.md');
+  const outPath = path.join(root, 'docs/release-notes', `v${version}.md`);
   if (injectedFs.existsSync(outPath)) {
     throw new Error(`Release notes already exists: ${outPath}`);
   }
@@ -143,8 +142,8 @@ function scaffoldReleaseNotes({ version, date, fs: injectedFs = fs, root = ROOT 
 }
 
 function verifyScaffoldsFilled({ version, fs: injectedFs = fs, root = ROOT }) {
-  const changelogPath = `${root}/CHANGELOG.md`;
-  const notesPath = `${root}/docs/release-notes/v${version}.md`;
+  const changelogPath = path.join(root, 'CHANGELOG.md');
+  const notesPath = path.join(root, 'docs/release-notes', `v${version}.md`);
 
   const changelog = injectedFs.readFileSync(changelogPath, 'utf8');
   if (changelog.includes('<!-- TODO: fill in from git log below -->')) {
@@ -163,7 +162,7 @@ function verifyScaffoldsFilled({ version, fs: injectedFs = fs, root = ROOT }) {
 
 function bumpManifests({ newVersion, fs: injectedFs = fs, root = ROOT }) {
   for (const rel of ['package.json', 'manifest.json', 'manifest.firefox.json']) {
-    const p = `${root}/${rel}`;
+    const p = path.join(root, rel);
     const obj = JSON.parse(injectedFs.readFileSync(p, 'utf8'));
     obj.version = newVersion;
     injectedFs.writeFileSync(p, JSON.stringify(obj, null, 2) + '\n');
@@ -244,6 +243,17 @@ async function runPhase2() {
   const newVersion = m[1];
   if (newVersion === currentVersion) {
     throw new Error(`CHANGELOG top entry is ${newVersion} but manifests are already at ${newVersion}. Did Phase 1 run?`);
+  }
+
+  // Sanity check: scraped version must be a valid bump (patch/minor/major) of current.
+  // Catches the case where the CHANGELOG top entry is a doc-only block or a stale scaffold.
+  const validBumps = ['patch', 'minor', 'major'].map((t) => computeNextVersion(currentVersion, t));
+  if (!validBumps.includes(newVersion)) {
+    throw new Error(
+      `CHANGELOG top entry v${newVersion} is not a valid bump from current v${currentVersion}. ` +
+      `Expected one of: ${validBumps.map((v) => `v${v}`).join(', ')}. ` +
+      `Check that Phase 1 scaffolded correctly and no unrelated entries were added above it.`
+    );
   }
 
   verifyScaffoldsFilled({ version: newVersion });
@@ -330,6 +340,9 @@ async function main() {
     else await runPhase2();
   } catch (err) {
     console.error(`[release] FAILED: ${err.message}`);
+    if (process.env.HC_RELEASE_DEBUG) {
+      console.error(err.stack);
+    }
     process.exit(1);
   }
 }

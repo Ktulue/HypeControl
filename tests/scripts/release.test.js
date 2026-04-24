@@ -151,7 +151,7 @@ describe('release.js scaffold helpers', () => {
       fs: fakeFs,
       root: '/tmp/hc',
     });
-    const expectedPath = '/tmp/hc/docs/release-notes/v1.1.1.md';
+    const expectedPath = path.join('/tmp/hc', 'docs/release-notes', 'v1.1.1.md');
     expect(written[expectedPath]).toContain('# v1.1.1 — May 1, 2026');
   });
 
@@ -227,6 +227,9 @@ describe('release.js Phase 2 continue', () => {
     bumpManifests({ newVersion: '1.1.1', fs: fakeFs, root: '/tmp/hc' });
     const paths = Object.keys(written);
     expect(paths.length).toBe(3);
+    expect(paths).toContain(path.join('/tmp/hc', 'package.json'));
+    expect(paths).toContain(path.join('/tmp/hc', 'manifest.json'));
+    expect(paths).toContain(path.join('/tmp/hc', 'manifest.firefox.json'));
     for (const p of paths) {
       const parsed = JSON.parse(written[p]);
       expect(parsed.version).toBe('1.1.1');
