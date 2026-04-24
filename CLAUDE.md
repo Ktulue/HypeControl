@@ -1,14 +1,11 @@
-## Versioning
+## Versioning & Release Process
 
-After any successful code change, always bump the patch version in **all three** of these files before finishing the task:
+All releases follow the process in `docs/dev/RELEASE-PROCESS.md`. The short version:
 
-- `manifest.json` (Chrome/Edge)
-- `manifest.firefox.json` (Firefox AMO)
-- `package.json`
-
-All three must stay in lockstep — never bump one without the others. Only increment the patch number (e.g., `1.0.9` → `1.0.10`). Never bump the minor or major number unless explicitly instructed.
-
-The bump must happen **before** `npm run build` so the `dist/` output reflects the new version. Attempt `npm run build` once after the bump; if it fails for any reason, do not retry — ask the user to run it manually.
+- **Lockstep bump** — patch version bumps must happen in `manifest.json`, `manifest.firefox.json`, AND `package.json` together. Never bump one without the others. Drift between them is a known failure mode (Firefox 1.0.2 / Chrome 1.0.9 incident).
+- **Only increment patch** (e.g. `1.1.0` → `1.1.1`) unless explicitly instructed to bump minor or major.
+- **`npm run release`** handles the bump, CHANGELOG scaffold, release-notes scaffold, lockstep enforcement, and dual-platform builds. Don't bump manifests by hand.
+- **Build attempt** — `npm run release -- --continue` runs both `npm run build` and `npm run build:firefox`. If either fails, the script aborts. Do not retry — ask the user to run the failing build manually in their own terminal.
 
 ## Currency Math
 
@@ -28,10 +25,6 @@ When adding new settings fields:
 1. Add the field to the `UserSettings` interface in `src/shared/types.ts`.
 2. Provide a default value in `DEFAULT_SETTINGS`.
 3. Handle the new field in `migrateSettings()` so existing users get the default on upgrade.
-
-## Build
-
-Attempt npm run build once after versioning. If the build fails for any reason (path issues, shell errors, etc.), do not retry. Instead, tell the user to run npm run build manually in their own terminal.
 
 ## Post-Work Updates
 
