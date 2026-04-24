@@ -55,4 +55,31 @@ function preflight({ exec = defaultExec, readJson = defaultReadJson } = {}) {
   return { currentVersion: versions[0].version };
 }
 
-module.exports = { preflight };
+const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
+
+/**
+ * Compute the next version string given the current one and a bump type.
+ * @param {string} current - Current version like "1.1.0"
+ * @param {'patch'|'minor'|'major'} bumpType
+ * @returns {string}
+ */
+function computeNextVersion(current, bumpType) {
+  const m = SEMVER_RE.exec(current);
+  if (!m) {
+    throw new Error(`Invalid version: "${current}". Expected MAJOR.MINOR.PATCH with no prefix or suffix.`);
+  }
+  const [, majStr, minStr, patStr] = m;
+  const major = parseInt(majStr, 10);
+  const minor = parseInt(minStr, 10);
+  const patch = parseInt(patStr, 10);
+
+  switch (bumpType) {
+    case 'patch': return `${major}.${minor}.${patch + 1}`;
+    case 'minor': return `${major}.${minor + 1}.0`;
+    case 'major': return `${major + 1}.0.0`;
+    default:
+      throw new Error(`Unknown bump type: "${bumpType}". Expected patch, minor, or major.`);
+  }
+}
+
+module.exports = { preflight, computeNextVersion };

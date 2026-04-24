@@ -66,3 +66,32 @@ describe('release.js preflight', () => {
     expect(preflight({ exec: mockExec, readJson: mockReadJson })).toEqual({ currentVersion: '1.1.0' });
   });
 });
+
+const { computeNextVersion } = require('../../scripts/release.js');
+
+describe('release.js computeNextVersion', () => {
+  test('patch bump (default)', () => {
+    expect(computeNextVersion('1.1.0', 'patch')).toBe('1.1.1');
+    expect(computeNextVersion('0.4.28', 'patch')).toBe('0.4.29');
+  });
+
+  test('minor bump resets patch', () => {
+    expect(computeNextVersion('1.1.0', 'minor')).toBe('1.2.0');
+    expect(computeNextVersion('1.0.10', 'minor')).toBe('1.1.0');
+  });
+
+  test('major bump resets minor + patch', () => {
+    expect(computeNextVersion('1.1.0', 'major')).toBe('2.0.0');
+    expect(computeNextVersion('0.4.28', 'major')).toBe('1.0.0');
+  });
+
+  test('rejects non-semver input', () => {
+    expect(() => computeNextVersion('v1.1.0', 'patch')).toThrow(/invalid version/i);
+    expect(() => computeNextVersion('1.1', 'patch')).toThrow(/invalid version/i);
+    expect(() => computeNextVersion('1.1.0-beta', 'patch')).toThrow(/invalid version/i);
+  });
+
+  test('rejects unknown bump type', () => {
+    expect(() => computeNextVersion('1.1.0', 'mega')).toThrow(/unknown bump type/i);
+  });
+});
