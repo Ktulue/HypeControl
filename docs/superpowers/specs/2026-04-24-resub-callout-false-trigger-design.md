@@ -103,9 +103,29 @@ jsdom-based tests using `document.createElement` + attribute/child setup.
 
 ### `manifest.json` + `package.json`
 
-Patch bump `1.0.9` → `1.0.10` per CLAUDE.md rule.
+Patch bump `1.0.9` → `1.0.10`.
 
-`manifest.firefox.json` is intentionally **not bumped** here — it sits at `1.0.2` on an independent AMO release cadence. Reconciling the Chrome/Firefox version drift is a separate concern and out of scope.
+`manifest.firefox.json` is **not bumped** in this fix — it sits at `1.0.2` and will be brought back into lockstep as part of the upcoming `1.1.0` release cut (separate PR). Bumping it to `1.0.10` here is wasted work because `1.1.0` will overwrite it.
+
+### `CLAUDE.md`
+
+The current versioning rule says "bump both files" — ambiguous, and why `manifest.firefox.json` drifted from `1.0.2` while Chrome moved to `1.0.9`. Consolidate the two overlapping sections ("Version Management" and "Versioning") into a single explicit rule naming all three files:
+
+```markdown
+## Versioning
+
+After any successful code change, always bump the patch version in **all three** of these files before finishing the task:
+
+- `manifest.json` (Chrome/Edge)
+- `manifest.firefox.json` (Firefox AMO)
+- `package.json`
+
+All three must stay in lockstep — never bump one without the others. Only increment the patch number (e.g., `1.0.9` → `1.0.10`). Never bump the minor or major number unless explicitly instructed.
+
+The bump must happen **before** `npm run build` so the `dist/` output reflects the new version. Attempt `npm run build` once after the bump; if it fails for any reason, do not retry — ask the user to run it manually.
+```
+
+Rationale: version numbers are release identifiers, not code-equivalence claims. Browser-specific fixes may produce "no-op" bumps in the other manifest — that's fine and expected. The rule prevents the drift class entirely.
 
 ### `docs/dev/HypeControl-TODO.md`
 
