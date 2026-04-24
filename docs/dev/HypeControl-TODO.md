@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
 **Updated:** 2026-04-24
-**Current Version:** 1.0.10
+**Current Version:** 1.1.0
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -221,8 +221,7 @@ The original design called for a guided overlay on the Twitch page highlighting 
 - [ ] **Detector: require real BUTTON tag for the label-keyword match path** ⭐⭐
       The #44 bug logs showed the label-keyword path firing on a DIV via `textContent` / `tw-core-button-label-text` child aggregation. Tightening that path to require `element.tagName === 'BUTTON'` (or a role-scoped element) would reduce false-positive surface beyond the callout-exclusion rule. Not required to close #44; revisit if a new false-positive report surfaces that the callout-exclusion doesn't cover.
 
-- [ ] **Manifest version lockstep catch-up (Chrome + Firefox)** ⭐
-      `manifest.firefox.json` drifted to 1.0.2 while Chrome + `package.json` moved to 1.0.10. Plan is a 1.1.0 release cut that bumps all three in sync, then ships to both Chrome Web Store and Firefox AMO. The CLAUDE.md rule tightened in the #44 PR should prevent recurrence once the one-time catch-up lands.
+- [x] **Manifest version lockstep catch-up (Chrome + Firefox)** ⭐ — **v1.1.0 (2026-04-24).** All three files (`manifest.json`, `manifest.firefox.json`, `package.json`) bumped to 1.1.0 in sync. Firefox caught up from 1.0.2. Chrome + AMO submissions pending.
 
 - [ ] **CLAUDE.md: remove duplicate `## Build` section** ⭐
       The #44 PR consolidated the "Version Management" + "Versioning" sections into one rule that absorbs the build timing/retry guidance. The standalone `## Build` section (still present) now duplicates that guidance and can be removed in a future maint PR. Low priority — harmless duplication.
@@ -233,6 +232,7 @@ The original design called for a guided overlay on the Twitch page highlighting 
 
 ### Recently Completed
 
+- [x] **Dual-platform 1.1.0 release cut (2026-04-24)** — Lockstep version bump across `manifest.json`, `manifest.firefox.json`, `package.json` to 1.1.0. Firefox caught up from 1.0.2 (drift from the AMO port). Both Chrome and Firefox builds verified. Ready for Chrome Web Store + AMO submissions.
 - [x] **Fix stream override storage mismatch (#32) — v1.0.4** — Override now short-circuits `shouldBypassFriction` globally (any channel), popup writes `streamingOverride` to `chrome.storage.sync` so the content script actually reads it. Purchases during bypass logged as `outcome: 'streaming'`. Replaced per-purchase toast with persistent `hc-streaming-badge` showing live countdown / live-on-channel / grace-period state.
 - [x] **Firefox AMO Port (2026-04-02)** — v1.0.2. Dual-manifest build (`manifest.firefox.json`), webpack target flag, build-time icon directory constant. AMO submission pending.
 - [x] **Chrome Web Store Launch (2026-03-23)** — v1.0.0 release. Version bump, brand-voice alignment across manifest/landing page/store listing, build and submission.
@@ -343,4 +343,10 @@ Chat-callout surfaces (resub share, gifted-sub thanks, paid pins, community high
 
 ---
 
-_Last updated 2026-04-24 against the v1.0.10 codebase. Resub callout false-trigger fix (#44)._
+## DUAL-PLATFORM 1.1.0 RELEASE CUT (v1.1.0)
+
+Lockstep minor bump across all three version files (`manifest.json`, `manifest.firefox.json`, `package.json`) to 1.1.0. Firefox manifest caught up from 1.0.2 — it had drifted during the AMO port and subsequent patch releases. Both Chrome and Firefox production builds verified. Ready for Chrome Web Store + AMO submissions.
+
+---
+
+_Last updated 2026-04-24 against the v1.1.0 codebase. Dual-platform release cut._

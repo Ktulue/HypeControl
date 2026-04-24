@@ -29,6 +29,9 @@ Thumbs.db
 skills-lock.json
 .superpowers/
 
+# Local-only docs (personal release notes, scratch references, etc.)
+docs/local/
+
 # Playwright MCP cache
 .playwright-mcp/
 
