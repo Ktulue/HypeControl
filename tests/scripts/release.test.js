@@ -65,6 +65,30 @@ describe('release.js preflight', () => {
     // Returns the current version for downstream use
     expect(preflight({ exec: mockExec, readJson: mockReadJson })).toEqual({ currentVersion: '1.1.0' });
   });
+
+  test('preflight phase 2 skips the clean-tree check', () => {
+    // Phase 2 runs against the Phase 1 scaffold (CHANGELOG.md modified,
+    // docs/release-notes/vX.Y.Z.md untracked), so a dirty tree is expected.
+    const mockExec = jest.fn((cmd) => {
+      if (cmd.includes('git status --porcelain')) return ' M CHANGELOG.md\n?? docs/release-notes/v1.1.1.md\n';
+      if (cmd.includes('git branch --show-current')) return 'maint/vX.Y.Z-release\n';
+      return '';
+    });
+    const mockReadJson = jest.fn(() => ({ version: '1.1.0' }));
+    expect(() => preflight({ exec: mockExec, readJson: mockReadJson, phase: 2 })).not.toThrow();
+  });
+
+  test('preflight phase 2 still enforces branch + lockstep', () => {
+    // Phase 2 skips clean-tree but still rejects main branch.
+    const mockExec = jest.fn((cmd) => {
+      if (cmd.includes('git status --porcelain')) return ' M CHANGELOG.md\n';
+      if (cmd.includes('git branch --show-current')) return 'main\n';
+      return '';
+    });
+    const mockReadJson = jest.fn(() => ({ version: '1.1.0' }));
+    expect(() => preflight({ exec: mockExec, readJson: mockReadJson, phase: 2 }))
+      .toThrow(/must not be on main or master/i);
+  });
 });
 
 const { computeNextVersion } = require('../../scripts/release.js');

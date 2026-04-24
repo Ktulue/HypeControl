@@ -28,13 +28,19 @@ function defaultReadJson(p) {
 
 /**
  * Preflight checks before either phase runs.
+ * Phase 1 requires a clean tree. Phase 2 runs against the Phase 1 scaffold
+ * (CHANGELOG.md modified + docs/release-notes/vX.Y.Z.md untracked), so
+ * Phase 2 skips the clean-tree check.
+ * @param {{exec?, readJson?, phase?: 1|2}} opts
  * @returns {{currentVersion: string}}
  * @throws if any precondition fails
  */
-function preflight({ exec = defaultExec, readJson = defaultReadJson } = {}) {
-  const status = exec('git status --porcelain').trim();
-  if (status) {
-    throw new Error(`Working tree is not clean:\n${status}\nCommit or stash changes before running release.`);
+function preflight({ exec = defaultExec, readJson = defaultReadJson, phase = 1 } = {}) {
+  if (phase === 1) {
+    const status = exec('git status --porcelain').trim();
+    if (status) {
+      throw new Error(`Working tree is not clean:\n${status}\nCommit or stash changes before running release.`);
+    }
   }
 
   const branch = exec('git branch --show-current').trim();
@@ -233,7 +239,7 @@ async function runPhase1({ bumpType }) {
 }
 
 async function runPhase2() {
-  preflight();
+  preflight({ phase: 2 });
   const { version: currentVersion } = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 
   // Figure out the "next" version from the latest scaffolded CHANGELOG entry
