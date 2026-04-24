@@ -87,3 +87,91 @@ describe('isPurchaseButton — chat-callout exclusion (#44)', () => {
     expect(isPurchaseButton(inner)).toBe(true);
   });
 });
+
+describe('isPurchaseButton — baseline behavior', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('intercepts the top-nav Get Bits button', () => {
+    const button = document.createElement('button');
+    button.setAttribute('data-a-target', 'top-nav-get-bits-button');
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+
+  test('ignores the Cheer button (bits-button / aria-label="Cheer")', () => {
+    const button = document.createElement('button');
+    button.setAttribute('data-a-target', 'bits-button');
+    button.setAttribute('aria-label', 'Cheer');
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(false);
+  });
+
+  test('intercepts a Bits purchase button in the popover (bits-purchase-button-100)', () => {
+    const button = document.createElement('button');
+    button.setAttribute('data-a-target', 'bits-purchase-button-100');
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+
+  test('intercepts any data-a-target containing "gift" (e.g. gift-sub-button)', () => {
+    const button = document.createElement('button');
+    button.setAttribute('data-a-target', 'gift-sub-button');
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+
+  test('intercepts a button whose label matches the "gift N sub(s)" regex', () => {
+    const button = document.createElement('button');
+    const label = document.createElement('span');
+    label.setAttribute('data-a-target', 'tw-core-button-label-text');
+    label.textContent = 'Gift 1 sub';
+    button.appendChild(label);
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+
+  test('ignores a button labeled "Gifted Subscriptions" (past-tense — issue #36 regression guard)', () => {
+    const button = document.createElement('button');
+    const label = document.createElement('span');
+    label.setAttribute('data-a-target', 'tw-core-button-label-text');
+    label.textContent = 'Gifted Subscriptions';
+    button.appendChild(label);
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(false);
+  });
+
+  test.each(['Cancel', 'Close', 'Dismiss'])('ignores the %s button via IGNORE_LABELS', (labelText) => {
+    const button = document.createElement('button');
+    const label = document.createElement('span');
+    label.setAttribute('data-a-target', 'tw-core-button-label-text');
+    label.textContent = labelText;
+    button.appendChild(label);
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(false);
+  });
+
+  test('intercepts a combo button via aria-label ("Send Hearts Combo, 5 Bits")', () => {
+    const button = document.createElement('button');
+    button.setAttribute('aria-label', 'Send Hearts Combo, 5 Bits');
+    document.body.appendChild(button);
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+
+  test('intercepts a dollar-amount button inside a [role="dialog"] (gift-sub quantity picker)', () => {
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const button = document.createElement('button');
+    button.textContent = '$4.99';
+
+    dialog.appendChild(button);
+    document.body.appendChild(dialog);
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+
+  test('returns false for a null element', () => {
+    expect(isPurchaseButton(null)).toBe(false);
+  });
+});
