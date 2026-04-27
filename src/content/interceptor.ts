@@ -1140,7 +1140,11 @@ async function showTypeToConfirmStep(
           placeholder="Type the phrase above..."
           autocomplete="off"
           spellcheck="false"
+          name="hc-no-autofill"
+          data-1p-ignore
+          data-lpignore="true"
         />
+        <p class="hc-cheat-callout" id="hc-cheat-callout" role="alert" style="display: none;"></p>
       </div>
       <div class="hc-actions">
         <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel</button>
