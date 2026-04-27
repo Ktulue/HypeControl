@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-24
-**Current Version:** 1.1.0
+**Updated:** 2026-04-27
+**Current Version:** 1.1.1
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -349,4 +349,10 @@ Lockstep minor bump across all three version files (`manifest.json`, `manifest.f
 
 ---
 
-_Last updated 2026-04-24 against the v1.1.0 codebase. Dual-platform release cut._
+## TYPE-TO-CONFIRM PASTE BYPASS FIX (v1.1.1)
+
+Closed the copy/paste bypass on the type-to-confirm friction step. `paste`, `drop`, and paste-flavored `beforeinput` events on the input are now blocked; `.hc-confirm-phrase` flipped from `user-select: all` to `user-select: none` so the prompt itself can't be dragged into the input; three autofill-suppression attributes (`name="hc-no-autofill"`, `data-1p-ignore`, `data-lpignore="true"`) discourage password managers. Caught cheats trigger a Newman-flavored callout from a 4-line random pool — "Ah ah ah. You didn't type the magic phrase." (#49)
+
+---
+
+_Last updated 2026-04-27 against the v1.1.1 codebase. Type-to-confirm paste bypass closed (#49)._
