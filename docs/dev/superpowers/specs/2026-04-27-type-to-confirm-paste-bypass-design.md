@@ -37,10 +37,9 @@ The friction in this step is the act of typing — the muscle memory pause and t
 
 Inside `showTypeToConfirmStep()` (~line 1113):
 
-- Add a module-scoped `CHEAT_CALLOUT_LINES: readonly string[]` array near `TYPE_TO_CONFIRM_PHRASE` with five Newman-flavored lines:
+- Add a module-scoped `CHEAT_CALLOUT_LINES: readonly string[]` array near `TYPE_TO_CONFIRM_PHRASE` with four Newman-flavored lines:
   - `"Ah ah ah. You didn't type the magic phrase."`
   - `"Ah ah ah — pasting isn't typing."`
-  - `"You didn't say the magic word."`
   - `"The friction is the feature. Hands on keyboard."`
   - `"Nice try. Hands on keyboard."`
 - Add a small helper `pickCheatLine()` that returns a random entry from the pool.
