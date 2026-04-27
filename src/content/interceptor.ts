@@ -1162,6 +1162,24 @@ async function showTypeToConfirmStep(
     const previousFocus = document.activeElement as HTMLElement | null;
     const inputEl = overlay.querySelector('#hc-confirm-input') as HTMLInputElement | null;
     const proceedBtn = overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null;
+    const calloutEl = overlay.querySelector('#hc-cheat-callout') as HTMLElement | null;
+
+    const triggerCheatCallout = () => {
+      if (!inputEl) return;
+      inputEl.value = '';
+      if (proceedBtn) {
+        proceedBtn.disabled = true;
+        proceedBtn.setAttribute('aria-disabled', 'true');
+        proceedBtn.style.opacity = '0.4';
+        proceedBtn.style.cursor = 'not-allowed';
+      }
+      if (calloutEl) {
+        calloutEl.textContent = pickCheatLine();
+        calloutEl.style.display = '';
+      }
+      inputEl.focus();
+      log('Type-to-confirm: paste/drop bypass attempt blocked');
+    };
 
     const finish = (decision: 'cancel' | 'proceed') => {
       if (resolved) return;
@@ -1173,12 +1191,35 @@ async function showTypeToConfirmStep(
 
     // Real-time validation: enable Confirm only when input matches phrase (case-insensitive)
     inputEl?.addEventListener('input', () => {
+      if (calloutEl) calloutEl.style.display = 'none';
       const matches = (inputEl.value.trim().toLowerCase() === TYPE_TO_CONFIRM_PHRASE.toLowerCase());
       if (proceedBtn) {
         proceedBtn.disabled = !matches;
         proceedBtn.setAttribute('aria-disabled', String(!matches));
         proceedBtn.style.opacity = matches ? '' : '0.4';
         proceedBtn.style.cursor = matches ? '' : 'not-allowed';
+      }
+    });
+
+    inputEl?.addEventListener('paste', (e) => {
+      e.preventDefault();
+      triggerCheatCallout();
+    });
+
+    inputEl?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      triggerCheatCallout();
+    });
+
+    inputEl?.addEventListener('beforeinput', (e) => {
+      const ev = e as InputEvent;
+      if (
+        ev.inputType === 'insertFromPaste' ||
+        ev.inputType === 'insertFromDrop' ||
+        ev.inputType === 'insertReplacementText'
+      ) {
+        e.preventDefault();
+        triggerCheatCallout();
       }
     });
 
