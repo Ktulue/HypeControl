@@ -726,7 +726,8 @@
   border-radius: 4px;
   padding: 6px 14px;
   margin: 12px 0 16px;
-  user-select: all;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hc-confirm-input {
