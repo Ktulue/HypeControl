@@ -1105,6 +1105,17 @@ async function showFrictionCooldownStep(
 
 const TYPE_TO_CONFIRM_PHRASE = 'I want to buy this';
 
+const CHEAT_CALLOUT_LINES: readonly string[] = [
+  "Ah ah ah. You didn't type the magic phrase.",
+  "Ah ah ah — pasting isn't typing.",
+  'The friction is the feature. Hands on keyboard.',
+  'Nice try. Hands on keyboard.',
+];
+
+function pickCheatLine(): string {
+  return CHEAT_CALLOUT_LINES[Math.floor(Math.random() * CHEAT_CALLOUT_LINES.length)];
+}
+
 /**
  * Friction step that requires the user to type a specific phrase before
  * the Confirm button becomes enabled. Cancel/Escape/backdrop all resolve
