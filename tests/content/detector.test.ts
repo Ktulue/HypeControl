@@ -175,3 +175,120 @@ describe('isPurchaseButton — baseline behavior', () => {
     expect(isPurchaseButton(null)).toBe(false);
   });
 });
+
+describe('isPurchaseButton — form-control exclusion (#48)', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('does not intercept a click on a [role="option"] tier picker option inside a sub modal', () => {
+    // Reproduces #48: Twitch's sub-tier picker renders options as buttons
+    // whose visible text is just a price (e.g. "$4.99"), inside a
+    // [role="dialog"]. Without the form-control short-circuit, the
+    // dollar-amount-in-dialog heuristic would match.
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const listbox = document.createElement('div');
+    listbox.setAttribute('role', 'listbox');
+
+    const option = document.createElement('button');
+    option.setAttribute('role', 'option');
+    option.textContent = '$4.99';
+
+    listbox.appendChild(option);
+    dialog.appendChild(listbox);
+    document.body.appendChild(dialog);
+
+    expect(isPurchaseButton(option)).toBe(false);
+  });
+
+  test('does not intercept a click on a child span inside a [role="option"] (closest() path)', () => {
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const option = document.createElement('button');
+    option.setAttribute('role', 'option');
+
+    const inner = document.createElement('span');
+    inner.textContent = '$13.49';
+    option.appendChild(inner);
+
+    dialog.appendChild(option);
+    document.body.appendChild(dialog);
+
+    expect(isPurchaseButton(inner)).toBe(false);
+  });
+
+  test('does not intercept a [role="combobox"] trigger button (the dropdown control itself)', () => {
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const combobox = document.createElement('button');
+    combobox.setAttribute('role', 'combobox');
+    combobox.textContent = '$4.99';
+
+    dialog.appendChild(combobox);
+    document.body.appendChild(dialog);
+
+    expect(isPurchaseButton(combobox)).toBe(false);
+  });
+
+  test('does not intercept a [role="radio"] tier option inside a [role="radiogroup"]', () => {
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const group = document.createElement('div');
+    group.setAttribute('role', 'radiogroup');
+
+    const radio = document.createElement('button');
+    radio.setAttribute('role', 'radio');
+    radio.textContent = '$24.99';
+
+    group.appendChild(radio);
+    dialog.appendChild(group);
+    document.body.appendChild(dialog);
+
+    expect(isPurchaseButton(radio)).toBe(false);
+  });
+
+  test('does not intercept a native <option> inside a <select>', () => {
+    const select = document.createElement('select');
+    const option = document.createElement('option');
+    option.textContent = '$4.99';
+    select.appendChild(option);
+    document.body.appendChild(select);
+
+    expect(isPurchaseButton(option)).toBe(false);
+  });
+
+  test('does not intercept a [role="menuitem"] price option', () => {
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const menuitem = document.createElement('button');
+    menuitem.setAttribute('role', 'menuitem');
+    menuitem.textContent = '$4.99';
+
+    dialog.appendChild(menuitem);
+    document.body.appendChild(dialog);
+
+    expect(isPurchaseButton(menuitem)).toBe(false);
+  });
+
+  test('regression guard: still intercepts a plain $X.XX button inside a [role="dialog"] (gift-sub quantity picker — #48 must not break this)', () => {
+    // Mirrors the existing test at the bottom of the chat-callout describe.
+    // If this fails, the form-control exclusion is too broad and gift-sub
+    // detection is regressed.
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+
+    const button = document.createElement('button');
+    button.textContent = '$4.99';
+
+    dialog.appendChild(button);
+    document.body.appendChild(dialog);
+
+    expect(isPurchaseButton(button)).toBe(true);
+  });
+});
