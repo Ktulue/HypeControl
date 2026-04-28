@@ -277,7 +277,7 @@ describe('isPurchaseButton — form-control exclusion (#48)', () => {
   });
 
   test('regression guard: still intercepts a plain $X.XX button inside a [role="dialog"] (gift-sub quantity picker — #48 must not break this)', () => {
-    // Mirrors the existing test at the bottom of the chat-callout describe.
+    // Mirrors the existing test at the bottom of the baseline-behavior describe.
     // If this fails, the form-control exclusion is too broad and gift-sub
     // detection is regressed.
     const dialog = document.createElement('div');
