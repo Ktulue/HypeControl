@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hype Control",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Friction between your wallet and the hype train. Spending caps, cooldown timers, and reality checks before Twitch purchases.",
   "browser_specific_settings": {
     "gecko": {
@@ -25,13 +25,21 @@
     "https://www.twitch.tv/*"
   ],
   "background": {
-    "scripts": ["serviceWorker.js"]
+    "scripts": [
+      "serviceWorker.js"
+    ]
   },
   "content_scripts": [
     {
-      "matches": ["https://www.twitch.tv/*"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "https://www.twitch.tv/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -44,7 +52,9 @@
         "assets/fonts/SpaceGrotesk-SemiBold.woff2",
         "assets/fonts/SpaceGrotesk-Bold.woff2"
       ],
-      "matches": ["https://www.twitch.tv/*"]
+      "matches": [
+        "https://www.twitch.tv/*"
+      ]
     }
   ],
   "action": {

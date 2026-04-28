@@ -1105,6 +1105,17 @@ async function showFrictionCooldownStep(
 
 const TYPE_TO_CONFIRM_PHRASE = 'I want to buy this';
 
+const CHEAT_CALLOUT_LINES: readonly string[] = [
+  "Ah ah ah. You didn't type the magic phrase.",
+  "Ah ah ah — pasting isn't typing.",
+  'The friction is the feature. Hands on keyboard.',
+  'Nice try. Hands on keyboard.',
+];
+
+function pickCheatLine(): string {
+  return CHEAT_CALLOUT_LINES[Math.floor(Math.random() * CHEAT_CALLOUT_LINES.length)];
+}
+
 /**
  * Friction step that requires the user to type a specific phrase before
  * the Confirm button becomes enabled. Cancel/Escape/backdrop all resolve
@@ -1129,7 +1140,11 @@ async function showTypeToConfirmStep(
           placeholder="Type the phrase above..."
           autocomplete="off"
           spellcheck="false"
+          name="hc-no-autofill"
+          data-1p-ignore
+          data-lpignore="true"
         />
+        <p class="hc-cheat-callout" id="hc-cheat-callout" role="alert" style="display: none;"></p>
       </div>
       <div class="hc-actions">
         <button class="hc-btn hc-btn-cancel" data-action="cancel">Cancel</button>
@@ -1147,6 +1162,27 @@ async function showTypeToConfirmStep(
     const previousFocus = document.activeElement as HTMLElement | null;
     const inputEl = overlay.querySelector('#hc-confirm-input') as HTMLInputElement | null;
     const proceedBtn = overlay.querySelector('[data-action="proceed"]') as HTMLButtonElement | null;
+    const calloutEl = overlay.querySelector('#hc-cheat-callout') as HTMLElement | null;
+
+    const triggerCheatCallout = () => {
+      if (!inputEl) return;
+      inputEl.value = '';
+      if (proceedBtn) {
+        proceedBtn.disabled = true;
+        proceedBtn.setAttribute('aria-disabled', 'true');
+        proceedBtn.style.opacity = '0.4';
+        proceedBtn.style.cursor = 'not-allowed';
+      }
+      if (calloutEl) {
+        // Flip display before setting textContent so role="alert" announces
+        // reliably — Chrome+NVDA only fires the live-region announcement when
+        // content changes while the element is already visible.
+        calloutEl.style.display = '';
+        calloutEl.textContent = pickCheatLine();
+      }
+      inputEl.focus();
+      log('Type-to-confirm: paste/drop bypass attempt blocked');
+    };
 
     const finish = (decision: 'cancel' | 'proceed') => {
       if (resolved) return;
@@ -1158,12 +1194,35 @@ async function showTypeToConfirmStep(
 
     // Real-time validation: enable Confirm only when input matches phrase (case-insensitive)
     inputEl?.addEventListener('input', () => {
+      if (calloutEl) calloutEl.style.display = 'none';
       const matches = (inputEl.value.trim().toLowerCase() === TYPE_TO_CONFIRM_PHRASE.toLowerCase());
       if (proceedBtn) {
         proceedBtn.disabled = !matches;
         proceedBtn.setAttribute('aria-disabled', String(!matches));
         proceedBtn.style.opacity = matches ? '' : '0.4';
         proceedBtn.style.cursor = matches ? '' : 'not-allowed';
+      }
+    });
+
+    inputEl?.addEventListener('paste', (e) => {
+      e.preventDefault();
+      triggerCheatCallout();
+    });
+
+    inputEl?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      triggerCheatCallout();
+    });
+
+    inputEl?.addEventListener('beforeinput', (e) => {
+      const ev = e as InputEvent;
+      if (
+        ev.inputType === 'insertFromPaste' ||
+        ev.inputType === 'insertFromDrop' ||
+        ev.inputType === 'insertReplacementText'
+      ) {
+        e.preventDefault();
+        triggerCheatCallout();
       }
     });
 

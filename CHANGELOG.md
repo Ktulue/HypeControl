@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2026-04-28
+
+### Fixed
+- **Type-to-confirm paste bypass closed (#49).** Pasting, dropping, or autofilling the confirmation phrase no longer enables the Confirm button. Blocked vectors: keyboard paste (Ctrl/Cmd+V), right-click paste, drag-and-drop into the input, and `execCommand`/IME paste paths via `beforeinput`. The displayed phrase is no longer mouse-selectable, closing the drag-the-prompt vector. Password-manager autofill is suppressed via `name="hc-no-autofill"`, `data-1p-ignore`, and `data-lpignore="true"` hints. Caught cheat attempts trigger a Newman-flavored callout from a 4-line random pool.
+- **Screen-reader announcement reliability for the new callout.** The `role="alert"` element flips visible *before* its text is set, so Chrome+NVDA reliably fires the live-region announcement.
+
+---
 ## [1.1.0] - 2026-04-24
 
 ### Changed
