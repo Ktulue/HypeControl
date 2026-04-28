@@ -376,6 +376,21 @@ export function isPurchaseButton(element: HTMLElement | null): boolean {
     return false;
   }
 
+  // Form-control short-circuit: tier pickers, quantity radios, and other
+  // configuration controls inside purchase modals are never purchase commits.
+  // They often render as buttons whose text is just a price inside a dialog,
+  // which would otherwise trip the dollar-amount-in-dialog heuristic below (#48).
+  const FORM_CONTROL_SELECTOR = [
+    'select', 'option', 'optgroup',
+    '[role="option"]', '[role="combobox"]', '[role="listbox"]',
+    '[role="radio"]', '[role="radiogroup"]',
+    '[role="menuitem"]', '[role="menuitemradio"]',
+  ].join(',');
+  if (element.matches(FORM_CONTROL_SELECTOR) || element.closest(FORM_CONTROL_SELECTOR)) {
+    debug('isPurchaseButton: IGNORED (form-control)', elementInfo);
+    return false;
+  }
+
   // Check if this is a button we should NEVER intercept (Close, Cancel, etc.)
   const isIgnoredLabel = IGNORE_LABELS.some(ignored => labelText === ignored || labelText.startsWith(ignored + ' '));
   if (isIgnoredLabel) {
