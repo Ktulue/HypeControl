@@ -1174,8 +1174,11 @@ async function showTypeToConfirmStep(
         proceedBtn.style.cursor = 'not-allowed';
       }
       if (calloutEl) {
-        calloutEl.textContent = pickCheatLine();
+        // Flip display before setting textContent so role="alert" announces
+        // reliably — Chrome+NVDA only fires the live-region announcement when
+        // content changes while the element is already visible.
         calloutEl.style.display = '';
+        calloutEl.textContent = pickCheatLine();
       }
       inputEl.focus();
       log('Type-to-confirm: paste/drop bypass attempt blocked');
