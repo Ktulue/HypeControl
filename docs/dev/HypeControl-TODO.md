@@ -357,7 +357,7 @@ Closed the copy/paste bypass on the type-to-confirm friction step. `paste`, `dro
 
 ## SUB TIER DROPDOWN RE-TRIGGER FIX (v1.1.2)
 
-Fixed a form-control short-circuit in `isPurchaseButton()` so tier-picker, combobox, and radio button clicks inside the sub modal payment screen no longer fire friction overlays. The detector now returns early for `HTMLSelectElement`, `HTMLInputElement[type="radio"]`, and form control ancestors to prevent triggering on secondary controls within subscription modals. (#48)
+Added a form-control short-circuit in `isPurchaseButton()` so tier-picker, combobox, radio, and menuitem clicks inside the sub modal payment screen no longer fire friction overlays. The detector now returns early for `<select>`, `<option>`, `<optgroup>`, and ARIA roles `option` / `combobox` / `listbox` / `radio` / `radiogroup` / `menuitem` / `menuitemradio` (or any ancestor matching those), preventing the dollar-amount-in-dialog heuristic from triggering on secondary controls within subscription modals. (#48)
 
 ---
 
