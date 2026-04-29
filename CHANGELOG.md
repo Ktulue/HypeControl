@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.2] - 2026-04-28
+
+### Fixed
+- **Sub-tier dropdown re-trigger closed (#48).** Switching the Sub Tier dropdown (1 month / 3 month / 6 month) on Twitch's sub modal payment screen no longer re-fires the friction overlay after the user has already passed it once. Added a form-control short-circuit in `isPurchaseButton()` that returns `false` early for `<select>`, `<option>`, `<optgroup>`, and the ARIA roles `option` / `combobox` / `listbox` / `radio` / `radiogroup` / `menuitem` / `menuitemradio` (or any ancestor matching those). Friction still fires on the actual final "Subscribe with $X.XX" confirm button — including a second time if the price changed since the original friction, because the spend amount has changed. The existing dollar-amount-in-dialog rule that gift-sub quantity buttons depend on is unchanged.
+
+---
 ## [1.1.1] - 2026-04-28
 
 ### Fixed

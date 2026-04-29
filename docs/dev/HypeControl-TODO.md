@@ -1,7 +1,7 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-27
-**Current Version:** 1.1.1
+**Updated:** 2026-04-28
+**Current Version:** 1.1.2
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
 ---
@@ -355,4 +355,10 @@ Closed the copy/paste bypass on the type-to-confirm friction step. `paste`, `dro
 
 ---
 
-_Last updated 2026-04-27 against the v1.1.1 codebase. Type-to-confirm paste bypass closed (#49)._
+## SUB TIER DROPDOWN RE-TRIGGER FIX (v1.1.2)
+
+Added a form-control short-circuit in `isPurchaseButton()` so tier-picker, combobox, radio, and menuitem clicks inside the sub modal payment screen no longer fire friction overlays. The detector now returns early for `<select>`, `<option>`, `<optgroup>`, and ARIA roles `option` / `combobox` / `listbox` / `radio` / `radiogroup` / `menuitem` / `menuitemradio` (or any ancestor matching those), preventing the dollar-amount-in-dialog heuristic from triggering on secondary controls within subscription modals. (#48)
+
+---
+
+_Last updated 2026-04-28 against the v1.1.2 codebase. Sub tier dropdown re-trigger fix closed (#48)._
