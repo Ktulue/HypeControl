@@ -1,6 +1,6 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-28
+**Updated:** 2026-04-29
 **Current Version:** 1.1.2
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
@@ -232,6 +232,7 @@ The original design called for a guided overlay on the Twitch page highlighting 
 
 ### Recently Completed
 
+- [x] **Limits Progress Bars in Popup (2026-04-29)** — Replaced plain-text spending tracker rows in the popup Limits section with the same colored progress-bar widget the friction overlay renders. Bars only render when their cap is enabled; cap-disabled rows fall back to existing text behavior. Cap-amount edits live-update bars via the existing `onCapChange` callback. Extracted `getCapColorClass` + `buildCapProgressBar` into shared `src/shared/capBar.ts` (reused by overlay and popup). Adds `capAmount <= 0` guard as a defensive improvement to the overlay too. Spec: `docs/dev/superpowers/specs/2026-04-29-limits-progress-bars-design.md`. Plan: `docs/dev/superpowers/plans/2026-04-29-limits-progress-bars.md`.
 - [x] **Dual-platform 1.1.0 release cut (2026-04-24)** — Lockstep version bump across `manifest.json`, `manifest.firefox.json`, `package.json` to 1.1.0. Firefox caught up from 1.0.2 (drift from the AMO port). Both Chrome and Firefox builds verified. Ready for Chrome Web Store + AMO submissions.
 - [x] **Fix stream override storage mismatch (#32) — v1.0.4** — Override now short-circuits `shouldBypassFriction` globally (any channel), popup writes `streamingOverride` to `chrome.storage.sync` so the content script actually reads it. Purchases during bypass logged as `outcome: 'streaming'`. Replaced per-purchase toast with persistent `hc-streaming-badge` showing live countdown / live-on-channel / grace-period state.
 - [x] **Firefox AMO Port (2026-04-02)** — v1.0.2. Dual-manifest build (`manifest.firefox.json`), webpack target flag, build-time icon directory constant. AMO submission pending.
