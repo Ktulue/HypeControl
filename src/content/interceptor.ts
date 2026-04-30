@@ -18,6 +18,7 @@ import { writeInterceptEvent } from '../shared/interceptLogger';
 import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { loadSpendingTracker, recordPurchase } from '../shared/spendingTracker';
 import { buildCapProgressBar } from '../shared/capBar';
+import { computeTotalSteps } from '../shared/frictionStepCount';
 
 // ── Zero Trust no-price overlay messages ────────────────────────────────
 // Two tonal buckets: matter-of-fact and cheeky. Selection alternates buckets
@@ -70,6 +71,8 @@ export interface FrictionResult {
   decision: OverlayDecision;
   cancelledAtStep?: number;
   purchaseReason?: string;
+  /** Final step number reached. Populated on both proceed and cancel. On cancel, equals cancelledAtStep. */
+  lastStep: number;
 }
 
 /** Storage keys */
@@ -1602,35 +1605,53 @@ async function runFrictionFlow(
   onWhitelistAdd?: (behavior: WhitelistBehavior) => Promise<void>,
 ): Promise<FrictionResult> {
   let purchaseReason: string | undefined;
+  let currentStep = 1;
 
   // Step 1: Main overlay
   const mainDecision = await showMainOverlay(attempt, settings, tracker, whitelistNote, onWhitelistAdd);
   if (mainDecision === 'cancel') {
     log('Friction flow: cancelled at Step 1 (main overlay)');
-    return { decision: 'cancel', cancelledAtStep: 1 };
+    return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
   }
 
-  // Build comparison steps — only when price is detected
+  // Compute priceWithTax (null when no price was detected)
   const priceWithTax = (attempt.priceValue && attempt.priceValue > 0)
     ? Math.round(attempt.priceValue * (1 + settings.taxRate / 100) * 100) / 100
     : null;
 
   if (priceWithTax === null) {
     log('Friction flow: no price detected, skipping comparison steps');
-    // Price Guard would never reach here (determineFrictionLevel returns 'none').
-    // Zero Trust continues to intensity steps below — fall through.
+    // Zero Trust mode can reach here — intensity steps still run without a price.
   }
 
-  if (priceWithTax !== null) {
-    // nudge: enabled items where scope is 'nudge' or 'both', limited to softNudgeSteps
-    // full: enabled items where scope is 'full' or 'both' (scope replaces the old "all items" behavior)
-    const itemPool = maxComparisons !== undefined
+  // Compute item pool. Empty when priceWithTax is null (comparison loop will be skipped).
+  const itemPool: ComparisonItem[] = priceWithTax === null
+    ? []
+    : maxComparisons !== undefined
       ? settings.comparisonItems
           .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'full')
           .slice(0, maxComparisons)
       : settings.comparisonItems
           .filter(i => i.enabled && (i.frictionScope ?? 'both') !== 'nudge');
 
+  // Compute escalated intensity (hoisted from below — pure, no side effects)
+  const maxPercent = computeMaxCapPercent(settings, tracker);
+  const intensity = computeEscalatedIntensity(
+    settings.frictionIntensity ?? 'low',
+    maxPercent,
+    settings.intensityLocked ?? false,
+  );
+
+  // Compute total steps once based on actual conditions.
+  const totalSteps = computeTotalSteps(
+    priceWithTax,
+    itemPool.length,
+    intensity,
+    settings.delayTimer?.enabled ?? false,
+  );
+
+  // Steps 2..(1+itemPool.length): comparison items (only when price detected)
+  if (priceWithTax !== null) {
     const taxPrice = `$${priceWithTax.toFixed(2)}`;
     const comparisonSteps: { item: ComparisonItem; display: ComparisonDisplay }[] = [];
 
@@ -1639,30 +1660,18 @@ async function runFrictionFlow(
       comparisonSteps.push({ item, display });
     }
 
-    // Total steps = 1 (main) + N (comparisons)
-    const totalSteps = 1 + comparisonSteps.length;
-
     log(`Friction flow: ${comparisonSteps.length} comparison step(s) (${maxComparisons !== undefined ? 'nudge/enabled only' : 'full/all items'}), priceWithTax=${taxPrice}`);
-
-    // Steps 2+: Each comparison item
-    // We need a reference to the last overlay shown so we can pass it to subsequent steps.
-    // Comparison steps each create their own overlay element; after the loop we need
-    // the most-recently-created overlay for the intensity steps below.
-    // showComparisonStep creates its own overlay internally, so we capture it via a
-    // wrapper that returns it. For now, we create a placeholder overlay to reuse for
-    // the intensity steps (it will be re-populated by each step function).
 
     for (let i = 0; i < comparisonSteps.length; i++) {
       const { item, display } = comparisonSteps[i];
-      const stepNumber = i + 2; // Step 1 was the main overlay
-
-      const decision = await showComparisonStep(item, display, stepNumber, totalSteps, attempt);
+      currentStep++;
+      const decision = await showComparisonStep(item, display, currentStep, totalSteps, attempt);
       if (decision === 'cancel') {
-        log(`Friction flow: cancelled at Step ${stepNumber} (${item.name})`, {
-          stepsCompleted: stepNumber - 1,
+        log(`Friction flow: cancelled at Step ${currentStep} (${item.name})`, {
+          stepsCompleted: currentStep - 1,
           totalSteps,
         });
-        return { decision: 'cancel', cancelledAtStep: stepNumber };
+        return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
       }
     }
 
@@ -1674,21 +1683,14 @@ async function runFrictionFlow(
   }
 
   // ── Intensity-gated steps ─────────────────────────────────────────────
-  // For steps 3+, we reuse a shared overlay element that each step re-populates.
+  // For intensity steps we reuse a shared overlay element that each step re-populates.
   // Note: showReasonSelectionStep appends and removes the overlay itself.
   // The subsequent steps (cooldown, type-to-confirm, math) expect the overlay to
   // already be in the DOM (they only set innerHTML and apply theme).
   // So after reason selection proceeds we must re-append before the next step.
   let intensityOverlay: HTMLElement | null = null;
-  const maxPercent = computeMaxCapPercent(settings, tracker);
-  const intensity = computeEscalatedIntensity(
-    settings.frictionIntensity ?? 'low',
-    maxPercent,
-    settings.intensityLocked ?? false,
-  );
 
   if (intensity === 'medium' || intensity === 'high' || intensity === 'extreme') {
-    // Create the shared overlay element for intensity steps
     intensityOverlay = document.createElement('div');
     intensityOverlay.id = 'hc-overlay';
     intensityOverlay.className = 'hc-overlay';
@@ -1697,13 +1699,12 @@ async function runFrictionFlow(
     intensityOverlay.setAttribute('aria-labelledby', 'hc-overlay-heading');
     intensityOverlay.setAttribute('aria-describedby', 'hc-overlay-desc');
 
-    // Step 3: Reason selection
-    // showReasonSelectionStep manages its own append/remove lifecycle.
-    log('Friction flow: starting reason selection step (step 3)');
+    currentStep++;
+    log(`Friction flow: starting reason selection step (step ${currentStep})`);
     const reasonResult = await showReasonSelectionStep(intensityOverlay);
     if (reasonResult.decision === 'cancel') {
       // Overlay was already removed by showReasonSelectionStep; nothing to clean up.
-      return { decision: 'cancel', cancelledAtStep: 3 };
+      return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
     }
     purchaseReason = reasonResult.reason;
   }
@@ -1714,62 +1715,62 @@ async function runFrictionFlow(
     overlayVisible = true;
     document.body.appendChild(intensityOverlay!);
 
+    currentStep++;
     const cooldownSecs = intensity === 'extreme' ? 30 : 10;
-    log(`Friction flow: starting friction cooldown step (${cooldownSecs}s, step 4)`);
+    log(`Friction flow: starting friction cooldown step (${cooldownSecs}s, step ${currentStep})`);
     const cooldownResult = await showFrictionCooldownStep(intensityOverlay!, cooldownSecs);
     if (cooldownResult === 'cancel') {
       removeOverlay(intensityOverlay!);
-      return { decision: 'cancel', cancelledAtStep: 4 };
+      return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
     }
   }
 
   if (intensity === 'high') {
-    // intensityOverlay is still in the DOM (cooldown step didn't remove it).
-    log('Friction flow: starting type-to-confirm step (step 5)');
+    currentStep++;
+    log(`Friction flow: starting type-to-confirm step (step ${currentStep})`);
     const typeResult = await showTypeToConfirmStep(intensityOverlay!);
     if (typeResult === 'cancel') {
       removeOverlay(intensityOverlay!);
-      return { decision: 'cancel', cancelledAtStep: 5 };
+      return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
     }
     // All intensity steps done for 'high' — clean up overlay.
     removeOverlay(intensityOverlay!);
   }
 
   if (intensity === 'extreme') {
-    // intensityOverlay is still in the DOM (cooldown step didn't remove it).
-    log('Friction flow: starting math challenge step (step 5)');
+    currentStep++;
+    log(`Friction flow: starting math challenge step (step ${currentStep})`);
     const mathResult = await showMathChallengeStep(intensityOverlay!);
     if (mathResult === 'cancel') {
       removeOverlay(intensityOverlay!);
-      return { decision: 'cancel', cancelledAtStep: 5 };
+      return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
     }
-    // Math passed — proceed to type-to-confirm (step 6). Overlay stays in DOM.
-    log('Friction flow: starting type-to-confirm step (step 6)');
+    currentStep++;
+    log(`Friction flow: starting type-to-confirm step (step ${currentStep})`);
     const typeResult = await showTypeToConfirmStep(intensityOverlay!);
     if (typeResult === 'cancel') {
       removeOverlay(intensityOverlay!);
-      return { decision: 'cancel', cancelledAtStep: 6 };
+      return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
     }
     // All intensity steps done for 'extreme' — clean up overlay.
     removeOverlay(intensityOverlay!);
   }
 
-  // For 'medium' intensity: reason step removed overlay itself; no extra cleanup needed.
-
   // ── Standalone Delay Timer (final step) ──────────────────────────────
   if (settings.delayTimer?.enabled) {
-    log(`Delay timer step starting (${settings.delayTimer.seconds}s)`);
+    currentStep++;
+    log(`Delay timer step starting (${settings.delayTimer.seconds}s, step ${currentStep})`);
     const delayDecision = await showDelayTimerStep(
       settings.delayTimer.seconds,
       attempt,
     );
     if (delayDecision === 'cancel') {
       log('Friction flow: cancelled at delay timer step');
-      return { decision: 'cancel' };
+      return { decision: 'cancel', cancelledAtStep: currentStep, lastStep: currentStep };
     }
   }
 
-  return { decision: 'proceed', purchaseReason };
+  return { decision: 'proceed', purchaseReason, lastStep: currentStep };
 }
 
 export function showBudgetToast(
@@ -2011,6 +2012,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
           rawPrice: attempt.rawPrice,
           priceWithTax,
           outcome: 'cancelled',
+          cancelledAtStep: frictionResult.lastStep + 1,
           savedAmount: priceWithTax ?? 0,
           purchaseReason: frictionResult.purchaseReason,
         });
