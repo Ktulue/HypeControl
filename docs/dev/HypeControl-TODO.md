@@ -1,6 +1,6 @@
 # Hype Control - What's Left To Do
 
-**Updated:** 2026-04-29
+**Updated:** 2026-04-30
 **Current Version:** 1.1.2
 **Based On:** HC-Project-Document.md vs. actual codebase audit (MTS was the original project codename)
 
@@ -362,4 +362,17 @@ Added a form-control short-circuit in `isPurchaseButton()` so tier-picker, combo
 
 ---
 
-_Last updated 2026-04-28 against the v1.1.2 codebase. Sub tier dropdown re-trigger fix closed (#48)._
+## CANCEL-STEP TRACKING FIX (v1.1.2)
+
+- [x] **Cancel-step tracking fix (`fix/cancel-step-tracking`)** — `InterceptEvent.cancelledAtStep` now reflects the actual step where the user cancelled. Replaced hardcoded step numbers in `runFrictionFlow`'s intensity-gated branches with a running counter, and added recording on two cancel paths that previously dropped the field entirely (delay-timer cancel, cap-exceedance cancel). Spec: `docs/superpowers/specs/2026-04-30-cancel-step-tracking-design.md`.
+
+---
+
+## FOLLOW-UPS
+
+- [ ] **Chat-command cap-exceedance step recording** — `chatCommandInterceptor.ts` cap-exceedance cancel handler does not record `cancelledAtStep`. Same class of bug as the one fixed for the button-click path; deferred so the button-path fix could ship first. Should record `frictionResult.lastStep + 1` similar to the fix in `interceptor.ts`.
+- [ ] **"Top Cancel Step" tile tie-breaker (`history.ts:223`)** — Tie-breaker currently favors the lowest step number; tile may still skew to Step 1 even after recording is fixed. Revisit once real corrected data accumulates; possibly switch to highest-step-wins or show all tied steps.
+
+---
+
+_Last updated 2026-04-30 against the v1.1.2 codebase. Cancel-step tracking fix completed._
