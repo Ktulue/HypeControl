@@ -74,7 +74,7 @@ describe('buildCapProgressBar', () => {
     expect(html).toContain('(85%)');
   });
 
-  test('renders 100% red bar with OVER BUDGET when newTotal exactly equals capAmount', () => {
+  test('renders 100% red bar at exactly the cap amount, with no OVER BUDGET label', () => {
     // Boundary: newTotal == capAmount is treated as 100% (red), not over-budget.
     const html = buildCapProgressBar('Daily', 100, 0, 100);
     expect(html).toContain('hc-cap-red');
