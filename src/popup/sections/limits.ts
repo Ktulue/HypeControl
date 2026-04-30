@@ -2,6 +2,7 @@ import { UserSettings, DEFAULT_SPENDING_TRACKER, migrateSettings } from '../../s
 import { loadSpendingTracker, SPENDING_KEY } from '../../shared/spendingTracker';
 import { initCalendar } from './calendar';
 import { getPending, setPendingField } from '../pendingState';
+import { buildCapProgressBar } from '../../shared/capBar';
 
 export interface LimitsController {
   render(settings: UserSettings): void;
@@ -32,6 +33,12 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
   const trackerWeeklyRowEl = el.querySelector<HTMLElement>('#tracker-weekly-row')!;
   const trackerMonthlyEl = el.querySelector<HTMLElement>('#tracker-monthly')!;
   const trackerMonthlyRowEl = el.querySelector<HTMLElement>('#tracker-monthly-row')!;
+
+  // Tracker rows + bar host slots (one pair per period)
+  const trackerDailyTextEl = el.querySelector<HTMLElement>('#tracker-daily-text')!;
+  const trackerDailyBarEl = el.querySelector<HTMLElement>('#tracker-daily-bar')!;
+  const trackerWeeklyBarEl = el.querySelector<HTMLElement>('#tracker-weekly-bar')!;
+  const trackerMonthlyBarEl = el.querySelector<HTMLElement>('#tracker-monthly-bar')!;
 
   // Daily cap
   dailyCapEnabledEl.addEventListener('change', () => {
@@ -157,20 +164,86 @@ export function initLimits(el: HTMLElement, callbacks: LimitsCallbacks = {}): Li
     calendar.toggle();
   });
 
+  /**
+   * Render one tracker row as either a progress bar (cap enabled with non-zero
+   * amount) or as a plain text row / hidden state (cap disabled or amount=0).
+   *
+   * @param textRowEl The .hc-row element holding the label + value spans.
+   * @param barHostEl The sibling .hc-cap-bar-host slot.
+   * @param showTextWhenCapOff true for daily (always visible), false for
+   *   weekly/monthly (hidden until their cap is enabled).
+   */
+  function renderCapRow(
+    label: 'Daily' | 'Weekly' | 'Monthly',
+    total: number,
+    cap: { enabled: boolean; amount: number },
+    textRowEl: HTMLElement,
+    barHostEl: HTMLElement,
+    showTextWhenCapOff: boolean,
+  ): void {
+    const barHtml = cap.enabled
+      ? buildCapProgressBar(label, total, 0, cap.amount)
+      : '';
+
+    if (barHtml) {
+      barHostEl.innerHTML = barHtml;
+      barHostEl.hidden = false;
+      textRowEl.hidden = true;
+    } else {
+      barHostEl.innerHTML = '';
+      barHostEl.hidden = true;
+      textRowEl.hidden = !showTextWhenCapOff;
+    }
+  }
+
   async function refreshTracker(): Promise<void> {
-    const settingsResult = await chrome.storage.sync.get('hcSettings');
-    const userSettings = migrateSettings(settingsResult['hcSettings'] || {});
-    const tracker = await loadSpendingTracker(userSettings);
+    // Cap config comes from pending state so live edits to cap inputs
+    // update the bars before the user clicks Save.
+    const pending = getPending();
+    // Tracker totals come from chrome.storage.local (read-only here — popup
+    // never mutates the tracker). loadSpendingTracker handles auto-resets.
+    const settingsForTracker = await (async () => {
+      const stored = await chrome.storage.sync.get('hcSettings');
+      return migrateSettings(stored['hcSettings'] || {});
+    })();
+    const tracker = await loadSpendingTracker(settingsForTracker);
 
-    trackerDailyEl.textContent = `$${(tracker.dailyTotal ?? 0).toFixed(2)}`;
+    const dailyTotal = tracker.dailyTotal ?? 0;
+    const weeklyTotal = tracker.weeklyTotal ?? 0;
+    const monthlyTotal = tracker.monthlyTotal ?? 0;
 
-    trackerWeeklyEl.textContent = `$${(tracker.weeklyTotal ?? 0).toFixed(2)}`;
-    trackerMonthlyEl.textContent = `$${(tracker.monthlyTotal ?? 0).toFixed(2)}`;
+    // Always set the text-value spans — they're the fallback when no bar renders.
+    trackerDailyEl.textContent = `$${dailyTotal.toFixed(2)}`;
+    trackerWeeklyEl.textContent = `$${weeklyTotal.toFixed(2)}`;
+    trackerMonthlyEl.textContent = `$${monthlyTotal.toFixed(2)}`;
 
-    const weeklyEnabled = userSettings.weeklyCap?.enabled ?? false;
-    const monthlyEnabled = userSettings.monthlyCap?.enabled ?? false;
-    trackerWeeklyRowEl.hidden = !weeklyEnabled;
-    trackerMonthlyRowEl.hidden = !monthlyEnabled;
+    // Daily: cap on → bar; cap off → text row (always visible per current behavior).
+    renderCapRow(
+      'Daily',
+      dailyTotal,
+      pending.dailyCap,
+      trackerDailyTextEl,
+      trackerDailyBarEl,
+      /* showTextWhenCapOff */ true,
+    );
+
+    // Weekly/Monthly: cap on → bar; cap off → entire row hidden (current behavior).
+    renderCapRow(
+      'Weekly',
+      weeklyTotal,
+      pending.weeklyCap,
+      trackerWeeklyRowEl,
+      trackerWeeklyBarEl,
+      /* showTextWhenCapOff */ false,
+    );
+    renderCapRow(
+      'Monthly',
+      monthlyTotal,
+      pending.monthlyCap,
+      trackerMonthlyRowEl,
+      trackerMonthlyBarEl,
+      /* showTextWhenCapOff */ false,
+    );
   }
 
   function render(settings: UserSettings): void {

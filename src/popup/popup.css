@@ -43,6 +43,16 @@
   --radius: 6px;
   --font: 'Space Grotesk', sans-serif;
   --accent-text: #bf94ff;
+  /* Bar widget tokens (mirror src/content/styles.css for the shared .hc-cap-bar* rules) */
+  --hc-success: #22C55E;
+  --hc-success-rgb: 34, 197, 94;
+  --hc-danger: #e91916;
+  --hc-danger-rgb: 233, 25, 22;
+  --hc-warning: #F97316;
+  --hc-warning-rgb: 249, 115, 22;
+  --hc-caution: #EAB308;
+  --hc-caution-rgb: 234, 179, 8;
+  --hc-progress-bg: #2a2a2e;
 }
 
 /* ─── Light mode overrides ───────────────────────────────── */
@@ -60,6 +70,11 @@
   --success: #16A34A;
   --accent-rgb: 124, 58, 237;
   --success-rgb: 22, 163, 74;
+  /* Bar widget light-mode overrides */
+  --hc-success: #16A34A;
+  --hc-warning: #EA580C;
+  --hc-caution: #CA8A04;
+  --hc-caution-rgb: 202, 138, 4;
 }
 
 [data-theme="light"] .calendar-cell.tier-grass {
@@ -1078,3 +1093,80 @@ body {
    It is used in overlay HTML rendered by interceptor.ts (content script),
    which loads src/content/styles.css — not popup.css.
    The badge style is defined in Task 9 (styles.css). */
+
+/* ─── Cap progress bars (shared widget — mirrors src/content/styles.css) ─── */
+
+.hc-cap-bar-host {
+  /* Match the vertical rhythm of sibling .hc-row elements inside .hc-group */
+  margin-top: 8px;
+}
+
+.hc-cap-bar {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.hc-cap-bar__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.hc-cap-bar__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hc-cap-bar__track {
+  height: 4px;
+  background: var(--hc-progress-bg, #2a2a2e);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hc-cap-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Color tiers */
+.hc-cap-green {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.2);
+  color: var(--hc-success);
+}
+.hc-cap-green .hc-cap-bar__fill {
+  background: var(--hc-success);
+}
+
+.hc-cap-yellow {
+  background: rgba(var(--hc-caution-rgb), 0.1);
+  border-color: rgba(var(--hc-caution-rgb), 0.2);
+  color: var(--hc-caution);
+}
+.hc-cap-yellow .hc-cap-bar__fill {
+  background: var(--hc-caution);
+}
+
+.hc-cap-orange {
+  background: rgba(var(--hc-warning-rgb), 0.1);
+  border-color: rgba(var(--hc-warning-rgb), 0.2);
+  color: var(--hc-warning);
+}
+.hc-cap-orange .hc-cap-bar__fill {
+  background: var(--hc-warning);
+}
+
+.hc-cap-red {
+  background: rgba(var(--hc-danger-rgb), 0.1);
+  border-color: rgba(var(--hc-danger-rgb), 0.2);
+  color: var(--hc-danger);
+}
+.hc-cap-red .hc-cap-bar__fill {
+  background: var(--hc-danger);
+}

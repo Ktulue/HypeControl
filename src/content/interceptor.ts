@@ -17,6 +17,7 @@ import { log, debug } from '../shared/logger';
 import { writeInterceptEvent } from '../shared/interceptLogger';
 import { computeEscalatedIntensity, computeMaxCapPercent } from '../shared/escalation';
 import { loadSpendingTracker, recordPurchase } from '../shared/spendingTracker';
+import { buildCapProgressBar } from '../shared/capBar';
 
 // ── Zero Trust no-price overlay messages ────────────────────────────────
 // Two tonal buckets: matter-of-fact and cheeky. Selection alternates buckets
@@ -313,47 +314,6 @@ function formatComparisonDisplay(item: ComparisonItem, purchaseAmount: number, t
     labelText: `of a ${item.name}`,
     sentence: `That ${taxPrice} is only ~${percent}% of a ${item.name}`,
   };
-}
-
-/**
- * Determine the color tier for a cap progress bar.
- * Green < 60%, Yellow 60–79%, Orange 80–99%, Red 100%+
- */
-function getCapColorClass(percentage: number): string {
-  if (percentage >= 100) return 'hc-cap-red';
-  if (percentage >= 80) return 'hc-cap-orange';
-  if (percentage >= 60) return 'hc-cap-yellow';
-  return 'hc-cap-green';
-}
-
-/**
- * Build a single cap progress bar HTML string.
- * Label is constrained to known static values — never user-controlled.
- * Numeric values are computed internally. innerHTML is safe here.
- */
-function buildCapProgressBar(
-  label: 'Daily' | 'Weekly' | 'Monthly',
-  currentTotal: number,
-  purchaseAmount: number,
-  capAmount: number,
-): string {
-  const newTotal = Math.round((currentTotal + purchaseAmount) * 100) / 100;
-  const percentage = Math.round((newTotal / capAmount) * 100);
-  const barWidth = Math.min(percentage, 100);
-  const colorClass = getCapColorClass(percentage);
-  const overBudget = newTotal > capAmount;
-
-  return `
-    <div class="hc-cap-bar ${colorClass}">
-      <div class="hc-cap-bar__header">
-        <span class="hc-cap-bar__label">${label}</span>
-        <span class="hc-cap-bar__value">$${newTotal.toFixed(2)} / $${capAmount.toFixed(2)}${overBudget ? ' — OVER BUDGET' : ` (${percentage}%)`}</span>
-      </div>
-      <div class="hc-cap-bar__track">
-        <div class="hc-cap-bar__fill" style="width: ${barWidth}%"></div>
-      </div>
-    </div>
-  `;
 }
 
 /**

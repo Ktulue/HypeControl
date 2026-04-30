@@ -241,7 +241,15 @@ async function main(): Promise<void> {
     onLockChange: () => updateEscalation(),
   });
 
-  const limits = initLimits(limitsEl, { onCapChange: () => updateEscalation() });
+  const limits = initLimits(limitsEl, {
+    onCapChange: () => {
+      updateEscalation();
+      // Repaint cap progress bars on cap toggle/amount edits.
+      // limits is in the closure scope; resolved at call-time, not init-time
+      // (same pattern updateEscalation uses to reach `friction`).
+      limits.refreshTracker();
+    },
+  });
 
   const stats = initStats(statsEl);
 
