@@ -306,18 +306,21 @@
           </select>
         </div>
         <div class="hc-group">
-          <div class="hc-row">
+          <div class="hc-row" id="tracker-daily-text">
             <span class="hc-label">Daily total</span>
             <span class="tracker-value" id="tracker-daily">—</span>
           </div>
+          <div class="hc-cap-bar-host" id="tracker-daily-bar" hidden></div>
           <div class="hc-row" id="tracker-weekly-row" hidden>
             <span class="hc-label">Weekly total</span>
             <span class="tracker-value" id="tracker-weekly">—</span>
           </div>
+          <div class="hc-cap-bar-host" id="tracker-weekly-bar" hidden></div>
           <div class="hc-row" id="tracker-monthly-row" hidden>
             <span class="hc-label">Monthly total</span>
             <span class="tracker-value" id="tracker-monthly">—</span>
           </div>
+          <div class="hc-cap-bar-host" id="tracker-monthly-bar" hidden></div>
           <div class="hc-row">
             <span class="hc-label">Savings calendar</span>
             <button class="btn-icon" id="btn-calendar" aria-label="Toggle savings calendar" title="View savings calendar">
