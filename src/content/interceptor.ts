@@ -1621,6 +1621,7 @@ async function runFrictionFlow(
 
   if (priceWithTax === null) {
     log('Friction flow: no price detected, skipping comparison steps');
+    // Zero Trust mode can reach here — intensity steps still run without a price.
   }
 
   // Compute item pool. Empty when priceWithTax is null (comparison loop will be skipped).
