@@ -4,7 +4,7 @@
 
 You love your streamers. You've also tipped more in one stream than you spent on groceries that week. Hype Control is a lightweight browser extension that adds a friction layer between you and impulse purchases — spending caps, cooldown timers, and confirmation prompts that give your future self a fighting chance.
 
-**[Install from the Chrome Web Store](TODO(store-url))**
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/hype-control/gkadjgggiddabdpoaegabgmhbjgedael)**
 
 ## Features
 
